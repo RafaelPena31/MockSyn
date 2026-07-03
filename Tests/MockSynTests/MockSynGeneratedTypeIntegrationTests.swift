@@ -199,6 +199,11 @@ protocol StaticThrowingService {
     static func save() throws
 }
 
+@Mocking
+protocol QualifiedSendableService: Swift.Sendable {
+    func refresh()
+}
+
 final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
     func testGeneratedMockCarriesRuntimeMetadata() {
         #if MOCKSYN_ENABLE
@@ -714,6 +719,19 @@ final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
         try StaticThrowingServiceMock.verify.fetch().once()
         try StaticThrowingServiceMock.verify.save().once()
         StaticThrowingServiceMock.resetStatic()
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedMockSupportsQualifiedProtocolInheritance() {
+        #if MOCKSYN_ENABLE
+        let mock = QualifiedSendableServiceMock()
+        let sendable: any Swift.Sendable = mock
+
+        mock.refresh()
+
+        XCTAssertTrue(sendable is QualifiedSendableServiceMock)
         #else
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif

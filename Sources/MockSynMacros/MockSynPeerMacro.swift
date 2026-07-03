@@ -94,14 +94,6 @@ private struct MockSynPeerMacro {
         context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         if let protocolDeclaration = declaration.as(ProtocolDeclSyntax.self) {
-            guard protocolDeclaration.hasOnlySimpleInheritedTypes else {
-                context.diagnose(Diagnostic(
-                    node: Syntax(attribute),
-                    message: MockSynDiagnostic.unsupportedProtocolInheritance
-                ))
-                return []
-            }
-
             let associatedTypes = protocolDeclaration.associatedTypeBindings
             let genericConfiguration = ProtocolGenericConfiguration(
                 protocolName: protocolDeclaration.name.text,
@@ -906,18 +898,6 @@ private struct GeneratedSubscript {
 private struct MemberGenerationResult {
     let generatedMembers: [GeneratedMember]
     let isValid: Bool
-}
-
-private extension ProtocolDeclSyntax {
-    var hasOnlySimpleInheritedTypes: Bool {
-        guard let inheritedTypes = inheritanceClause?.inheritedTypes else {
-            return true
-        }
-
-        return inheritedTypes.allSatisfy { inheritedType in
-            inheritedType.type.as(IdentifierTypeSyntax.self) != nil
-        }
-    }
 }
 
 private enum MemberGenerator {

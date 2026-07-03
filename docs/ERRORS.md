@@ -18,7 +18,6 @@ MockSyn has two kinds of errors: compile-time diagnostics from macros and runtim
 | Invalid mode option | Emit an error explaining the supported mode values. |
 | Private member requirement | Emit an error because generated code cannot satisfy inaccessible requirements. |
 | Unsupported operator | Emit an error or warning depending on planned support. |
-| Unsupported protocol inheritance | Emit an error explaining the supported inheritance model. |
 | Invalid access override | Emit an error when requested access is wider than allowed. |
 | Unsupported generic shape | Emit an error describing the unsupported generic construct. |
 

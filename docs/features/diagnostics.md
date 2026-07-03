@@ -15,7 +15,6 @@ next step.
 | Invalid `mode` option | Supported | Emits the supported mode values: `.strict` and `.relaxed`. |
 | Visibility widening | Supported | Rejects generated access that is wider than the annotated declaration. |
 | Operator requirements | Supported | Emits an error because operator generation is not implemented yet. |
-| Complex protocol inheritance | Supported | Emits an error for inherited types that are not simple protocol names. |
 
 ## Invalid Target
 
@@ -95,7 +94,7 @@ MockSyn mode must be one of: strict, relaxed
 
 ## Protocol Inheritance
 
-Simple inherited protocol names are supported:
+Inherited protocol syntax that is valid Swift is supported:
 
 ```swift
 @Mocking
@@ -103,18 +102,10 @@ protocol AuthenticatedUserService: UserService, Sendable {
 }
 ```
 
-Complex inherited type syntax is rejected:
-
 ```swift
 @Mocking
 protocol AuthenticatedUserService: Foundation.Sendable {
 }
-```
-
-Diagnostic:
-
-```text
-MockSyn supports protocol inheritance only with simple protocol names. Extract complex inherited constraints into a dedicated protocol.
 ```
 
 ## Unsupported Members

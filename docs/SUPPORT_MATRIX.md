@@ -39,7 +39,7 @@ Initial platform support:
 | --- | --- | --- |
 | Protocol mocks | Supported | Supported |
 | Simple protocol inheritance | Supported | Supported |
-| Complex protocol inheritance | Diagnostic | Diagnostic |
+| Complex protocol inheritance | Supported for valid Swift inherited type syntax | Supported for valid Swift inherited type syntax |
 | Non-final class doubles | Supported | Supported |
 | `NSObject` subclasses | Supported as subclass generation | Supported as subclass generation |
 | Objective-C runtime interception | Not supported in core | Not supported in core |

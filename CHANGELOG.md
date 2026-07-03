@@ -2,6 +2,24 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.15.0 - 2026-07-03
+
+### Added
+
+- Support for qualified and complex protocol inheritance syntax on annotated protocols.
+- Macro expansion coverage for inherited types such as `Foundation.Sendable`.
+- Integration coverage proving generated mocks compile for protocols inheriting `Swift.Sendable`.
+
+### Changed
+
+- MockSyn no longer rejects protocol inheritance clauses that contain qualified inherited types.
+- Documentation and support matrix now describe complex protocol inheritance syntax as supported.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.15.0`.
+- Generated doubles still conform to the annotated protocol itself; inherited requirements must be visible through normal Swift protocol conformance.
+
 ## 0.14.0 - 2026-07-03
 
 ### Added

@@ -148,7 +148,8 @@ doubles. MockSyn does not generate `open` test doubles.
 - Class initializer mirroring is not part of Block 3.
 - Associated-type protocols generate generic mocks, stubs, and spies when the
   associated types can be represented as generic parameters.
-- Complex protocol inheritance constraints are deferred to later language-feature blocks.
+- Qualified and complex protocol inheritance syntax is supported when Swift
+  accepts the annotated protocol declaration.
 
 ## Compatibility Notes
 

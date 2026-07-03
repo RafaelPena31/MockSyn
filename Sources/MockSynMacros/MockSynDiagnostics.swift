@@ -39,11 +39,6 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
         message: "MockSyn cannot generate a public double for an internal declaration"
     )
 
-    static let unsupportedProtocolInheritance = MockSynDiagnostic(
-        id: "unsupportedProtocolInheritance",
-        message: "MockSyn supports protocol inheritance only with simple protocol names. Extract complex inherited constraints into a dedicated protocol."
-    )
-
     static let unsupportedOperatorRequirement = MockSynDiagnostic(
         id: "unsupportedOperatorRequirement",
         message: "MockSyn cannot generate operator requirements yet. Wrap the operator behind a named method."

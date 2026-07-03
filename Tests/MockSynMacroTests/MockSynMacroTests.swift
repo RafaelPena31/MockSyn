@@ -2313,7 +2313,7 @@ final class MockSynMacroTests: XCTestCase {
         )
     }
 
-    func testComplexProtocolInheritanceEmitsDiagnostic() {
+    func testMockingSupportsQualifiedProtocolInheritance() {
         assertExpansion(
             """
             @Mocking
@@ -2323,15 +2323,17 @@ final class MockSynMacroTests: XCTestCase {
             expandedSource: """
               protocol UserService: Foundation.Sendable {
               }
-              """,
-            diagnostics: [
-                DiagnosticSpec(
-                    message: "MockSyn supports protocol inheritance only with simple protocol names. Extract complex inherited constraints into a dedicated protocol.",
-                    line: 1,
-                    column: 1,
-                    severity: .error
-                )
-            ]
+              
+              #if MOCKSYN_ENABLE
+              internal final class UserServiceMock: UserService {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+              }
+              #endif
+              """
         )
     }
 
