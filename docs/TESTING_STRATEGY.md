@@ -1,0 +1,78 @@
+# Testing Strategy
+
+MockSyn must test the macro layer, runtime layer, public DSL, documentation examples, and performance characteristics.
+
+## Test Layers
+
+| Layer | Purpose |
+| --- | --- |
+| Macro expansion tests | Validate generated code for representative inputs. |
+| Diagnostic tests | Validate compiler diagnostics for unsupported constructs. |
+| Runtime unit tests | Validate invocation recording, stubbing, matching, captors, and reset. |
+| DSL tests | Validate user-facing `given` and `verify` behavior. |
+| Integration examples | Validate real package usage with XCTest and Swift Testing. |
+| Concurrency tests | Validate async calls and thread-safe runtime state. |
+| Performance tests | Validate build-time and runtime budgets. |
+
+## Macro Expansion Tests
+
+Each supported syntax family needs expansion coverage:
+
+- simple method;
+- throwing method;
+- async method;
+- async throwing method;
+- void method;
+- get property;
+- get-set property;
+- overloads;
+- generics;
+- associated types;
+- global actor annotations;
+- static protocol requirements;
+- subscripts.
+
+## Diagnostic Tests
+
+Diagnostic tests should cover:
+
+- final classes;
+- invalid macro target;
+- unsupported member;
+- invalid access control;
+- unsupported inheritance case;
+- unsupported generic case.
+
+## Runtime Tests
+
+Runtime tests should cover:
+
+- strict mode missing stub;
+- relaxed mode default;
+- return value;
+- thrown error;
+- closure behavior;
+- sequential returns;
+- argument matching;
+- captors;
+- verify counts;
+- order verification;
+- `confirmVerified`;
+- `checkUnnecessaryStubs`;
+- reset.
+
+## Documentation Examples
+
+Every public Markdown feature example should be compiled in at least one example target or test fixture.
+
+## CI Matrix
+
+CI should run:
+
+- Swift 5.9-compatible toolchain when available;
+- Swift 6-compatible toolchain;
+- Release build without `MOCKSYN_ENABLE`;
+- test build with `MOCKSYN_ENABLE`;
+- macro expansion tests;
+- runtime tests;
+- documentation example tests.

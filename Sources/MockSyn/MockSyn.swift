@@ -1,0 +1,29 @@
+/// Generates a mock peer type for the annotated protocol.
+///
+/// Generated declarations are wrapped in `#if MOCKSYN_ENABLE` by default.
+@attached(peer, names: prefixed(Mock), suffixed(Mock))
+public macro Mocking(
+    name: String? = nil,
+    access: MockSynAccess = .internal,
+    mode: MockSynMode = .strict
+) = #externalMacro(module: "MockSynMacros", type: "MockingMacro")
+
+/// Generates a stub peer type for the annotated protocol.
+///
+/// Stubs default to relaxed mode because they focus on preconfigured responses.
+@attached(peer, names: prefixed(Stub), suffixed(Stub))
+public macro Stubbing(
+    name: String? = nil,
+    access: MockSynAccess = .internal,
+    mode: MockSynMode = .relaxed
+) = #externalMacro(module: "MockSynMacros", type: "StubbingMacro")
+
+/// Generates a spy peer type for the annotated protocol.
+///
+/// Spies keep a wrapped implementation so generated members can delegate when supported.
+@attached(peer, names: prefixed(Spy), suffixed(Spy))
+public macro Spying(
+    name: String? = nil,
+    access: MockSynAccess = .internal,
+    mode: MockSynMode = .strict
+) = #externalMacro(module: "MockSynMacros", type: "SpyingMacro")
