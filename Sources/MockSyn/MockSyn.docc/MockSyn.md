@@ -38,6 +38,10 @@ For selectors visible to the Objective-C runtime, `MockSynObjCInterception`
 offers an explicit scoped swizzling API. This is separate from macro-generated
 test doubles and is available only when `ObjectiveC.runtime` can be imported.
 
+For construction behavior that can be injected, `MockSynConstructor`,
+`MockSynConstructor1`, and `MockSynConstructor2` provide explicit scoped
+constructor seams. They do not intercept direct `Type(...)` calls.
+
 ## Diagnostics
 
 MockSyn emits compile-time diagnostics for unsupported declarations, pure Swift

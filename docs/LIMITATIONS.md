@@ -11,7 +11,7 @@ MockSyn is inspired by MockK and Mockito, but Swift does not provide the same ru
 | Private methods | Generated code cannot access private implementation details. |
 | Global functions | Macros on protocols do not intercept global functions. |
 | Concrete static methods | Static calls on concrete types are not dynamically intercepted. |
-| Arbitrary constructors | Swift macros do not intercept constructor calls. |
+| Arbitrary constructors | Swift macros do not intercept direct constructor calls. Use explicit constructor seams when factory injection is possible. |
 | Class operator members | Class operator overriding is not part of the subclass-generation model. |
 | Runtime bytecode-style interception | Swift does not have a JVM-like bytecode agent model. |
 | Fully arbitrary generated peer names | Swift attached peer macros at global scope must declare name patterns. |
@@ -104,6 +104,15 @@ scope.
 Only selectors visible to the Objective-C runtime can be intercepted. Pure Swift
 methods, Swift-only final dispatch, global functions, and arbitrary constructor
 calls are still outside this model.
+
+## Constructors
+
+MockSyn supports explicit constructor seams through `MockSynConstructor`,
+`MockSynConstructor1`, and `MockSynConstructor2`. These APIs let tests replace a
+factory dependency for a scoped block.
+
+They do not intercept direct `Type(...)` calls. Code must receive and call the
+constructor seam for the replacement to take effect.
 
 ## Macro Limits
 

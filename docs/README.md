@@ -29,6 +29,7 @@ This folder contains the required design and feature documentation for MockSyn.
 - [Test Integration](features/test-integration.md)
 - [Diagnostics](features/diagnostics.md)
 - [Objective-C Interception](features/objective-c-interception.md)
+- [Constructor Seams](features/constructor-seams.md)
 - [Tooling](features/tooling.md)
 
 ## Migration Guides

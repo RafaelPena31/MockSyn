@@ -37,6 +37,7 @@ Este documento lista as features planejadas para o MockSyn, agrupadas por bloco 
 | Static requirements | Requisitos estaticos de protocolo, quando geraveis por macro. |
 | Subscripts | Suporte a `subscript`, incluindo subscripts genericos com constraints. |
 | Initializers | Suporte para requisitos de protocolo e espelhamento de inicializadores de classe nao-variadicos. |
+| Constructor seams | Factories injetaveis para substituir construcao em testes de forma escopada; nao intercepta chamadas diretas `Type(...)`. |
 | Overloads | Metodos com mesmo nome, mas assinaturas diferentes. |
 | Operators | Suporte a requisitos de operador em protocolos com aliases nomeados para stubbing e verificacao; diagnostico para operadores de classe. |
 

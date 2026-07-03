@@ -53,6 +53,8 @@ Initial platform support:
 | Static protocol members | Supported with type-level stubbing/verification | Supported with type-level stubbing/verification |
 | Concrete static class members | Diagnostic; use protocol static requirements or Objective-C interception for Objective-C class methods | Diagnostic; use protocol static requirements or Objective-C interception for Objective-C class methods |
 | Global functions | Diagnostic; wrap behind a protocol or explicit test seam | Diagnostic; wrap behind a protocol or explicit test seam |
+| Constructor seams | Supported with zero, one, and two argument factories | Supported with zero, one, and two argument factories |
+| Arbitrary direct constructor interception | Not supported; Swift macros do not rewrite `Type(...)` call sites | Not supported; Swift macros do not rewrite `Type(...)` call sites |
 | Protocol initializers | Supported for mocks/stubs | Supported for mocks/stubs |
 | Class initializers | Mirrored for non-variadic class initializers; required initializers supported for mocks/stubs | Mirrored for non-variadic class initializers; required initializers supported for mocks/stubs |
 | Protocol operator requirements | Supported with named type-level stubbing/verification DSL | Supported with named type-level stubbing/verification DSL |

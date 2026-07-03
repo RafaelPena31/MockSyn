@@ -2,6 +2,24 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.24.0 - 2026-07-03
+
+### Added
+
+- Explicit constructor seam APIs for zero, one, and two constructor arguments.
+- Scoped replacement token for constructor seams, restoring the previous constructor on `restore()` or deinit.
+- Runtime tests proving original constructor execution, scoped replacement, idempotent restore, deinit restore, and argument forwarding.
+
+### Changed
+
+- Constructor interception documentation now distinguishes injectable constructor seams from unsupported arbitrary `Type(...)` call-site interception.
+- Support matrix now describes constructor seams as supported and arbitrary direct constructor interception as unsupported.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.24.0`.
+- MockSyn still cannot rewrite arbitrary constructor call sites. Consumers must inject `MockSynConstructor`, `MockSynConstructor1`, or `MockSynConstructor2` where constructor behavior needs to be replaceable in tests.
+
 ## 0.23.0 - 2026-07-03
 
 ### Added
