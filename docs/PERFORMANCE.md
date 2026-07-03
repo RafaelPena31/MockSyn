@@ -60,11 +60,22 @@ Print the benchmark plan with:
 tools/benchmark.sh --print-plan
 ```
 
-Run benchmark tests when a `MockSynPerformance` suite exists:
+Run benchmark tests:
 
 ```bash
 tools/benchmark.sh --run
 ```
+
+The command sets `MOCKSYN_RUN_BENCHMARKS=1`, runs
+`swift test --filter MockSynPerformance`, and wraps the SwiftPM invocation with
+`/usr/bin/time -p` so the output includes real elapsed build/test time. The
+`MockSynPerformanceTests` target contains macro-expanded fixtures for simple,
+large, async throwing, property, and generic protocols plus measured runtime
+recording and verification loops.
+
+Plain `swift test` still compiles the benchmark target as part of package
+validation, but the measured bodies skip unless `MOCKSYN_RUN_BENCHMARKS=1` is
+present.
 
 ## Regression Policy
 

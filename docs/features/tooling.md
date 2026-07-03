@@ -12,7 +12,7 @@ and do not write generated mocks into the project.
 | CLI de inspecao | Supported as optional shell CLI | `tools/mocksyn-inspect.sh` groups local inspection commands. |
 | DocC | Supported | `Sources/MockSyn/MockSyn.docc` documents the public package surface. |
 | Guias de migracao | Supported | Migration guides cover Mockable, Cuckoo, and SwiftyMocky. |
-| Benchmarks | Supported as optional local harness | `tools/benchmark.sh` defines the benchmark plan and run command. |
+| Benchmarks | Supported as optional local harness | `tools/benchmark.sh --run` enables `MockSynPerformanceTests` with `MOCKSYN_RUN_BENCHMARKS=1` and reports SwiftPM elapsed time. |
 
 ## Export de macro expansion
 
@@ -95,5 +95,10 @@ Run benchmark tests when a `MockSynPerformance` test suite exists:
 tools/benchmark.sh --run
 ```
 
-Benchmark fixtures should cover macro expansion size/time and runtime operations
-listed in [Performance](../PERFORMANCE.md).
+The command runs real XCTest performance measurements and macro-expanded
+fixtures from `Tests/MockSynPerformanceTests`. Plain `swift test` compiles the
+target, but measured benchmark bodies skip unless `MOCKSYN_RUN_BENCHMARKS=1` is
+set by the script.
+
+Benchmark fixtures cover macro expansion size/time through SwiftPM build work
+and runtime operations listed in [Performance](../PERFORMANCE.md).

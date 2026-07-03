@@ -48,6 +48,14 @@ let package = Package(
             ]
         ),
 
+        .testTarget(
+            name: "MockSynPerformanceTests",
+            dependencies: ["MockSyn"],
+            swiftSettings: [
+                .define("MOCKSYN_ENABLE"),
+            ]
+        ),
+
         // A test target used to develop the macro implementation.
         .testTarget(
             name: "MockSynMacroTests",

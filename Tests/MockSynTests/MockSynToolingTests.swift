@@ -5,7 +5,7 @@ final class MockSynToolingTests: XCTestCase {
         let expectedHelp = [
             ("tools/mocksyn-inspect.sh", ["MockSyn Inspector", "support-matrix", "macro-expansion", "benchmarks", "docc"]),
             ("tools/export-macro-expansion.sh", ["Export MockSyn Macro Expansion", "swift build", "dump-macro-expansions"]),
-            ("tools/benchmark.sh", ["MockSyn Benchmark", "swift test", "MockSynPerformance"]),
+            ("tools/benchmark.sh", ["MockSyn Benchmark", "swift test", "MockSynPerformance", "MOCKSYN_RUN_BENCHMARKS"]),
         ]
 
         for (relativePath, expectedFragments) in expectedHelp {
@@ -27,6 +27,7 @@ final class MockSynToolingTests: XCTestCase {
             "docs/migration/cuckoo.md": ["Cuckoo", "GeneratedMocks.swift", "@Mocking"],
             "docs/migration/swiftymocky.md": ["SwiftyMocky", "Mock.generated.swift", "@Mocking"],
             "Sources/MockSyn/MockSyn.docc/MockSyn.md": ["# MockSyn", "Macros", "Runtime", "Diagnostics"],
+            "Tests/MockSynPerformanceTests/MockSynPerformanceTests.swift": ["MockSynPerformanceTests", "measure", "MOCKSYN_RUN_BENCHMARKS"],
         ]
 
         for (relativePath, expectedFragments) in expectedDocuments {

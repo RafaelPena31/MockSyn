@@ -14,16 +14,19 @@ Commands:
   --help         Show this help.
 
 Default run command:
-  swift test --filter MockSynPerformance
+  MOCKSYN_RUN_BENCHMARKS=1 /usr/bin/time -p swift test --filter MockSynPerformance
 
 Benchmarks are optional local checks. They do not participate in macro
-generation and are not run during consumer builds.
+generation and are not run during consumer builds. The benchmark tests are
+compiled as package tests, but their measured bodies skip unless
+MOCKSYN_RUN_BENCHMARKS=1 is present.
 EOF
 }
 
 print_plan() {
   cat <<'EOF'
 MockSynPerformance benchmark plan:
+- SwiftPM test build including macro-expanded performance fixtures;
 - macro expansion for 1 method;
 - macro expansion for 20 methods;
 - macro expansion for async throws members;
@@ -44,9 +47,9 @@ case "${1:---print-plan}" in
     ;;
   --run)
     shift
-    exec swift test --filter MockSynPerformance "$@"
+    MOCKSYN_RUN_BENCHMARKS=1 /usr/bin/time -p swift test --filter MockSynPerformance "$@"
     ;;
   *)
-    exec swift test --filter MockSynPerformance "$@"
+    MOCKSYN_RUN_BENCHMARKS=1 /usr/bin/time -p swift test --filter MockSynPerformance "$@"
     ;;
 esac

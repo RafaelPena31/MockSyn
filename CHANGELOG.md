@@ -2,6 +2,24 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.27.0 - 2026-07-03
+
+### Added
+
+- Optional `MockSynPerformanceTests` target with real XCTest performance measurements.
+- Macro-expanded benchmark fixtures covering 1 method, 20 methods, async throwing members, properties, and generic methods.
+- Runtime benchmark measurements for 1,000 generated stubbed calls, 1,000 runtime recordings, and 1,000 verifications.
+- `tools/benchmark.sh --run` now enables benchmarks with `MOCKSYN_RUN_BENCHMARKS=1` and reports SwiftPM elapsed time with `/usr/bin/time -p`.
+
+### Changed
+
+- Benchmark documentation now describes the real opt-in performance suite instead of a future placeholder.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.27.0`.
+- Plain `swift test` compiles the benchmark target but skips measured benchmark bodies unless `MOCKSYN_RUN_BENCHMARKS=1` is set.
+
 ## 0.26.0 - 2026-07-03
 
 ### Added
