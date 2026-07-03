@@ -67,9 +67,10 @@ struct MockSynMacroOptions {
                 options.access = access
             } else if argument.label?.text == "mode" {
                 let modeName = argument.expression.memberAccessName
-                if let modeName, let mode = MockSynGeneratedMode(rawValue: modeName) {
-                    options.mode = mode
+                guard let modeName, let mode = MockSynGeneratedMode(rawValue: modeName) else {
+                    throw MockSynDiagnostic.invalidMode
                 }
+                options.mode = mode
             }
         }
 
@@ -112,7 +113,7 @@ extension DeclModifierListSyntax {
         return .internal
     }
 
-    var containsFinal: Bool {
-        contains { $0.name.tokenKind == .keyword(.final) }
+    var finalModifier: DeclModifierSyntax? {
+        first { $0.name.tokenKind == .keyword(.final) }
     }
 }

@@ -39,6 +39,7 @@ Initial platform support:
 | --- | --- | --- |
 | Protocol mocks | Supported | Supported |
 | Simple protocol inheritance | Supported | Supported |
+| Complex protocol inheritance | Diagnostic | Diagnostic |
 | Non-final class doubles | Supported | Supported |
 | `NSObject` subclasses | Supported as subclass generation | Supported as subclass generation |
 | Objective-C runtime interception | Not supported in core | Not supported in core |
@@ -64,6 +65,7 @@ Initial platform support:
 | XCTest adapter | Supported | Supported |
 | Swift Testing adapter | Optional when available | Supported as optional adapter |
 | Sendable strictness | Best effort | First-class diagnostics |
+| Compile-time fix-its | Supported where actionable | Supported where actionable |
 
 ## Conditional APIs
 

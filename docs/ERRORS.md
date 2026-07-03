@@ -15,6 +15,7 @@ MockSyn has two kinds of errors: compile-time diagnostics from macros and runtim
 | --- | --- |
 | Macro on unsupported declaration | Emit an error explaining valid targets. |
 | Pure Swift final class | Emit an error recommending protocol extraction. |
+| Invalid mode option | Emit an error explaining the supported mode values. |
 | Private member requirement | Emit an error because generated code cannot satisfy inaccessible requirements. |
 | Unsupported operator | Emit an error or warning depending on planned support. |
 | Unsupported protocol inheritance | Emit an error explaining the supported inheritance model. |
@@ -24,8 +25,11 @@ MockSyn has two kinds of errors: compile-time diagnostics from macros and runtim
 Example:
 
 ```text
-MockSyn cannot generate UserServiceMock because UserService is a final class. Extract a protocol and apply @Mocking to the protocol.
+MockSyn cannot mock a pure Swift final class directly. Extract a protocol and apply @Mocking to the protocol.
 ```
+
+Actionable diagnostics may include fix-its. The final-class diagnostic suggests
+removing `final` when subclass generation is acceptable for the annotated type.
 
 ## Runtime Failures
 

@@ -29,9 +29,19 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
         message: "MockSyn access must be one of: internal, public, package, fileprivate, private"
     )
 
+    static let invalidMode = MockSynDiagnostic(
+        id: "invalidMode",
+        message: "MockSyn mode must be one of: strict, relaxed"
+    )
+
     static let publicAccessOnInternalDeclaration = MockSynDiagnostic(
         id: "publicAccessOnInternalDeclaration",
         message: "MockSyn cannot generate a public double for an internal declaration"
+    )
+
+    static let unsupportedProtocolInheritance = MockSynDiagnostic(
+        id: "unsupportedProtocolInheritance",
+        message: "MockSyn supports protocol inheritance only with simple protocol names. Extract complex inherited constraints into a dedicated protocol."
     )
 
     static let unsupportedOperatorRequirement = MockSynDiagnostic(
@@ -48,5 +58,20 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
         self.message = message
         self.diagnosticID = MessageID(domain: "MockSyn", id: id)
         self.severity = .error
+    }
+}
+
+struct MockSynFixItMessage: FixItMessage {
+    let message: String
+    let fixItID: MessageID
+
+    static let removeFinal = MockSynFixItMessage(
+        id: "removeFinal",
+        message: "Remove 'final'"
+    )
+
+    private init(id: String, message: String) {
+        self.message = message
+        self.fixItID = MessageID(domain: "MockSyn", id: id)
     }
 }

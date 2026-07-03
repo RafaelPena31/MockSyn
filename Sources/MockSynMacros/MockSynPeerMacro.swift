@@ -94,6 +94,14 @@ private struct MockSynPeerMacro {
         context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         if let protocolDeclaration = declaration.as(ProtocolDeclSyntax.self) {
+            guard protocolDeclaration.hasOnlySimpleInheritedTypes else {
+                context.diagnose(Diagnostic(
+                    node: Syntax(attribute),
+                    message: MockSynDiagnostic.unsupportedProtocolInheritance
+                ))
+                return []
+            }
+
             let members = MemberGenerator.members(
                 from: protocolDeclaration.memberBlock.members,
                 targetKind: .protocol,
@@ -121,8 +129,22 @@ private struct MockSynPeerMacro {
         }
 
         if let classDeclaration = declaration.as(ClassDeclSyntax.self) {
-            if classDeclaration.modifiers.containsFinal {
-                context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.finalClass))
+            if let finalModifier = classDeclaration.modifiers.finalModifier {
+                let fixIt = FixIt(
+                    message: MockSynFixItMessage.removeFinal,
+                    changes: [
+                        .replaceText(
+                            range: finalModifier.name.position..<finalModifier.name.endPosition,
+                            with: "",
+                            in: Syntax(classDeclaration.root)
+                        )
+                    ]
+                )
+                context.diagnose(Diagnostic(
+                    node: Syntax(attribute),
+                    message: MockSynDiagnostic.finalClass,
+                    fixIts: [fixIt]
+                ))
                 return []
             }
 
@@ -641,6 +663,18 @@ private struct GeneratedSubscript {
 private struct MemberGenerationResult {
     let generatedMembers: [GeneratedMember]
     let isValid: Bool
+}
+
+private extension ProtocolDeclSyntax {
+    var hasOnlySimpleInheritedTypes: Bool {
+        guard let inheritedTypes = inheritanceClause?.inheritedTypes else {
+            return true
+        }
+
+        return inheritedTypes.allSatisfy { inheritedType in
+            inheritedType.type.as(IdentifierTypeSyntax.self) != nil
+        }
+    }
 }
 
 private enum MemberGenerator {

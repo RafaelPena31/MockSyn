@@ -2,6 +2,20 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.11.0 - 2026-07-03
+
+### Added
+
+- Compile-time diagnostic for invalid `mode` macro options.
+- Compile-time diagnostic for complex protocol inheritance that MockSyn cannot expand reliably.
+- Fix-it suggestion for pure Swift `final` classes.
+- Diagnostics feature documentation and support-matrix updates.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.11.0`.
+- The final-class fix-it only removes `final`; protocol extraction remains the recommended design for production types that should stay final.
+
 ## 0.10.0 - 2026-07-03
 
 ### Added

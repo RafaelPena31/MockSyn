@@ -1600,7 +1600,10 @@ final class MockSynMacroTests: XCTestCase {
                     message: "MockSyn cannot mock a pure Swift final class directly. Extract a protocol and apply @Mocking to the protocol.",
                     line: 1,
                     column: 1,
-                    severity: .error
+                    severity: .error,
+                    fixIts: [
+                        FixItSpec(message: "Remove 'final'")
+                    ]
                 )
             ]
         )
@@ -1622,7 +1625,10 @@ final class MockSynMacroTests: XCTestCase {
                     message: "MockSyn cannot mock a pure Swift final class directly. Extract a protocol and apply @Mocking to the protocol.",
                     line: 1,
                     column: 1,
-                    severity: .error
+                    severity: .error,
+                    fixIts: [
+                        FixItSpec(message: "Remove 'final'")
+                    ]
                 )
             ]
         )
@@ -1644,7 +1650,10 @@ final class MockSynMacroTests: XCTestCase {
                     message: "MockSyn cannot mock a pure Swift final class directly. Extract a protocol and apply @Mocking to the protocol.",
                     line: 1,
                     column: 1,
-                    severity: .error
+                    severity: .error,
+                    fixIts: [
+                        FixItSpec(message: "Remove 'final'")
+                    ]
                 )
             ]
         )
@@ -1730,6 +1739,72 @@ final class MockSynMacroTests: XCTestCase {
             diagnostics: [
                 DiagnosticSpec(
                     message: "MockSyn access must be one of: internal, public, package, fileprivate, private",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ]
+        )
+    }
+
+    func testInvalidModeOptionEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Mocking(mode: .lenient)
+            protocol UserService {
+            }
+            """,
+            expandedSource: """
+              protocol UserService {
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "MockSyn mode must be one of: strict, relaxed",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ]
+        )
+    }
+
+    func testInvalidModeLiteralEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Mocking(mode: "strict")
+            protocol UserService {
+            }
+            """,
+            expandedSource: """
+              protocol UserService {
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "MockSyn mode must be one of: strict, relaxed",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ]
+        )
+    }
+
+    func testComplexProtocolInheritanceEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Mocking
+            protocol UserService: Foundation.Sendable {
+            }
+            """,
+            expandedSource: """
+              protocol UserService: Foundation.Sendable {
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "MockSyn supports protocol inheritance only with simple protocol names. Extract complex inherited constraints into a dedicated protocol.",
                     line: 1,
                     column: 1,
                     severity: .error
