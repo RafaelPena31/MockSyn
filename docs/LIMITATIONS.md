@@ -91,10 +91,15 @@ intercept concrete static dispatch on subclasses.
 Subclassable `NSObject` classes are supported through the same subclass generation
 model used for other non-final classes.
 
-Objective-C runtime interception is not part of the core. MockSyn does not swizzle
-methods or intercept Objective-C messages. A future optional module may add
-Objective-C runtime behavior, but it must remain separate from the Swift
-macro-first core.
+Objective-C runtime interception is available through the explicit
+`MockSynObjCInterception` API when `ObjectiveC.runtime` can be imported. It is
+not automatic macro generation: tests must name the class, selector, and
+replacement block, and must keep the returned token alive for the interception
+scope.
+
+Only selectors visible to the Objective-C runtime can be intercepted. Pure Swift
+methods, Swift-only final dispatch, global functions, and arbitrary constructor
+calls are still outside this model.
 
 ## Macro Limits
 

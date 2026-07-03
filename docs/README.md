@@ -28,6 +28,7 @@ This folder contains the required design and feature documentation for MockSyn.
 - [Runtime Internals](features/runtime-internals.md)
 - [Test Integration](features/test-integration.md)
 - [Diagnostics](features/diagnostics.md)
+- [Objective-C Interception](features/objective-c-interception.md)
 - [Tooling](features/tooling.md)
 
 ## Migration Guides

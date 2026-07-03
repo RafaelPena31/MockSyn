@@ -21,6 +21,8 @@ MockSyn has two kinds of errors: compile-time diagnostics from macros and runtim
 | Unsupported class operator | Emit an error recommending a protocol operator requirement. |
 | Invalid access override | Emit an error when requested access is wider than allowed. |
 | Unsupported generic shape | Emit an error describing the unsupported generic construct. |
+| Missing Objective-C instance selector | Throw `MockSynObjCInterceptionError.missingInstanceMethod`. |
+| Missing Objective-C class selector | Throw `MockSynObjCInterceptionError.missingClassMethod`. |
 
 Example:
 

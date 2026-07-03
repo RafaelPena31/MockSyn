@@ -19,7 +19,7 @@ Este documento lista as features planejadas para o MockSyn, agrupadas por bloco 
 | --- | --- |
 | Protocolos | Suporte principal do framework. A macro le o protocolo e gera mock, stub ou spy conformando a ele. |
 | Classes nao-final | Suporte opcional para classes sobrescreviveis, via subclass gerada. |
-| Classes `NSObject` / `@objc dynamic` | Suporte opcional futuro para casos que passam pelo runtime Objective-C. |
+| Classes `NSObject` / `@objc dynamic` | Suporte por subclass gerada quando a classe e sobrescrevivel; interceptacao Objective-C explicita via runtime quando o seletor existe. |
 | Final classes | Nao mockar diretamente; oferecer diagnostico e sugestao de protocolo ou wrapper. |
 | Protocol inheritance | Suporte a protocolos que herdam de outros protocolos, comecando por heranca simples. |
 

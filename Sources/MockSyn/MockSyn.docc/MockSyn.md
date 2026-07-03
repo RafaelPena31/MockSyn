@@ -34,6 +34,10 @@ effectful property getter, generic subscript, synchronous variadic requirements,
 and mirrored class initializer requirements where Swift subclassing supports
 them.
 
+For selectors visible to the Objective-C runtime, `MockSynObjCInterception`
+offers an explicit scoped swizzling API. This is separate from macro-generated
+test doubles and is available only when `ObjectiveC.runtime` can be imported.
+
 ## Diagnostics
 
 MockSyn emits compile-time diagnostics for unsupported declarations, pure Swift

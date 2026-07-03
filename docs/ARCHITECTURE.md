@@ -142,4 +142,6 @@ Macro annotations affect the target where they are written. MockSyn cannot make 
 - No build tool plugin.
 - No external source generator.
 - No generated source directory as the main workflow.
-- No Objective-C runtime dependency in the core package.
+- No automatic Objective-C runtime interception in macro expansion. The
+  explicit Objective-C interception helper stays isolated behind
+  `canImport(ObjectiveC)`.

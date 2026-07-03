@@ -43,7 +43,7 @@ Initial platform support:
 | Non-final class doubles | Supported | Supported |
 | Pure Swift final classes and final class members | Diagnostic with fix-it where actionable | Diagnostic with fix-it where actionable |
 | `NSObject` subclasses | Supported as subclass generation | Supported as subclass generation |
-| Objective-C runtime interception | Not supported in core | Not supported in core |
+| Objective-C runtime interception | Supported via explicit `MockSynObjCInterception` API when `ObjectiveC.runtime` is available | Supported via explicit `MockSynObjCInterception` API when `ObjectiveC.runtime` is available |
 | Sync members | Supported | Supported |
 | `throws` members | Supported | Supported |
 | `async` members | Supported | Supported |

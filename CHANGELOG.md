@@ -2,6 +2,26 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.22.0 - 2026-07-03
+
+### Added
+
+- Optional Objective-C runtime interception API for replacing instance methods with block implementations.
+- Optional Objective-C runtime interception API for replacing class methods with block implementations.
+- Scoped restoration token that restores the original Objective-C implementation on `restore()` or deinit.
+- Errors for missing Objective-C instance and class methods.
+- Runtime tests covering instance method swizzling, class method swizzling, automatic restoration, idempotent restoration, and missing selector errors.
+
+### Changed
+
+- Documentation now distinguishes generated Swift subclass doubles from explicit Objective-C runtime swizzling.
+- Support matrix now marks Objective-C runtime interception as supported only through the explicit `MockSynObjCInterception` API when `ObjectiveC.runtime` is available.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.22.0`.
+- Objective-C interception is not automatic macro generation and does not make pure Swift methods interceptable. It only applies to selectors visible to the Objective-C runtime.
+
 ## 0.21.0 - 2026-07-03
 
 ### Added

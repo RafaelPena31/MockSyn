@@ -12,7 +12,7 @@ for common requirements starts in Block 3.
 | Protocols with simple inheritance | Supported | Generates a final class conforming to the child protocol. |
 | Non-final classes | Supported | Generates a final subclass of the annotated class. |
 | `NSObject` classes | Supported as non-final classes | Generates a final subclass. |
-| `@objc dynamic` members | Type accepted when class is subclassable | Supported members are generated as Swift overrides; runtime interception is not implemented. |
+| `@objc dynamic` members | Type accepted when class is subclassable | Supported members are generated as Swift overrides; explicit runtime interception is available through `MockSynObjCInterception`. |
 | Final classes | Not supported | Emits a compile-time diagnostic. |
 | Final methods/properties on classes | Not supported | Emits a compile-time diagnostic with fix-it. |
 
@@ -107,10 +107,11 @@ let service = LegacyServiceMock()
 #endif
 ```
 
-MockSyn does not use Objective-C runtime method swizzling or message
-interception. The generated type is a Swift subclass. Once a supported member is
-generated as an override, its behavior follows the generated mock/stub/spy rules
-instead of Objective-C runtime interception.
+Generated mocks, stubs, and spies still use Swift subclass generation. Objective-C
+runtime interception is available only when a test explicitly uses
+`MockSynObjCInterception` with a selector and replacement block. Once a supported
+member is generated as an override, its behavior follows the generated
+mock/stub/spy rules instead of Objective-C runtime interception.
 
 ## Final Classes And Final Members
 
@@ -167,7 +168,8 @@ doubles. MockSyn does not generate `open` test doubles.
 
 - Classes must be subclassable. Non-variadic class initializers are mirrored.
 - Final classes are not mocked directly.
-- Objective-C runtime interception is not part of the core macro-only flow.
+- Objective-C runtime interception is explicit runtime API usage, not automatic
+  macro-generated double behavior.
 - Variadic class initializers are diagnosed because Swift cannot forward
   captured variadic arrays to `super.init`.
 - Associated-type protocols generate generic mocks, stubs, and spies when the
