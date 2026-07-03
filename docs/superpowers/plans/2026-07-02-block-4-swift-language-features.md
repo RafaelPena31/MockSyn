@@ -23,9 +23,9 @@ generated MockSyn doubles:
   references.
 - Forward actor attributes whose names end in `Actor`.
 - Delegate spy `inout` calls with `&`.
-- Preserve variadic signatures but keep spy placeholder behavior for variadic
-  methods because Swift does not provide a general splat for forwarding captured
-  variadic arrays.
+- Preserve variadic signatures. Later releases add finite synchronous spy
+  delegation for one variadic parameter because Swift still does not provide a
+  general splat for forwarding captured variadic arrays.
 - Diagnose associated-type protocols instead of inferring bindings.
 
 ## Verification

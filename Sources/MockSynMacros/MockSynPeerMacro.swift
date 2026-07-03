@@ -661,11 +661,73 @@ private struct GeneratedFunction {
     }
 
     private func spyFallback(kind: MockSynPeerMacro.Kind) -> String {
-        guard kind == .spy, !isStatic, !hasVariadicParameter else {
+        guard kind == .spy, !isStatic else {
             return ""
         }
 
+        if hasVariadicParameter {
+            guard effectSpecifiers.hasAsyncEffect == false,
+                  let variadicFallback = variadicSpyFallback else {
+                return ""
+            }
+
+            return ", fallback: {\n\(variadicFallback)\n    }"
+        }
+
         return ", fallback: { \(effectSpecifiers.callPrefix)self.__mockSynWrapped.\(name)(\(callArguments)) }"
+    }
+
+    private var variadicSpyFallback: String? {
+        let variadicParameters = stubParameters.filter(\.isVariadic)
+        guard variadicParameters.count == 1, let variadicParameter = variadicParameters.first else {
+            return nil
+        }
+
+        let cases = (0...8).map { count in
+            let call = "self.__mockSynWrapped.\(name)(\(delegatedCallArguments(variadicParameter: variadicParameter, count: count)))"
+            let statement = returnsValue ? "return \(effectSpecifiers.callPrefix)\(call)" : "\(effectSpecifiers.callPrefix)\(call)"
+            return """
+                  case \(count):
+                    \(statement)
+            """
+        }.joined(separator: "\n")
+
+        return """
+                  switch \(variadicParameter.localName).count {
+        \(cases)
+                  default:
+                    fatalError("MockSyn spy cannot delegate variadic member \(signatureName) with more than 8 values")
+                  }
+        """
+    }
+
+    private func delegatedCallArguments(variadicParameter: GeneratedParameter, count: Int) -> String {
+        stubParameters.flatMap { parameter -> [String] in
+            if parameter.isVariadic {
+                return variadicDelegatedArguments(parameter: parameter, count: count)
+            }
+
+            guard parameter.label != "_" else {
+                return [parameter.localName]
+            }
+
+            return ["\(parameter.label): \(parameter.localName)"]
+        }.joined(separator: ", ")
+    }
+
+    private func variadicDelegatedArguments(parameter: GeneratedParameter, count: Int) -> [String] {
+        guard count > 0 else {
+            return []
+        }
+
+        return (0..<count).map { index in
+            let value = "\(parameter.localName)[\(index)]"
+            if index == 0, parameter.label != "_" {
+                return "\(parameter.label): \(value)"
+            }
+
+            return value
+        }
     }
 
     private var signatureName: String {
@@ -1085,7 +1147,12 @@ private extension FunctionParameterClauseSyntax {
                 .replacingOccurrences(of: "@escaping ", with: "")
             let typedMatcher = parameter.ellipsis == nil ? matcherType : "[\(matcherType)]"
 
-            return GeneratedParameter(label: label, localName: localName, matcherType: typedMatcher)
+            return GeneratedParameter(
+                label: label,
+                localName: localName,
+                matcherType: typedMatcher,
+                isVariadic: parameter.ellipsis != nil
+            )
         }
     }
 
@@ -1120,6 +1187,7 @@ private struct GeneratedParameter {
     let label: String
     let localName: String
     let matcherType: String
+    let isVariadic: Bool
 
     func matcherParameterSource(generatedName: String) -> String {
         let matcherType = matcherType.resolvingSelf(as: generatedName)

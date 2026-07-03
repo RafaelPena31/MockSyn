@@ -13,7 +13,7 @@ inside the macro-only architecture.
 | `where` clauses | Supported | Preserved on generated generic classes and methods. |
 | `Self` requirements | Supported for placeholder behavior | Mocks/stubs compile by using placeholder bodies. |
 | `inout` parameters | Supported | Spies delegate with `&` when the method is otherwise delegatable. |
-| Variadic parameters | Signature supported | Spies do not delegate variadic calls in this block. |
+| Variadic parameters | Signature supported with sync spy delegation | Spies delegate one variadic parameter up to 8 values. Async and multiple-variadic methods remain stub-driven. |
 | Closures | Supported | Closure parameter signatures are preserved. |
 | `@escaping` closures | Supported | Attributes inside parameter clauses are preserved by SwiftSyntax. |
 | Global actors | Supported for actor attributes ending in `Actor` | Type and member actor attributes are forwarded. |
@@ -90,19 +90,31 @@ protocol Counter {
 
 ## Variadics
 
-Variadic signatures are generated, so mocks and stubs can conform to protocols
-that use them.
+Variadic signatures are generated, so mocks, stubs, and spies can conform to
+protocols that use them.
 
 ```swift
-@Mocking
+@Spying
 protocol Scores {
     func total(_ values: Int...) -> Int
 }
 ```
 
 Swift does not provide a general array splat for forwarding a captured variadic
-parameter into another variadic call. Because of that, spies keep placeholder
-behavior for variadic methods in this block.
+parameter into another variadic call. For the common synchronous case with one
+variadic parameter, MockSyn emits finite forwarding cases for 0 through 8 values
+and uses the wrapped implementation as the spy fallback:
+
+```swift
+let spy = ScoresSpy(wrapping: RealScores(), mode: .relaxed)
+
+XCTAssertEqual(spy.total(1, 2, 3), 6)
+try spy.verify.total(.value([1, 2, 3])).once()
+```
+
+Async variadic methods and methods with multiple variadic parameters remain
+stub-driven because there is no general Swift syntax for safe arbitrary
+forwarding from captured arrays.
 
 ## Global Actors
 

@@ -111,6 +111,17 @@ private struct RealMutableCounterService: MutableCounterService {
     }
 }
 
+@Spying
+protocol VariadicSumService {
+    func sum(_ values: Int...) -> Int
+}
+
+private struct RealVariadicSumService: VariadicSumService {
+    func sum(_ values: Int...) -> Int {
+        values.reduce(0, +)
+    }
+}
+
 @Mocking
 class GenericBox<Value> where Value: Sendable {
     func load(_ value: Value) -> Value {
@@ -433,6 +444,20 @@ final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
 
         XCTAssertEqual(value, 2)
         XCTAssertEqual(spy.__mockSyn.kind, .spy)
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedProtocolSpyDelegatesVariadicArguments() throws {
+        #if MOCKSYN_ENABLE
+        let spy = VariadicSumServiceSpy(wrapping: RealVariadicSumService(), mode: .relaxed)
+
+        let result = spy.sum(1, 2, 3)
+
+        XCTAssertEqual(result, 6)
+        try spy.verify.sum(.value([1, 2, 3])).once()
+        try spy.confirmVerified()
         #else
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif

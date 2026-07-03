@@ -2,6 +2,25 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.19.0 - 2026-07-03
+
+### Added
+
+- Spy delegation for synchronous variadic protocol methods with one variadic parameter.
+- Generated fallback forwarding for 0 through 8 variadic values, including unlabeled and labeled variadic parameters.
+- Macro expansion coverage for return-value variadic spies, `Void` variadic spies, async variadic fallback exclusion, and multiple-variadic fallback exclusion.
+- Integration coverage proving variadic spies delegate to the wrapped implementation and still record calls for verification.
+
+### Changed
+
+- Variadic spy methods now use the wrapped implementation as fallback when Swift can represent the forwarded call without array splatting.
+- Documentation and support matrix now describe the supported variadic spy delegation shape and remaining Swift language limits.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.19.0`.
+- Swift has no general array splat syntax for forwarding arbitrary captured variadic arrays. MockSyn emits finite forwarding cases for one synchronous variadic parameter and leaves async or multiple-variadic signatures stub-driven.
+
 ## 0.18.0 - 2026-07-03
 
 ### Added

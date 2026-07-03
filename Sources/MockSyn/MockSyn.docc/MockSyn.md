@@ -30,7 +30,8 @@ where mocks exist through Active Compilation Conditions.
 The runtime records invocations, stores stubs, evaluates matchers, verifies call
 counts, verifies order, reports failures, and supports reset scopes. Generated
 members include sync, throwing, async, async throwing, static, operator,
-effectful property getter, and generic subscript requirements.
+effectful property getter, generic subscript, and synchronous variadic
+requirements.
 
 ## Diagnostics
 

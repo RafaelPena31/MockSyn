@@ -208,6 +208,9 @@ requirements from sharing the same runtime stubs or verification records.
 - Async spy property getters delegate directly after recording; targeted
   property stubs for those async getters are not applied before delegation.
 - Generic subscripts are supported for generated members and generated DSL APIs.
+- Variadic spy delegation supports one synchronous variadic parameter with 0
+  through 8 forwarded values. Async variadic methods and methods with multiple
+  variadic parameters remain stub-driven.
 - Properties without explicit type annotations are ignored by the member
   generator.
 - Verification APIs are available for generated instance and static methods,

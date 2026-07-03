@@ -49,7 +49,7 @@ Este documento lista as features planejadas para o MockSyn, agrupadas por bloco 
 | `where` clauses | Preservacao de restricoes genericas. |
 | `Self` requirements | Suporte ou diagnostico para requisitos que usam `Self`. |
 | `inout` parameters | Parametros que podem ser modificados pela funcao. |
-| Variadic parameters | Parametros como `Int...`. |
+| Variadic parameters | Parametros como `Int...`; spies sincronas delegam um parametro variadico ate 8 valores. |
 | Closures | Parametros e retornos baseados em closures. |
 | `@escaping` closures | Closures armazenaveis ou chamadas depois. |
 | Actors/global actors | Preservacao de isolamento como `@MainActor`. |

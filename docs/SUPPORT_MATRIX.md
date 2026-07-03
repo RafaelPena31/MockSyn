@@ -58,7 +58,7 @@ Initial platform support:
 | `where` clauses | Supported for generated methods/classes | Supported for generated methods/classes |
 | `Self` requirements | Supported for generated methods and direct operator parameters/returns | Supported for generated methods and direct operator parameters/returns |
 | `inout` parameters | Supported | Supported |
-| Variadic parameters | Signature supported | Signature supported |
+| Variadic parameters | Signature supported; sync spies delegate one variadic parameter up to 8 values | Signature supported; sync spies delegate one variadic parameter up to 8 values |
 | Closures / `@escaping` | Supported | Supported |
 | Global actors | Supported where syntax is available | Supported |
 | Associated types | Supported for generated generic protocol doubles | Supported for generated generic protocol doubles |
