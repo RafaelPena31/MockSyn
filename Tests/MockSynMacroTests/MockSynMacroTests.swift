@@ -352,6 +352,385 @@ final class MockSynMacroTests: XCTestCase {
         )
     }
 
+    func testMockingGeneratesSupportedProtocolMembers() {
+        assertExpansion(
+            """
+            @Mocking
+            protocol UserService {
+                init(seed: String)
+                var currentUser: String { get }
+                var token: String? { get set }
+                static var build: String { get }
+                static func makeDefault() -> String
+                func load(id: String) -> String
+                func save(_ user: String) throws
+                func refresh() async
+                func fetch(id: String) async throws -> Int
+                subscript(key: String) -> String? { get set }
+            }
+            """,
+            expandedSource: """
+              protocol UserService {
+                  init(seed: String)
+                  var currentUser: String { get }
+                  var token: String? { get set }
+                  static var build: String { get }
+                  static func makeDefault() -> String
+                  func load(id: String) -> String
+                  func save(_ user: String) throws
+                  func refresh() async
+                  func fetch(id: String) async throws -> Int
+                  subscript(key: String) -> String? { get set }
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class UserServiceMock: UserService {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+
+                internal init(seed: String) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: .strict)
+                }
+
+                internal var currentUser: String {
+                  get {
+                    fatalError("MockSyn member currentUser is not configured")
+                  }
+                }
+
+                internal var token: String? {
+                  get {
+                    fatalError("MockSyn member token is not configured")
+                  }
+                  set {
+                  }
+                }
+
+                internal static var build: String {
+                  get {
+                    fatalError("MockSyn member build is not configured")
+                  }
+                }
+
+                internal static func makeDefault() -> String {
+                  fatalError("MockSyn member makeDefault() is not configured")
+                }
+
+                internal func load(id: String) -> String {
+                  fatalError("MockSyn member load(id:) is not configured")
+                }
+
+                internal func save(_ user: String) throws {
+                }
+
+                internal func refresh() async {
+                }
+
+                internal func fetch(id: String) async throws -> Int {
+                  fatalError("MockSyn member fetch(id:) is not configured")
+                }
+
+                internal subscript(key: String) -> String? {
+                  get {
+                    fatalError("MockSyn member subscript(key:) is not configured")
+                  }
+                  set {
+                  }
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testSpyingGeneratesDelegatingProtocolMembers() {
+        assertExpansion(
+            """
+            @Spying
+            protocol CacheStore {
+                var count: Int { get }
+                var token: String? { get set }
+                func load(id: String) -> String
+                func fail() throws
+                func stream() async -> String
+                func save(_ value: String) async throws
+                subscript(key: String) -> String? { get }
+                subscript(label key: String) -> String? { get }
+            }
+            """,
+            expandedSource: """
+              protocol CacheStore {
+                  var count: Int { get }
+                  var token: String? { get set }
+                  func load(id: String) -> String
+                  func fail() throws
+                  func stream() async -> String
+                  func save(_ value: String) async throws
+                  subscript(key: String) -> String? { get }
+                  subscript(label key: String) -> String? { get }
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class CacheStoreSpy: CacheStore {
+                internal let __mockSyn: MockSynRuntime
+                internal let __mockSynWrapped: any CacheStore
+
+                internal init(wrapping __mockSynWrapped: any CacheStore, mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .spy, mode: mode)
+                  self.__mockSynWrapped = __mockSynWrapped
+                }
+
+                internal var count: Int {
+                  get {
+                    __mockSynWrapped.count
+                  }
+                }
+
+                internal var token: String? {
+                  get {
+                    __mockSynWrapped.token
+                  }
+                  set {
+                  }
+                }
+
+                internal func load(id: String) -> String {
+                  __mockSynWrapped.load(id: id)
+                }
+
+                internal func fail() throws {
+                  try __mockSynWrapped.fail()
+                }
+
+                internal func stream() async -> String {
+                  await __mockSynWrapped.stream()
+                }
+
+                internal func save(_ value: String) async throws {
+                  try await __mockSynWrapped.save(value)
+                }
+
+                internal subscript(key: String) -> String? {
+                  get {
+                    __mockSynWrapped[key]
+                  }
+                }
+
+                internal subscript(label key: String) -> String? {
+                  get {
+                    __mockSynWrapped[label: key]
+                  }
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testSpyingGeneratesDelegatingUnderscoredSubscript() {
+        assertExpansion(
+            """
+            @Spying
+            protocol CacheStore {
+                subscript(_ key: String) -> String? { get }
+            }
+            """,
+            expandedSource: """
+              protocol CacheStore {
+                  subscript(_ key: String) -> String? { get }
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class CacheStoreSpy: CacheStore {
+                internal let __mockSyn: MockSynRuntime
+                internal let __mockSynWrapped: any CacheStore
+
+                internal init(wrapping __mockSynWrapped: any CacheStore, mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .spy, mode: mode)
+                  self.__mockSynWrapped = __mockSynWrapped
+                }
+
+                internal subscript(_ key: String) -> String? {
+                  get {
+                    __mockSynWrapped[key]
+                  }
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testMockingGeneratesSupportedClassMemberOverrides() {
+        assertExpansion(
+            """
+            @Mocking
+            class UserService {
+                var storedToken: String = "real"
+
+                var token: String {
+                    get { "real" }
+                    set { }
+                }
+
+                func load(id: String) -> String {
+                    "real"
+                }
+
+                func save(_ user: String) throws {
+                }
+
+                subscript(key: String) -> String {
+                    "real"
+                }
+            }
+            """,
+            expandedSource: """
+              class UserService {
+                  var storedToken: String = "real"
+
+                  var token: String {
+                      get { "real" }
+                      set { }
+                  }
+
+                  func load(id: String) -> String {
+                      "real"
+                  }
+
+                  func save(_ user: String) throws {
+                  }
+
+                  subscript(key: String) -> String {
+                      "real"
+                  }
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class UserServiceMock: UserService {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                  super.init()
+                }
+
+                internal override var storedToken: String {
+                  get {
+                    fatalError("MockSyn member storedToken is not configured")
+                  }
+                  set {
+                  }
+                }
+
+                internal override var token: String {
+                  get {
+                    fatalError("MockSyn member token is not configured")
+                  }
+                  set {
+                  }
+                }
+
+                internal override func load(id: String) -> String {
+                  fatalError("MockSyn member load(id:) is not configured")
+                }
+
+                internal override func save(_ user: String) throws {
+                }
+
+                internal override subscript(key: String) -> String {
+                  get {
+                    fatalError("MockSyn member subscript(key:) is not configured")
+                  }
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testPropertyWithoutExplicitTypeIsIgnored() {
+        assertExpansion(
+            """
+            @Mocking
+            class UserService {
+                var inferred = "value"
+            }
+            """,
+            expandedSource: """
+              class UserService {
+                  var inferred = "value"
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class UserServiceMock: UserService {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                  super.init()
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testOperatorRequirementEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Mocking
+            protocol ComparableService {
+                static func == (lhs: ComparableService, rhs: ComparableService) -> Bool
+            }
+            """,
+            expandedSource: """
+              protocol ComparableService {
+                  static func == (lhs: ComparableService, rhs: ComparableService) -> Bool
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "MockSyn cannot generate operator requirements yet. Wrap the operator behind a named method.",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ]
+        )
+    }
+
+    func testClassOperatorMemberEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Mocking
+            class ComparableService {
+                static func == (lhs: ComparableService, rhs: ComparableService) -> Bool {
+                    false
+                }
+            }
+            """,
+            expandedSource: """
+              class ComparableService {
+                  static func == (lhs: ComparableService, rhs: ComparableService) -> Bool {
+                      false
+                  }
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "MockSyn cannot generate operator requirements yet. Wrap the operator behind a named method.",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ]
+        )
+    }
+
     func testMacroOnUnsupportedDeclarationEmitsDiagnostic() {
         assertExpansion(
             """

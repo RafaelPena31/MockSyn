@@ -34,6 +34,11 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
         message: "MockSyn cannot generate a public double for an internal declaration"
     )
 
+    static let unsupportedOperatorRequirement = MockSynDiagnostic(
+        id: "unsupportedOperatorRequirement",
+        message: "MockSyn cannot generate operator requirements yet. Wrap the operator behind a named method."
+    )
+
     private init(id: String, message: String) {
         self.message = message
         self.diagnosticID = MessageID(domain: "MockSyn", id: id)

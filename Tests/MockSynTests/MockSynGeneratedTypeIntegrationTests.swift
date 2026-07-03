@@ -48,6 +48,52 @@ class EmptyDynamicLegacyService: NSObject {
     }
 }
 
+@Mocking
+protocol MemberUserService {
+    init(seed: String)
+    var token: String { get set }
+    func refresh()
+    func save(_ value: String) async throws
+    subscript(key: String) -> String? { get set }
+}
+
+@Spying
+protocol MemberCacheStore {
+    var count: Int { get }
+    func load(id: String) -> String
+    func save(_ value: String) async throws
+    subscript(key: String) -> String? { get }
+}
+
+private struct RealMemberCacheStore: MemberCacheStore {
+    let count = 2
+
+    func load(id: String) -> String {
+        "cached-\(id)"
+    }
+
+    func save(_ value: String) async throws {
+    }
+
+    subscript(key: String) -> String? {
+        "value-\(key)"
+    }
+}
+
+@Mocking
+class MemberUserServiceBase {
+    var token: String {
+        get { "real" }
+        set { }
+    }
+
+    func refresh() {
+    }
+
+    func save(_ value: String) throws {
+    }
+}
+
 final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
     func testGeneratedMockCarriesRuntimeMetadata() {
         #if MOCKSYN_ENABLE
@@ -159,7 +205,53 @@ final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
 
         XCTAssertTrue(legacy === mock)
         XCTAssertTrue(object === mock)
-        XCTAssertEqual(mock.ping(), "real")
+        XCTAssertEqual(mock.__mockSyn.kind, .mock)
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedProtocolMockSupportsCallableVoidMembersAndSetters() async throws {
+        #if MOCKSYN_ENABLE
+        let defaultMock = MemberUserServiceMock()
+        let seededMock = MemberUserServiceMock(seed: "seed")
+
+        defaultMock.refresh()
+        defaultMock.token = "token"
+        defaultMock["theme"] = "dark"
+        try await defaultMock.save("value")
+
+        XCTAssertEqual(defaultMock.__mockSyn.kind, .mock)
+        XCTAssertEqual(seededMock.__mockSyn.mode, .strict)
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedProtocolSpyDelegatesReadableMembers() async throws {
+        #if MOCKSYN_ENABLE
+        let spy = MemberCacheStoreSpy(wrapping: RealMemberCacheStore())
+
+        XCTAssertEqual(spy.count, 2)
+        XCTAssertEqual(spy.load(id: "user"), "cached-user")
+        XCTAssertEqual(spy["theme"], "value-theme")
+        try await spy.save("value")
+        XCTAssertEqual(spy.__mockSyn.kind, .spy)
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedClassMockOverridesCallableVoidMembersAndSetters() throws {
+        #if MOCKSYN_ENABLE
+        let mock = MemberUserServiceBaseMock()
+        let base: MemberUserServiceBase = mock
+
+        mock.refresh()
+        mock.token = "token"
+        try mock.save("value")
+
+        XCTAssertTrue(base === mock)
         XCTAssertEqual(mock.__mockSyn.kind, .mock)
         #else
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")

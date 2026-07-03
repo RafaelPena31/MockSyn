@@ -42,9 +42,16 @@ Initial platform support:
 | Non-final class doubles | Supported | Supported |
 | `NSObject` subclasses | Supported as subclass generation | Supported as subclass generation |
 | Objective-C runtime interception | Not supported in core | Not supported in core |
+| Sync members | Supported | Supported |
+| `throws` members | Supported | Supported |
+| `async` members | Supported | Supported |
+| `async throws` members | Supported | Supported |
+| Properties | Supported | Supported |
+| Subscripts | Supported | Supported |
+| Protocol initializers | Supported for mocks/stubs | Supported for mocks/stubs |
+| Operator requirements | Diagnostic | Diagnostic |
 | Stubs | Supported | Supported |
 | Spies | Supported | Supported |
-| async/throws | Supported | Supported |
 | XCTest adapter | Supported | Supported |
 | Swift Testing adapter | Optional when available | Supported as optional adapter |
 | Sendable strictness | Best effort | First-class diagnostics |

@@ -2,6 +2,26 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.3.0 - 2026-07-02
+
+### Added
+
+- Member generation for supported protocol and class declarations.
+- Generated sync, `throws`, `async`, and `async throws` methods.
+- Generated `get` and `get set` properties.
+- Generated callable `Void` methods and setters.
+- Generated protocol static requirements for methods and properties.
+- Generated protocol initializer requirements for mocks and stubs.
+- Generated subscript requirements, including labeled and underscored subscripts.
+- Spy delegation for supported instance methods, readable properties, and readable protocol subscripts.
+- Operator diagnostics for protocol and class members that MockSyn cannot generate yet.
+- Documentation for supported members and current Block 3 runtime behavior.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.3.0`.
+- Block 3 provides compile-time member conformance and placeholder behavior. Stubbing, verification, and invocation recording remain planned for later blocks.
+
 ## 0.2.0 - 2026-07-02
 
 ### Added
