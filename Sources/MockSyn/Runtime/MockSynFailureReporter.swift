@@ -1,19 +1,19 @@
 import Foundation
 
 /// Runtime failure captured before MockSyn throws or crashes.
-public struct MockSynFailure: Equatable, Sendable {
+public struct MockSynFailure: Sendable {
     /// Human-readable failure message.
     public let message: String
 
     /// Source file associated with the runtime reporting point.
-    public let file: String
+    public let file: StaticString
 
     /// Source line associated with the runtime reporting point.
     public let line: UInt
 
     public init(message: String, file: StaticString = #fileID, line: UInt = #line) {
         self.message = message
-        self.file = "\(file)"
+        self.file = file
         self.line = line
     }
 }
@@ -29,6 +29,20 @@ public enum MockSynFailureReporter {
         defer { lock.unlock() }
 
         handler = newHandler
+    }
+
+    /// Adapts runtime failures to an XCTest-style failure closure.
+    public static func useXCTest(_ recordFailure: @escaping @Sendable (String, StaticString, UInt) -> Void) {
+        setHandler { failure in
+            recordFailure(failure.message, failure.file, failure.line)
+        }
+    }
+
+    /// Adapts runtime failures to a Swift Testing-style issue recording closure.
+    public static func useSwiftTesting(_ recordIssue: @escaping @Sendable (String, StaticString, UInt) -> Void) {
+        setHandler { failure in
+            recordIssue(failure.message, failure.file, failure.line)
+        }
     }
 
     /// Restores the default no-op reporter.

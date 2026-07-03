@@ -70,7 +70,9 @@ public final class MockSynRuntime: @unchecked Sendable {
         member: String,
         arguments: [Any],
         returnType: Return.Type,
-        fallback: (() throws -> Return)? = nil
+        fallback: (() throws -> Return)? = nil,
+        file: StaticString = #fileID,
+        line: UInt = #line
     ) throws -> Return {
         recordInvocation(member: member, arguments: arguments)
 
@@ -88,7 +90,7 @@ public final class MockSynRuntime: @unchecked Sendable {
         }
 
         let error = MockSynRuntimeError.missingStub(member: member)
-        MockSynFailureReporter.report(error)
+        report(error, file: file, line: line, details: receivedCallDescription(member: member, arguments: arguments))
         throw error
     }
 
@@ -108,11 +110,17 @@ public final class MockSynRuntime: @unchecked Sendable {
     }
 
     /// Verifies recorded invocations for a generated member and marks matching calls as verified.
-    public func verify(member: String, matchers: [MockSynAnyMatcher], count: MockSynVerificationCount) throws {
+    public func verify(
+        member: String,
+        matchers: [MockSynAnyMatcher],
+        count: MockSynVerificationCount,
+        file: StaticString = #fileID,
+        line: UInt = #line
+    ) throws {
         let matchingInvocations = matchingInvocations(member: member, matchers: matchers)
         guard count.matches(matchingInvocations.count) else {
             let error = MockSynVerificationError.expected(member: member, count: count, actual: matchingInvocations.count)
-            MockSynFailureReporter.report(error)
+            report(error, file: file, line: line, details: recordedCallsDescription(member: member))
             throw error
         }
 
@@ -125,7 +133,7 @@ public final class MockSynRuntime: @unchecked Sendable {
     }
 
     /// Fails when any recorded invocation has not been verified.
-    public func confirmVerified() throws {
+    public func confirmVerified(file: StaticString = #fileID, line: UInt = #line) throws {
         lock.lock()
         let unverifiedMembers = invocations
             .filter { !$0.isVerified }
@@ -134,13 +142,13 @@ public final class MockSynRuntime: @unchecked Sendable {
 
         guard unverifiedMembers.isEmpty else {
             let error = MockSynVerificationError.unverifiedInvocations(unverifiedMembers)
-            MockSynFailureReporter.report(error)
+            report(error, file: file, line: line, details: recordedCallsDescription())
             throw error
         }
     }
 
     /// Fails when configured stubs were never matched by a call.
-    public func checkUnnecessaryStubs() throws {
+    public func checkUnnecessaryStubs(file: StaticString = #fileID, line: UInt = #line) throws {
         lock.lock()
         let unusedMembers = stubs.flatMap { member, rules in
             rules.filter { !$0.wasUsed }.map { _ in member }
@@ -149,7 +157,7 @@ public final class MockSynRuntime: @unchecked Sendable {
 
         guard unusedMembers.isEmpty else {
             let error = MockSynVerificationError.unnecessaryStubs(unusedMembers)
-            MockSynFailureReporter.report(error)
+            report(error, file: file, line: line, details: "Configured stubs: \(unusedMembers.joined(separator: ", "))")
             throw error
         }
     }
@@ -170,10 +178,15 @@ public final class MockSynRuntime: @unchecked Sendable {
         }
     }
 
-    func firstInvocationSequence(member: String, matchers: [MockSynAnyMatcher]) throws -> UInt64 {
+    func firstInvocationSequence(
+        member: String,
+        matchers: [MockSynAnyMatcher],
+        file: StaticString = #fileID,
+        line: UInt = #line
+    ) throws -> UInt64 {
         guard let invocation = matchingInvocations(member: member, matchers: matchers).first else {
             let error = MockSynVerificationError.expected(member: member, count: .atLeast(1), actual: 0)
-            MockSynFailureReporter.report(error)
+            report(error, file: file, line: line, details: recordedCallsDescription(member: member))
             throw error
         }
 
@@ -216,6 +229,38 @@ public final class MockSynRuntime: @unchecked Sendable {
         return nil
     }
 
+    private func report(
+        _ error: some CustomStringConvertible,
+        file: StaticString,
+        line: UInt,
+        details: String
+    ) {
+        let message = "\(error)\n\(details)"
+        MockSynFailureReporter.report(MockSynFailure(message: message, file: file, line: line))
+    }
+
+    private func receivedCallDescription(member: String, arguments: [Any]) -> String {
+        "Received call:\n- \(member)(\(Self.argumentDescription(arguments)))"
+    }
+
+    private func recordedCallsDescription(member: String? = nil) -> String {
+        lock.lock()
+        let snapshot = invocations
+        lock.unlock()
+
+        let matching = snapshot.filter { invocation in
+            member == nil || invocation.member == member
+        }
+
+        guard !matching.isEmpty else {
+            return "Recorded calls: none"
+        }
+
+        return "Recorded calls:\n" + matching
+            .map { "- \($0.member)(\(Self.argumentDescription($0.arguments)))" }
+            .joined(separator: "\n")
+    }
+
     fileprivate static func arguments(_ arguments: [Any], match matchers: [MockSynAnyMatcher]) -> Bool {
         guard arguments.count == matchers.count else {
             return false
@@ -224,6 +269,10 @@ public final class MockSynRuntime: @unchecked Sendable {
         return zip(matchers, arguments).allSatisfy { matcher, argument in
             matcher.matches(argument)
         }
+    }
+
+    private static func argumentDescription(_ arguments: [Any]) -> String {
+        arguments.map { String(describing: $0) }.joined(separator: ", ")
     }
 }
 

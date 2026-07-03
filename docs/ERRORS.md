@@ -44,15 +44,15 @@ MockSyn cannot generate UserServiceMock because UserService is a final class. Ex
 MockSyn uses a pluggable reporter:
 
 ```swift
-MockSynFailureReporter.setHandler { failure in
-    print(failure.message)
+MockSynFailureReporter.useXCTest { message, file, line in
+    XCTFail(message, file: file, line: line)
 }
 ```
 
 Adapters:
 
-- XCTest adapter using `XCTFail`.
-- Swift Testing adapter using `Issue.record` when available.
+- XCTest-style adapter through `MockSynFailureReporter.useXCTest`.
+- Swift Testing-style adapter through `MockSynFailureReporter.useSwiftTesting`.
 - Custom reporter for advanced users.
 
 ## File And Line

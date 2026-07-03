@@ -2,6 +2,22 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.10.0 - 2026-07-03
+
+### Added
+
+- XCTest-style failure adapter through `MockSynFailureReporter.useXCTest`.
+- Swift Testing-style failure adapter through `MockSynFailureReporter.useSwiftTesting`.
+- File/line forwarding on verification count APIs and order verification.
+- Detailed reporter messages for verification failures with recorded calls.
+- Runtime failure reports with message, file, and line.
+- Documentation for the test integration feature block.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.10.0`.
+- Direct framework imports for XCTest/Swift Testing remain intentionally outside the runtime target to keep production targets lightweight.
+
 ## 0.9.0 - 2026-07-03
 
 ### Added

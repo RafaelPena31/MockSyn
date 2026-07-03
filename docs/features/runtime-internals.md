@@ -77,8 +77,8 @@ deterministic without adding work to macro expansion.
 
 ## Current Limits
 
-- Failure reports carry the runtime reporting location. Public APIs with
-  forwarded file/line metadata are handled in the test integration block.
+- Public verification APIs forward file/line metadata. Generated non-throwing
+  production-style calls still report from the generated runtime path.
 - Invocation arguments are boxed as `[Any]`; detailed argument rendering is a
   later diagnostics improvement.
 - The global call-order clock is not reset by per-double reset because order can

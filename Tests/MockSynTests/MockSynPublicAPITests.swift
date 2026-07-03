@@ -38,6 +38,25 @@ private final class FailureRecorder: @unchecked Sendable {
     }
 }
 
+private final class AdapterFailureRecorder: @unchecked Sendable {
+    private let lock = NSRecursiveLock()
+    private var storedFailure: (message: String, file: String, line: UInt)?
+
+    var failure: (message: String, file: String, line: UInt)? {
+        lock.lock()
+        defer { lock.unlock() }
+
+        return storedFailure
+    }
+
+    func record(message: String, file: String, line: UInt) {
+        lock.lock()
+        defer { lock.unlock() }
+
+        storedFailure = (message, file, line)
+    }
+}
+
 final class MockSynPublicAPITests: XCTestCase {
     func testModeDescriptionsMatchMacroGeneratedSource() {
         XCTAssertEqual(MockSynMode.strict.generatedSourceName, ".strict")
@@ -129,10 +148,71 @@ final class MockSynPublicAPITests: XCTestCase {
             try MockSynVerification(runtime: runtime, member: "save(_:)", matchers: []).once()
         )
 
-        XCTAssertEqual(recorder.failures.map(\.message), [
-            "MockSyn member missing() is not configured",
-            "Expected save(_:) to be called exactly 1 time, but it was called 0 times",
-        ])
+        XCTAssertTrue(recorder.failures[0].message.hasPrefix("MockSyn member missing() is not configured"))
+        XCTAssertTrue(recorder.failures[1].message.hasPrefix("Expected save(_:) to be called exactly 1 time"))
+    }
+
+    func testFailureReporterAdaptersForwardMessageFileAndLine() {
+        let xctestRecorder = AdapterFailureRecorder()
+        let swiftTestingRecorder = AdapterFailureRecorder()
+
+        MockSynFailureReporter.useXCTest { message, file, line in
+            xctestRecorder.record(message: message, file: "\(file)", line: line)
+        }
+        MockSynFailureReporter.report(MockSynFailure(message: "xctest failure", file: "XCTestFile.swift", line: 41))
+
+        MockSynFailureReporter.useSwiftTesting { message, file, line in
+            swiftTestingRecorder.record(message: message, file: "\(file)", line: line)
+        }
+        MockSynFailureReporter.report(MockSynFailure(message: "swift testing failure", file: "SwiftTestingFile.swift", line: 42))
+        MockSynFailureReporter.reset()
+
+        XCTAssertEqual(xctestRecorder.failure?.message, "xctest failure")
+        XCTAssertEqual(xctestRecorder.failure?.file, "XCTestFile.swift")
+        XCTAssertEqual(xctestRecorder.failure?.line, 41)
+        XCTAssertEqual(swiftTestingRecorder.failure?.message, "swift testing failure")
+        XCTAssertEqual(swiftTestingRecorder.failure?.file, "SwiftTestingFile.swift")
+        XCTAssertEqual(swiftTestingRecorder.failure?.line, 42)
+
+        let directRecorder = FailureRecorder()
+        MockSynFailureReporter.setHandler { failure in
+            directRecorder.record(failure)
+        }
+        MockSynFailureReporter.report(
+            MockSynRuntimeError.missingStub(member: "direct()"),
+            file: "DirectFile.swift",
+            line: 43
+        )
+        MockSynFailureReporter.reset()
+
+        XCTAssertEqual(directRecorder.failures.last?.message, "MockSyn member direct() is not configured")
+        XCTAssertEqual(directRecorder.failures.last.map { "\($0.file)" }, "DirectFile.swift")
+        XCTAssertEqual(directRecorder.failures.last?.line, 43)
+    }
+
+    func testVerificationFailuresForwardFileLineAndRecordedCalls() {
+        let recorder = FailureRecorder()
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+
+        MockSynFailureReporter.setHandler { failure in
+            recorder.record(failure)
+        }
+        defer { MockSynFailureReporter.reset() }
+
+        runtime.resolveVoid(member: "save(_:)", arguments: ["received"])
+
+        XCTAssertThrowsError(
+            try MockSynVerification(
+                runtime: runtime,
+                member: "save(_:)",
+                matchers: [MockSynMatcher<String>.value("expected").erase()]
+            ).once(file: "ForwardedFile.swift", line: 123)
+        )
+
+        XCTAssertEqual(recorder.failures.last.map { "\($0.file)" }, "ForwardedFile.swift")
+        XCTAssertEqual(recorder.failures.last?.line, 123)
+        XCTAssertTrue(recorder.failures.last?.message.contains("Recorded calls:") == true)
+        XCTAssertTrue(recorder.failures.last?.message.contains("save(_:)(received)") == true)
     }
 
     func testMatchersSupportOptionalCollectionAndComposedRules() {

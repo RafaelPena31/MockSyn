@@ -81,57 +81,63 @@ public struct MockSynVerification {
     }
 
     /// Verifies the call count for this member.
-    public func wasCalled(_ count: MockSynVerificationCount = .atLeast(1)) throws {
-        try runtime.verify(member: member, matchers: matchers, count: count)
+    public func wasCalled(
+        _ count: MockSynVerificationCount = .atLeast(1),
+        file: StaticString = #fileID,
+        line: UInt = #line
+    ) throws {
+        try runtime.verify(member: member, matchers: matchers, count: count, file: file, line: line)
     }
 
     /// Waits until the call count matches, or fails after the timeout expires.
     public func wasCalled(
         _ count: MockSynVerificationCount = .atLeast(1),
         timeout: TimeInterval,
-        pollInterval: TimeInterval = 0.01
+        pollInterval: TimeInterval = 0.01,
+        file: StaticString = #fileID,
+        line: UInt = #line
     ) async throws {
         let deadline = Date().addingTimeInterval(timeout)
 
         while Date() < deadline {
             if count.matches(runtime.invocationCount(member: member, matchers: matchers)) {
-                try wasCalled(count)
+                try wasCalled(count, file: file, line: line)
                 return
             }
 
             try await Task.sleep(nanoseconds: UInt64(max(pollInterval, 0.001) * 1_000_000_000))
         }
 
-        try wasCalled(count)
+        try wasCalled(count, file: file, line: line)
     }
 
     /// Verifies the member was called once.
-    public func once() throws {
-        try wasCalled(.once)
+    public func once(file: StaticString = #fileID, line: UInt = #line) throws {
+        try wasCalled(.once, file: file, line: line)
     }
 
     /// Verifies the member was never called.
-    public func never() throws {
-        try wasCalled(.never)
+    public func never(file: StaticString = #fileID, line: UInt = #line) throws {
+        try wasCalled(.never, file: file, line: line)
     }
 
     /// Verifies the member was called an exact number of times.
-    public func times(_ count: Int) throws {
-        try wasCalled(.times(count))
+    public func times(_ count: Int, file: StaticString = #fileID, line: UInt = #line) throws {
+        try wasCalled(.times(count), file: file, line: line)
     }
 
     /// Verifies the member was called at least the given number of times.
-    public func atLeast(_ count: Int) throws {
-        try wasCalled(.atLeast(count))
+    public func atLeast(_ count: Int, file: StaticString = #fileID, line: UInt = #line) throws {
+        try wasCalled(.atLeast(count), file: file, line: line)
     }
 
     /// Verifies the member was called at most the given number of times.
-    public func atMost(_ count: Int) throws {
-        try wasCalled(.atMost(count))
+    public func atMost(_ count: Int, file: StaticString = #fileID, line: UInt = #line) throws {
+        try wasCalled(.atMost(count), file: file, line: line)
     }
 
-    func firstInvocationSequence() throws -> UInt64 {
-        try runtime.firstInvocationSequence(member: member, matchers: matchers)
+    func firstInvocationSequence(file: StaticString = #fileID, line: UInt = #line) throws -> UInt64 {
+        try runtime.firstInvocationSequence(member: member, matchers: matchers, file: file, line: line)
     }
 
     var memberName: String {
@@ -195,22 +201,30 @@ public struct MockSynSubscriptVerification<Value> {
 /// Cross-mock verification helpers.
 public enum MockSynVerifier {
     /// Verifies that the first matching invocation for each query happened in the provided order.
-    public static func verifyOrder(_ verifications: MockSynVerification...) throws {
-        try verifyOrder(verifications)
+    public static func verifyOrder(
+        _ verifications: MockSynVerification...,
+        file: StaticString = #fileID,
+        line: UInt = #line
+    ) throws {
+        try verifyOrder(verifications, file: file, line: line)
     }
 
     /// Verifies that the first matching invocation for each query happened in the provided order.
-    public static func verifyOrder(_ verifications: [MockSynVerification]) throws {
+    public static func verifyOrder(
+        _ verifications: [MockSynVerification],
+        file: StaticString = #fileID,
+        line: UInt = #line
+    ) throws {
         var previousSequence: UInt64 = 0
         var members: [String] = []
 
         for verification in verifications {
-            let sequence = try verification.firstInvocationSequence()
+            let sequence = try verification.firstInvocationSequence(file: file, line: line)
             members.append(verification.memberName)
 
             guard sequence > previousSequence else {
                 let error = MockSynVerificationError.order(members)
-                MockSynFailureReporter.report(error)
+                MockSynFailureReporter.report(MockSynFailure(message: String(describing: error), file: file, line: line))
                 throw error
             }
 
