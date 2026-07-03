@@ -183,8 +183,10 @@ Common operators use readable aliases such as `equalTo`, `notEqualTo`,
 operators use a deterministic fallback name based on Unicode scalar values, for
 example `<~>` becomes `operator_u3c_u7e_u3e`.
 
-Class operator members are still rejected because MockSyn does not intercept
-concrete static dispatch through subclass generation.
+Class operator members and other concrete `static` class members are rejected
+because MockSyn does not intercept concrete static dispatch through subclass
+generation. Move the static behavior behind a protocol requirement, or use
+`MockSynObjCInterception` when the member is an Objective-C class method.
 
 ## Generic Subscripts
 

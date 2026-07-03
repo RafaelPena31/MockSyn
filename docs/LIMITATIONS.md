@@ -83,8 +83,12 @@ ComparableServiceMock.given.equalTo(lhs: .any, rhs: .any).willReturn(true)
 #endif
 ```
 
-Class operator members still produce a diagnostic because MockSyn does not
-intercept concrete static dispatch on subclasses.
+Class operator members and other concrete static class members produce a
+diagnostic because MockSyn does not intercept concrete static dispatch on
+subclasses.
+
+For pure Swift global functions, wrap the behavior in a protocol. For
+Objective-C class methods, use `MockSynObjCInterception.replaceClassMethod`.
 
 ## Objective-C
 

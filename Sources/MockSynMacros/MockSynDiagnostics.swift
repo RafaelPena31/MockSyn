@@ -49,6 +49,11 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
         message: "MockSyn cannot generate class operator members. Move the operator behind a protocol requirement."
     )
 
+    static let unsupportedConcreteStaticMember = MockSynDiagnostic(
+        id: "unsupportedConcreteStaticMember",
+        message: "MockSyn cannot intercept concrete static class members. Move the static member behind a protocol requirement or use Objective-C interception for Objective-C class methods."
+    )
+
     static let unsupportedRequiredClassSpyInitializer = MockSynDiagnostic(
         id: "unsupportedRequiredClassSpyInitializer",
         message: "MockSyn cannot mirror required class initializers for spies because class spies need a wrapped instance. Prefer a protocol spy or remove the required initializer."

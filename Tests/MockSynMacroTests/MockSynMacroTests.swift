@@ -3032,6 +3032,86 @@ final class MockSynMacroTests: XCTestCase {
         )
     }
 
+    func testMockingGlobalFunctionEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Mocking
+            func makeID() -> String {
+                "real"
+            }
+            """,
+            expandedSource: """
+              func makeID() -> String {
+                  "real"
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "@Mocking can only be applied to protocols or supported classes",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ]
+        )
+    }
+
+    func testMockingClassWithStaticConcreteMethodEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Mocking
+            class IDFactory {
+                static func make() -> String {
+                    "real"
+                }
+            }
+            """,
+            expandedSource: """
+              class IDFactory {
+                  static func make() -> String {
+                      "real"
+                  }
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "MockSyn cannot intercept concrete static class members. Move the static member behind a protocol requirement or use Objective-C interception for Objective-C class methods.",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ]
+        )
+    }
+
+    func testStubbingClassWithStaticConcretePropertyEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Stubbing
+            class Configuration {
+                static var value: String {
+                    "real"
+                }
+            }
+            """,
+            expandedSource: """
+              class Configuration {
+                  static var value: String {
+                      "real"
+                  }
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "MockSyn cannot intercept concrete static class members. Move the static member behind a protocol requirement or use Objective-C interception for Objective-C class methods.",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ]
+        )
+    }
+
     func testStubbingOnUnsupportedDeclarationEmitsMacroSpecificDiagnostic() {
         assertExpansion(
             """

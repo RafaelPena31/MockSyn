@@ -2,6 +2,25 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.23.0 - 2026-07-03
+
+### Added
+
+- Compile-time diagnostic for applying `@Mocking` to global functions.
+- Compile-time diagnostic for concrete `static` methods declared inside annotated classes.
+- Compile-time diagnostic for concrete `static` properties declared inside annotated classes.
+- Macro expansion tests proving MockSyn does not generate misleading static APIs for concrete class members that Swift cannot intercept.
+
+### Changed
+
+- Static member documentation now distinguishes supported protocol static requirements from unsupported concrete static dispatch.
+- Limitation docs now point concrete Objective-C class methods to `MockSynObjCInterception` and pure Swift static/global behavior to protocol extraction.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.23.0`.
+- MockSyn still cannot intercept pure Swift global functions or `SomeConcreteType.staticMethod()` calls. Swift macros do not rewrite call sites or install a JVM-style runtime agent.
+
 ## 0.22.0 - 2026-07-03
 
 ### Added

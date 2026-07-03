@@ -1078,16 +1078,22 @@ private enum MemberGenerator {
 
         for item in memberBlock {
             if let function = item.decl.as(FunctionDeclSyntax.self) {
-                if targetKind == .class,
-                   let finalModifier = function.modifiers.finalModifier {
-                    diagnoseFinalMember(finalModifier, attribute: attribute, context: context)
+                let isNamedMember = function.name.text.isNamedMember
+                guard isNamedMember || targetKind == .protocol else {
+                    context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.unsupportedOperatorRequirement))
                     isValid = false
                     continue
                 }
 
-                let isNamedMember = function.name.text.isNamedMember
-                guard isNamedMember || targetKind == .protocol else {
-                    context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.unsupportedOperatorRequirement))
+                if targetKind == .class, function.modifiers.containsStatic {
+                    context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.unsupportedConcreteStaticMember))
+                    isValid = false
+                    continue
+                }
+
+                if targetKind == .class,
+                   let finalModifier = function.modifiers.finalModifier {
+                    diagnoseFinalMember(finalModifier, attribute: attribute, context: context)
                     isValid = false
                     continue
                 }
@@ -1113,6 +1119,12 @@ private enum MemberGenerator {
             }
 
             if let property = item.decl.as(VariableDeclSyntax.self) {
+                if targetKind == .class, property.modifiers.containsStatic {
+                    context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.unsupportedConcreteStaticMember))
+                    isValid = false
+                    continue
+                }
+
                 if targetKind == .class,
                    let finalModifier = property.modifiers.finalModifier {
                     diagnoseFinalMember(finalModifier, attribute: attribute, context: context)

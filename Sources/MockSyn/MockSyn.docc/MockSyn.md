@@ -42,4 +42,4 @@ test doubles and is available only when `ObjectiveC.runtime` can be imported.
 
 MockSyn emits compile-time diagnostics for unsupported declarations, pure Swift
 final classes, final class members, invalid macro options, unsupported class
-operator members, and visibility issues.
+operator members, concrete static class members, and visibility issues.

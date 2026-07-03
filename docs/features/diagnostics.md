@@ -16,6 +16,7 @@ next step.
 | Invalid `mode` option | Supported | Emits the supported mode values: `.strict` and `.relaxed`. |
 | Visibility widening | Supported | Rejects generated access that is wider than the annotated declaration. |
 | Class operator members | Supported | Emits an error because subclass generation does not intercept concrete static operators. |
+| Concrete static class members | Supported | Emits an error because Swift macros cannot intercept concrete static dispatch. |
 | Variadic class initializers | Supported | Emits an error because Swift cannot forward captured variadic arrays to `super.init`. |
 | Required class initializer on spies | Supported | Emits an error because the exact required initializer cannot receive the wrapped spy instance. |
 
@@ -159,6 +160,27 @@ Diagnostic:
 ```text
 MockSyn cannot generate class operator members. Move the operator behind a protocol requirement.
 ```
+
+Concrete static class members are also rejected:
+
+```swift
+@Mocking
+class IDFactory {
+    static func make() -> String {
+        "real"
+    }
+}
+```
+
+Diagnostic:
+
+```text
+MockSyn cannot intercept concrete static class members. Move the static member behind a protocol requirement or use Objective-C interception for Objective-C class methods.
+```
+
+Protocol static requirements are supported. Concrete `SomeType.staticMethod()`
+calls are not rewritten by Swift macros. If the member is an Objective-C class
+method, use `MockSynObjCInterception.replaceClassMethod`.
 
 Variadic class initializers are rejected because the macro receives the captured
 variadic values as an array, and Swift has no general splat syntax for
