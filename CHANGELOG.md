@@ -2,6 +2,25 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.25.0 - 2026-07-03
+
+### Added
+
+- Return-type-only overload disambiguation for generated instance method DSLs.
+- Return-type-only overload disambiguation for generated static method DSLs.
+- Runtime member keys that include the return type when otherwise identical overload signatures would collide.
+- Stable `Overload2`, `Overload3`, etc. DSL suffixes when complex return types sanitize to the same generated method name.
+- Macro expansion and integration tests proving separate stubbing and verification for `load() -> String` and `load() -> Int` style requirements.
+
+### Changed
+
+- Overload documentation now calls out return-type-only overloads and the generated `methodReturningType` DSL shape.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.25.0`.
+- Non-ambiguous members keep their existing DSL names and runtime keys.
+
 ## 0.24.0 - 2026-07-03
 
 ### Added

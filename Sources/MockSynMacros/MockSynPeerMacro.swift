@@ -257,6 +257,30 @@ private struct Target {
     let spyWrappedTypeName: String?
     let members: [GeneratedMember]
 
+    init(
+        kind: TargetKind,
+        name: String,
+        access: MockSynGeneratedAccess,
+        attributes: String,
+        genericParameterClause: String,
+        genericArgumentClause: String,
+        genericWhereClause: String,
+        associatedTypes: [AssociatedTypeBinding],
+        spyWrappedTypeName: String?,
+        members: [GeneratedMember]
+    ) {
+        self.kind = kind
+        self.name = name
+        self.access = access
+        self.attributes = attributes
+        self.genericParameterClause = genericParameterClause
+        self.genericArgumentClause = genericArgumentClause
+        self.genericWhereClause = genericWhereClause
+        self.associatedTypes = associatedTypes
+        self.spyWrappedTypeName = spyWrappedTypeName
+        self.members = members.mockSynDisambiguatingReturnTypeOverloads()
+    }
+
     var inheritedTypeName: String {
         switch kind {
         case .protocol:
@@ -587,6 +611,101 @@ private enum GeneratedMember {
     }
 }
 
+private extension Array where Element == GeneratedMember {
+    func mockSynDisambiguatingReturnTypeOverloads() -> [GeneratedMember] {
+        let functions = compactMap { member -> GeneratedFunction? in
+            guard case .function(let function) = member else {
+                return nil
+            }
+
+            return function
+        }
+        var returnTypesBySignature: [String: Set<String>] = [:]
+        for function in functions {
+            let key = "\(function.isStatic)|\(function.signatureName)"
+            if var returnTypes = returnTypesBySignature[key] {
+                returnTypes.insert(function.returnType)
+                returnTypesBySignature[key] = returnTypes
+            } else {
+                returnTypesBySignature[key] = [function.returnType]
+            }
+        }
+
+        var duplicateReturnSignatures = Set<String>()
+        for (key, returnTypes) in returnTypesBySignature where returnTypes.count > 1 {
+            duplicateReturnSignatures.insert(key)
+        }
+
+        guard !duplicateReturnSignatures.isEmpty else {
+            return self
+        }
+
+        let disambiguatedMembers: [GeneratedMember] = map { member in
+            guard case .function(let function) = member else {
+                return member
+            }
+
+            let key = "\(function.isStatic)|\(function.signatureName)"
+            guard duplicateReturnSignatures.contains(key) else {
+                return member
+            }
+
+            return .function(function.disambiguatingReturnType())
+        }
+
+        return disambiguatedMembers.mockSynResolvingReturnDslCollisions()
+    }
+
+    private func mockSynResolvingReturnDslCollisions() -> [GeneratedMember] {
+        let functions = compactMap { member -> GeneratedFunction? in
+            guard case .function(let function) = member, function.memberKey != nil else {
+                return nil
+            }
+
+            return function
+        }
+
+        var countsByDslSignature: [String: Int] = [:]
+        for function in functions {
+            let dslCollisionKey = function.dslCollisionKey
+            if let count = countsByDslSignature[dslCollisionKey] {
+                countsByDslSignature[dslCollisionKey] = count + 1
+            } else {
+                countsByDslSignature[dslCollisionKey] = 1
+            }
+        }
+
+        guard countsByDslSignature.values.contains(where: { $0 > 1 }) else {
+            return self
+        }
+
+        var seenByDslSignature: [String: Int] = [:]
+        return map { member in
+            guard case .function(let function) = member, function.memberKey != nil else {
+                return member
+            }
+
+            let dslCollisionKey = function.dslCollisionKey
+            guard countsByDslSignature[dslCollisionKey]! > 1 else {
+                return member
+            }
+
+            let seenCount: Int
+            if let count = seenByDslSignature[dslCollisionKey] {
+                seenCount = count + 1
+            } else {
+                seenCount = 1
+            }
+            seenByDslSignature[dslCollisionKey] = seenCount
+            guard seenCount > 1 else {
+                return member
+            }
+
+            return .function(function.renamingDsl(to: "\(function.dslName)Overload\(seenCount)"))
+        }
+    }
+}
+
 private struct GeneratedInitializer {
     let optionalMark: String
     let parameterClause: String
@@ -655,6 +774,7 @@ private struct GeneratedFunction {
     let attributes: String
     let name: String
     let dslName: String
+    let memberKey: String?
     let genericParameterClause: String
     let parameterClause: String
     let callArguments: String
@@ -667,6 +787,48 @@ private struct GeneratedFunction {
     let hasInoutParameter: Bool
     let hasVariadicParameter: Bool
     let returnsValue: Bool
+
+    func disambiguatingReturnType() -> GeneratedFunction {
+        GeneratedFunction(
+            attributes: attributes,
+            name: name,
+            dslName: "\(dslName)Returning\(returnType.mockSynReturnDslSuffix)",
+            memberKey: "\(signatureName) -> \(returnType)",
+            genericParameterClause: genericParameterClause,
+            parameterClause: parameterClause,
+            callArguments: callArguments,
+            argumentValues: argumentValues,
+            stubParameters: stubParameters,
+            effectSpecifiers: effectSpecifiers,
+            returnClause: returnClause,
+            genericWhereClause: genericWhereClause,
+            isStatic: isStatic,
+            hasInoutParameter: hasInoutParameter,
+            hasVariadicParameter: hasVariadicParameter,
+            returnsValue: returnsValue
+        )
+    }
+
+    func renamingDsl(to dslName: String) -> GeneratedFunction {
+        GeneratedFunction(
+            attributes: attributes,
+            name: name,
+            dslName: dslName,
+            memberKey: memberKey,
+            genericParameterClause: genericParameterClause,
+            parameterClause: parameterClause,
+            callArguments: callArguments,
+            argumentValues: argumentValues,
+            stubParameters: stubParameters,
+            effectSpecifiers: effectSpecifiers,
+            returnClause: returnClause,
+            genericWhereClause: genericWhereClause,
+            isStatic: isStatic,
+            hasInoutParameter: hasInoutParameter,
+            hasVariadicParameter: hasVariadicParameter,
+            returnsValue: returnsValue
+        )
+    }
 
     func source(access: String, kind: MockSynPeerMacro.Kind, target: Target, generatedName: String) -> String {
         let declarationPrefix = target.kind == .class && !isStatic ? "override " : ""
@@ -688,23 +850,23 @@ private struct GeneratedFunction {
 
             if effectSpecifiers.range(of: "throws") != nil {
                 if returnsValue {
-                    return "    return try __mockSynStatic.resolveThrowing(member: \"\(signatureName)\", arguments: \(arguments), returnType: \(returnType).self)"
+                    return "    return try __mockSynStatic.resolveThrowing(member: \"\(memberName)\", arguments: \(arguments), returnType: \(returnType).self)"
                 }
 
-                return "    try __mockSynStatic.resolveVoidThrowing(member: \"\(signatureName)\", arguments: \(arguments))"
+                return "    try __mockSynStatic.resolveVoidThrowing(member: \"\(memberName)\", arguments: \(arguments))"
             }
 
             if returnsValue {
-                return "    return __mockSynStatic.resolve(member: \"\(signatureName)\", arguments: \(arguments), returnType: \(returnType).self)"
+                return "    return __mockSynStatic.resolve(member: \"\(memberName)\", arguments: \(arguments), returnType: \(returnType).self)"
             }
 
-            return "    __mockSynStatic.resolveVoid(member: \"\(signatureName)\", arguments: \(arguments))"
+            return "    __mockSynStatic.resolveVoid(member: \"\(memberName)\", arguments: \(arguments))"
         }
 
         if kind == .spy, !isStatic, hasInoutParameter {
             let callPrefix = effectSpecifiers.callPrefix
             let call = "__mockSynWrapped.\(name)(\(callArguments))"
-            let recording = "    __mockSyn.record(member: \"\(signatureName)\", arguments: [\(argumentValues)])"
+            let recording = "    __mockSyn.record(member: \"\(memberName)\", arguments: [\(argumentValues)])"
             let delegation = returnsValue ? "    return \(callPrefix)\(call)" : "    \(callPrefix)\(call)"
             return "\(recording)\n\(delegation)"
         }
@@ -720,17 +882,17 @@ private struct GeneratedFunction {
 
         if effectSpecifiers.range(of: "throws") != nil {
             if returnsValue {
-                return "    return try __mockSyn.resolveThrowing(member: \"\(signatureName)\", arguments: \(arguments), returnType: \(returnType).self\(fallback))"
+                return "    return try __mockSyn.resolveThrowing(member: \"\(memberName)\", arguments: \(arguments), returnType: \(returnType).self\(fallback))"
             }
 
-            return "    try __mockSyn.resolveVoidThrowing(member: \"\(signatureName)\", arguments: \(arguments)\(fallback))"
+            return "    try __mockSyn.resolveVoidThrowing(member: \"\(memberName)\", arguments: \(arguments)\(fallback))"
         }
 
         if returnsValue {
-            return "    return __mockSyn.resolve(member: \"\(signatureName)\", arguments: \(arguments), returnType: \(returnType).self\(fallback))"
+            return "    return __mockSyn.resolve(member: \"\(memberName)\", arguments: \(arguments), returnType: \(returnType).self\(fallback))"
         }
 
-        return "    __mockSyn.resolveVoid(member: \"\(signatureName)\", arguments: \(arguments)\(fallback))"
+        return "    __mockSyn.resolveVoid(member: \"\(memberName)\", arguments: \(arguments)\(fallback))"
     }
 
     private func spyFallback(kind: MockSynPeerMacro.Kind) -> String {
@@ -803,12 +965,23 @@ private struct GeneratedFunction {
         }
     }
 
-    private var signatureName: String {
+    var signatureName: String {
         "\(name)\(parameterClause.signatureSuffix)"
     }
 
-    private var returnType: String {
+    var returnType: String {
         returnClause.returnTypeName
+    }
+
+    var dslCollisionKey: String {
+        let parameters = stubParameters
+            .map { "\($0.label):\($0.localName):\($0.matcherType)" }
+            .joined(separator: "|")
+        return "\(isStatic)|\(dslName)|\(genericParameterClause)|\(parameters)|\(genericWhereClause)"
+    }
+
+    private var memberName: String {
+        memberKey ?? signatureName
     }
 
     func stubbingSource(access: String, generatedName: String) -> String? {
@@ -835,7 +1008,7 @@ private struct GeneratedFunction {
 
         return """
             \(access) func \(dslName)\(genericParameterClause)\(stubParameterClause) -> \(stubBuilderType)\(genericWhereClause) {
-              \(stubBuilderType)(runtime: __mockSyn, member: "\(signatureName)", matchers: \(matchers))
+              \(stubBuilderType)(runtime: __mockSyn, member: "\(memberName)", matchers: \(matchers))
             }
         """
     }
@@ -863,7 +1036,7 @@ private struct GeneratedFunction {
 
         return """
             \(access) func \(dslName)\(genericParameterClause)\(stubParameterClause) -> MockSynVerification\(genericWhereClause) {
-              MockSynVerification(runtime: __mockSyn, member: "\(signatureName)", matchers: \(matchers))
+              MockSynVerification(runtime: __mockSyn, member: "\(memberName)", matchers: \(matchers))
             }
         """
     }
@@ -1102,6 +1275,7 @@ private enum MemberGenerator {
                     attributes: function.attributes.mockSynForwardedAttributes,
                     name: function.name.text,
                     dslName: isNamedMember ? function.name.text : function.name.text.mockSynOperatorDslName,
+                    memberKey: nil,
                     genericParameterClause: function.genericParameterClause?.description.trimmedSource ?? "",
                     parameterClause: function.signature.parameterClause.description.trimmedSource,
                     callArguments: function.signature.parameterClause.callArguments,
@@ -1447,6 +1621,25 @@ private extension String {
 
     func resolvingSelf(as generatedName: String) -> String {
         self == "Self" ? generatedName : self
+    }
+
+    var mockSynReturnDslSuffix: String {
+        let tokens = trimmedSource
+            .replacingOccurrences(of: "?", with: " Optional")
+            .replacingOccurrences(of: "!", with: " Optional")
+            .split { character in
+                !character.isLetter && !character.isNumber
+            }
+            .map(String.init)
+
+        let suffix = tokens
+            .map { token in
+                let first = token.first!
+                return first.uppercased() + token.dropFirst()
+            }
+            .joined()
+
+        return suffix
     }
 
     func resolvingParameterSelf(as generatedName: String) -> String {

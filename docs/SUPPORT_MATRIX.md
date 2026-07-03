@@ -51,6 +51,7 @@ Initial platform support:
 | Properties | Supported, including `get async`, `get throws`, and `get async throws` | Supported, including `get async`, `get throws`, and `get async throws` |
 | Subscripts | Supported, including generic subscripts | Supported, including generic subscripts |
 | Static protocol members | Supported with type-level stubbing/verification | Supported with type-level stubbing/verification |
+| Return-type-only overloads | Supported with return-disambiguated DSL names and runtime keys | Supported with return-disambiguated DSL names and runtime keys |
 | Concrete static class members | Diagnostic; use protocol static requirements or Objective-C interception for Objective-C class methods | Diagnostic; use protocol static requirements or Objective-C interception for Objective-C class methods |
 | Global functions | Diagnostic; wrap behind a protocol or explicit test seam | Diagnostic; wrap behind a protocol or explicit test seam |
 | Constructor seams | Supported with zero, one, and two argument factories | Supported with zero, one, and two argument factories |

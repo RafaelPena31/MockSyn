@@ -19,7 +19,7 @@ adds richer matchers and captors that plug into those generated member APIs.
 | Static requirements | Supported for protocols | Not a class feature in this block | Static methods/properties are generated for protocol conformance. |
 | Subscripts | Supported | Supported as overrides | Protocol spies delegate readable subscripts. Generic parameter and `where` clauses are preserved. |
 | Initializers | Supported for protocol mocks/stubs | Mirrored for non-variadic class initializers | Required class initializers are supported for mocks/stubs. Class spies diagnose required initializers. |
-| Overloads | Supported when signatures are valid Swift | Supported when overridable | Overload resolution is left to Swift. |
+| Overloads | Supported when signatures are valid Swift | Supported when overridable | Return-type-only overloads generate return-disambiguated DSL names like `loadReturningString()`. |
 | Operators | Supported for protocol requirements | Diagnostic | Protocol operators generate real static operators and named DSL aliases. |
 
 ## Runtime Behavior
@@ -46,6 +46,42 @@ service.load(id: "1")
 `Void` methods and setters are callable because they do not need a return value.
 Unstubbed non-void getters, subscripts, and methods fail in strict mode with a
 clear runtime message.
+
+## Return-Type-Only Overloads
+
+Swift can express overloads that differ only by return type when call-site
+context disambiguates the result:
+
+```swift
+@Mocking
+protocol Loader {
+    func load() -> String
+    func load() -> Int
+}
+```
+
+MockSyn keeps the protocol-conforming methods as `load()`, but generated
+stubbing and verification APIs use the return type in the DSL name:
+
+```swift
+#if MOCKSYN_ENABLE
+let loader = LoaderMock()
+loader.given.loadReturningString().willReturn("ready")
+loader.given.loadReturningInt().willReturn(42)
+
+let text: String = loader.load()
+let count: Int = loader.load()
+
+try loader.verify.loadReturningString().once()
+try loader.verify.loadReturningInt().once()
+#endif
+```
+
+The runtime key also includes the return type for those ambiguous signatures, so
+stubs and invocations for different return types do not share the same bucket.
+If two complex return types sanitize to the same DSL suffix, MockSyn keeps the
+first generated name and appends `Overload2`, `Overload3`, and so on to the
+later colliding DSL methods while preserving distinct runtime keys.
 
 ## Effectful Property Getters
 

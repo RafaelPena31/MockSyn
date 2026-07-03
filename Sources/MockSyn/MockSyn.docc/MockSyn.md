@@ -31,8 +31,8 @@ The runtime records invocations, stores stubs, evaluates matchers, verifies call
 counts, verifies order, reports failures, and supports reset scopes. Generated
 members include sync, throwing, async, async throwing, static, operator,
 effectful property getter, generic subscript, synchronous variadic requirements,
-and mirrored class initializer requirements where Swift subclassing supports
-them.
+return-type-only overload requirements, and mirrored class initializer
+requirements where Swift subclassing supports them.
 
 For selectors visible to the Objective-C runtime, `MockSynObjCInterception`
 offers an explicit scoped swizzling API. This is separate from macro-generated
