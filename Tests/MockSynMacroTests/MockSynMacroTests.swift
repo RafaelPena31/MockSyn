@@ -416,6 +416,10 @@ final class MockSynMacroTests: XCTestCase {
                   try __mockSyn.checkUnnecessaryStubs()
                 }
 
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
+                }
+
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
@@ -622,6 +626,10 @@ final class MockSynMacroTests: XCTestCase {
                   try __mockSyn.checkUnnecessaryStubs()
                 }
 
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
+                }
+
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
@@ -822,6 +830,10 @@ final class MockSynMacroTests: XCTestCase {
                   try __mockSyn.checkUnnecessaryStubs()
                 }
 
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
+                }
+
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
@@ -899,6 +911,10 @@ final class MockSynMacroTests: XCTestCase {
 
                 internal func checkUnnecessaryStubs() throws {
                   try __mockSyn.checkUnnecessaryStubs()
+                }
+
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
                 }
 
                 internal struct __MockSynGiven {
@@ -1034,6 +1050,10 @@ final class MockSynMacroTests: XCTestCase {
                   try __mockSyn.checkUnnecessaryStubs()
                 }
 
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
+                }
+
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
@@ -1128,6 +1148,10 @@ final class MockSynMacroTests: XCTestCase {
                   try __mockSyn.checkUnnecessaryStubs()
                 }
 
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
+                }
+
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
@@ -1196,6 +1220,10 @@ final class MockSynMacroTests: XCTestCase {
 
                 internal func checkUnnecessaryStubs() throws {
                   try __mockSyn.checkUnnecessaryStubs()
+                }
+
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
                 }
 
                 internal struct __MockSynGiven {
@@ -1320,6 +1348,10 @@ final class MockSynMacroTests: XCTestCase {
 
                 internal func checkUnnecessaryStubs() throws {
                   try __mockSyn.checkUnnecessaryStubs()
+                }
+
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
                 }
 
                 internal struct __MockSynGiven {

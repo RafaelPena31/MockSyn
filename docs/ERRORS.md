@@ -44,8 +44,8 @@ MockSyn cannot generate UserServiceMock because UserService is a final class. Ex
 MockSyn uses a pluggable reporter:
 
 ```swift
-public protocol FailureReporter {
-    func recordFailure(_ failure: MockSynFailure)
+MockSynFailureReporter.setHandler { failure in
+    print(failure.message)
 }
 ```
 

@@ -109,7 +109,7 @@ User protocol/class declaration
 | `StubRegistry` | Stores configured return values, thrown errors, and closures. |
 | `Matcher` | Compares expected arguments with received arguments. |
 | `ArgumentCaptor` | Captures arguments for later assertions. |
-| `FailureReporter` | Reports test failures through XCTest, Swift Testing, or a custom reporter. |
+| `MockSynFailureReporter` | Reports runtime failures through a custom handler; XCTest and Swift Testing adapters build on it later. |
 | `DefaultValueRegistry` | Provides default values for relaxed mocks. |
 | `MockSynLock` | Internal synchronization abstraction. |
 

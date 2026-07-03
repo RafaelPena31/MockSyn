@@ -197,9 +197,10 @@ Strict mode fails when an unstubbed non-void call is executed. Relaxed mode retu
 ## Global APIs
 
 ```swift
-MockSyn.confirmVerified(service)
-MockSyn.checkUnnecessaryStubs(service)
-MockSyn.reset(service)
+try service.confirmVerified()
+try service.checkUnnecessaryStubs()
+service.reset()
+service.reset(.invocations)
 ```
 
 ## Async Timeout Verify

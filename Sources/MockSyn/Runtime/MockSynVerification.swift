@@ -209,7 +209,9 @@ public enum MockSynVerifier {
             members.append(verification.memberName)
 
             guard sequence > previousSequence else {
-                throw MockSynVerificationError.order(members)
+                let error = MockSynVerificationError.order(members)
+                MockSynFailureReporter.report(error)
+                throw error
             }
 
             previousSequence = sequence

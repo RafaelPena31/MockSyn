@@ -19,6 +19,25 @@ private final class ManualFakeService: MockSynFake {
     }
 }
 
+private final class FailureRecorder: @unchecked Sendable {
+    private let lock = NSRecursiveLock()
+    private var storedFailures: [MockSynFailure] = []
+
+    var failures: [MockSynFailure] {
+        lock.lock()
+        defer { lock.unlock() }
+
+        return storedFailures
+    }
+
+    func record(_ failure: MockSynFailure) {
+        lock.lock()
+        defer { lock.unlock() }
+
+        storedFailures.append(failure)
+    }
+}
+
 final class MockSynPublicAPITests: XCTestCase {
     func testModeDescriptionsMatchMacroGeneratedSource() {
         XCTAssertEqual(MockSynMode.strict.generatedSourceName, ".strict")
@@ -58,7 +77,62 @@ final class MockSynPublicAPITests: XCTestCase {
 
         try fake.verifyLoad(id: .value("42")).once()
         try fake.mockSynConfirmVerified()
+        fake.mockSynReset(.invocations)
+        try fake.verifyLoad(id: .any).never()
         try fake.mockSynCheckUnnecessaryStubs()
+    }
+
+    func testRuntimeResetClearsInvocationsAndStubsByScope() throws {
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+
+        MockSynStubBuilder<String>(
+            runtime: runtime,
+            member: "title()"
+        ).willReturn("stubbed")
+
+        XCTAssertEqual(runtime.resolve(member: "title()", arguments: [], returnType: String.self), "stubbed")
+        try MockSynVerification(runtime: runtime, member: "title()", matchers: []).once()
+
+        runtime.reset(.invocations)
+
+        try MockSynVerification(runtime: runtime, member: "title()", matchers: []).never()
+        XCTAssertEqual(runtime.resolve(member: "title()", arguments: [], returnType: String.self), "stubbed")
+
+        runtime.reset(.stubs)
+
+        XCTAssertEqual(
+            runtime.resolve(member: "title()", arguments: [], returnType: String.self, fallback: { "fallback" }),
+            "fallback"
+        )
+
+        runtime.resolveVoid(member: "refresh()", arguments: [])
+        runtime.reset()
+
+        try MockSynVerification(runtime: runtime, member: "refresh()", matchers: []).never()
+        try runtime.checkUnnecessaryStubs()
+    }
+
+    func testFailureReporterReceivesRuntimeFailures() {
+        let recorder = FailureRecorder()
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+
+        MockSynFailureReporter.setHandler { failure in
+            recorder.record(failure)
+        }
+        defer { MockSynFailureReporter.reset() }
+
+        XCTAssertThrowsError(
+            try runtime.resolveThrowing(member: "missing()", arguments: [], returnType: String.self)
+        )
+
+        XCTAssertThrowsError(
+            try MockSynVerification(runtime: runtime, member: "save(_:)", matchers: []).once()
+        )
+
+        XCTAssertEqual(recorder.failures.map(\.message), [
+            "MockSyn member missing() is not configured",
+            "Expected save(_:) to be called exactly 1 time, but it was called 0 times",
+        ])
     }
 
     func testMatchersSupportOptionalCollectionAndComposedRules() {

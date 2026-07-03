@@ -25,6 +25,7 @@ This folder contains the required design and feature documentation for MockSyn.
 - [Verification](features/verification.md)
 - [Matchers And Captors](features/matchers-and-captors.md)
 - [Test Double Modes](features/test-double-modes.md)
+- [Runtime Internals](features/runtime-internals.md)
 
 ## Non-Negotiable Product Decisions
 

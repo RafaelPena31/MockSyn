@@ -291,6 +291,10 @@ private struct Target {
             try __mockSyn.checkUnnecessaryStubs()
           }
 
+          \(access) func reset(_ scope: MockSynResetScope = .all) {
+            __mockSyn.reset(scope)
+          }
+
           \(access) struct __MockSynGiven {
             \(access) let __mockSyn: MockSynRuntime
 

@@ -24,4 +24,9 @@ public extension MockSynFake {
     func mockSynCheckUnnecessaryStubs() throws {
         try __mockSyn.checkUnnecessaryStubs()
     }
+
+    /// Clears recorded calls, stubs, or both from this fake's runtime.
+    func mockSynReset(_ scope: MockSynResetScope = .all) {
+        __mockSyn.reset(scope)
+    }
 }

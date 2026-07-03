@@ -658,4 +658,27 @@ final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif
     }
+
+    func testGeneratedDoubleResetClearsRecordedCallsAndStubs() throws {
+        #if MOCKSYN_ENABLE
+        let mock = StubbedUserServiceMock(mode: .relaxed)
+
+        mock.given.name(id: .any).willReturn("stubbed")
+
+        XCTAssertEqual(mock.name(id: "42"), "stubbed")
+        try mock.verify.name(id: .value("42")).once()
+
+        mock.reset(.invocations)
+
+        try mock.verify.name(id: .any).never()
+        XCTAssertEqual(mock.name(id: "42"), "stubbed")
+
+        mock.reset()
+
+        XCTAssertEqual(mock.name(id: "42"), "")
+        try mock.verify.name(id: .any).once()
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
 }

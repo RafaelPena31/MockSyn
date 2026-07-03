@@ -2,6 +2,23 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.9.0 - 2026-07-03
+
+### Added
+
+- Public `MockSynResetScope` with `.invocations`, `.stubs`, and `.all`.
+- `MockSynRuntime.reset(_:)` for clearing calls, stubs, or both.
+- Generated `reset(_:)` API on mocks, stubs, and spies that have generated member DSLs.
+- `mockSynReset(_:)` for hand-written fakes adopting `MockSynFake`.
+- `MockSynFailure` and `MockSynFailureReporter` as the runtime failure reporting channel.
+- Failure reporting integration for missing stubs, verification count failures, unverified calls, unnecessary stubs, and order failures.
+- Documentation for the runtime internals feature block.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.9.0`.
+- XCTest and Swift Testing adapters are still planned for the test integration block.
+
 ## 0.8.0 - 2026-07-03
 
 ### Added

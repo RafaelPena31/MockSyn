@@ -13,6 +13,18 @@ public enum MockSynRuntimeError: Error, Equatable, CustomStringConvertible {
     }
 }
 
+/// Runtime state sections that can be cleared from a test double.
+public enum MockSynResetScope: Equatable, Sendable {
+    /// Clears recorded invocations while keeping configured stubs.
+    case invocations
+
+    /// Clears configured stubs while keeping recorded invocations.
+    case stubs
+
+    /// Clears recorded invocations and configured stubs.
+    case all
+}
+
 /// Runtime state shared by generated MockSyn test doubles.
 public final class MockSynRuntime: @unchecked Sendable {
     /// The generated double kind.
@@ -75,7 +87,9 @@ public final class MockSynRuntime: @unchecked Sendable {
             return defaultValue
         }
 
-        throw MockSynRuntimeError.missingStub(member: member)
+        let error = MockSynRuntimeError.missingStub(member: member)
+        MockSynFailureReporter.report(error)
+        throw error
     }
 
     /// Resolves a non-throwing generated void member call.
@@ -97,7 +111,9 @@ public final class MockSynRuntime: @unchecked Sendable {
     public func verify(member: String, matchers: [MockSynAnyMatcher], count: MockSynVerificationCount) throws {
         let matchingInvocations = matchingInvocations(member: member, matchers: matchers)
         guard count.matches(matchingInvocations.count) else {
-            throw MockSynVerificationError.expected(member: member, count: count, actual: matchingInvocations.count)
+            let error = MockSynVerificationError.expected(member: member, count: count, actual: matchingInvocations.count)
+            MockSynFailureReporter.report(error)
+            throw error
         }
 
         lock.lock()
@@ -117,7 +133,9 @@ public final class MockSynRuntime: @unchecked Sendable {
         lock.unlock()
 
         guard unverifiedMembers.isEmpty else {
-            throw MockSynVerificationError.unverifiedInvocations(unverifiedMembers)
+            let error = MockSynVerificationError.unverifiedInvocations(unverifiedMembers)
+            MockSynFailureReporter.report(error)
+            throw error
         }
     }
 
@@ -130,13 +148,33 @@ public final class MockSynRuntime: @unchecked Sendable {
         lock.unlock()
 
         guard unusedMembers.isEmpty else {
-            throw MockSynVerificationError.unnecessaryStubs(unusedMembers)
+            let error = MockSynVerificationError.unnecessaryStubs(unusedMembers)
+            MockSynFailureReporter.report(error)
+            throw error
+        }
+    }
+
+    /// Clears recorded invocations, configured stubs, or both.
+    public func reset(_ scope: MockSynResetScope = .all) {
+        lock.lock()
+        defer { lock.unlock() }
+
+        switch scope {
+        case .invocations:
+            invocations.removeAll(keepingCapacity: true)
+        case .stubs:
+            stubs.removeAll(keepingCapacity: true)
+        case .all:
+            invocations.removeAll(keepingCapacity: true)
+            stubs.removeAll(keepingCapacity: true)
         }
     }
 
     func firstInvocationSequence(member: String, matchers: [MockSynAnyMatcher]) throws -> UInt64 {
         guard let invocation = matchingInvocations(member: member, matchers: matchers).first else {
-            throw MockSynVerificationError.expected(member: member, count: .atLeast(1), actual: 0)
+            let error = MockSynVerificationError.expected(member: member, count: .atLeast(1), actual: 0)
+            MockSynFailureReporter.report(error)
+            throw error
         }
 
         return invocation.sequence
