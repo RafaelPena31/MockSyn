@@ -24,6 +24,7 @@ This folder contains the required design and feature documentation for MockSyn.
 - [Stubbing](features/stubbing.md)
 - [Verification](features/verification.md)
 - [Matchers And Captors](features/matchers-and-captors.md)
+- [Test Double Modes](features/test-double-modes.md)
 
 ## Non-Negotiable Product Decisions
 

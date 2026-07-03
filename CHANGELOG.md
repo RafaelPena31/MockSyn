@@ -2,6 +2,24 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.8.0 - 2026-07-03
+
+### Added
+
+- Explicit test double mode documentation for strict mocks, relaxed mocks, stubs, spies, partial spies, and hand-written fakes.
+- `MockSynDoubleKind.fake` for manual fakes that reuse MockSyn runtime state.
+- `MockSynFake` helper protocol with recording, verification, `confirmVerified`, and unnecessary-stub checks for hand-written fakes.
+- Integration tests proving generated mocks, stubs, and spies can override mode per instance.
+
+### Changed
+
+- Strict stubs now respect `mode: .strict` for non-void unstubbed calls instead of always returning relaxed defaults because the double kind is `.stub`.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.8.0`.
+- Testing-framework failure adapters, static member stubbing/verification, and associated-type binding remain planned for later blocks.
+
 ## 0.7.0 - 2026-07-03
 
 ### Added

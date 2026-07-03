@@ -8,4 +8,7 @@ public enum MockSynDoubleKind: Equatable, Sendable {
 
     /// A spy records calls and can delegate to a wrapped implementation.
     case spy
+
+    /// A hand-written fake that reuses MockSyn runtime helpers.
+    case fake
 }

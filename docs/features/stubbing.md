@@ -17,7 +17,7 @@ without a source generator or generated file cache.
 | Property setter stubs | Supported | `mock.given.name.set(.any).willRun { value in ... }`. |
 | Subscript getter stubs | Supported | `mock.given.subscript(key: .value("theme")).get.willReturn("dark")`. |
 | Subscript setter stubs | Supported | Setter closures receive the assigned value. |
-| Relaxed defaults | Supported | Stubs default to relaxed mode. Relaxed mocks can also use built-in defaults. |
+| Relaxed defaults | Supported | Stubs default to relaxed mode. Relaxed mocks can also use built-in defaults. Strict stubs require explicit stubs for non-void calls. |
 | Custom default values | Supported | Use `MockSynDefaultValueRegistry.register(_:for:)`. |
 
 ## When To Use
@@ -112,7 +112,8 @@ settings.given.subscript(label: .value("theme")).get.willReturn("dark")
 ## Relaxed Defaults
 
 Stubs default to `.relaxed`, so unstubbed supported return types can return a
-default value:
+default value. A stub constructed with `mode: .strict` requires explicit stubs
+for non-void calls.
 
 ```swift
 @Stubbing

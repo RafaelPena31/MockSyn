@@ -193,11 +193,12 @@ MockSyn cannot generate a public double for an internal declaration
 
 ## Current Limitations
 
-Blocks 1 through 7 implement the macro surface, option parsing, generated type
+Blocks 1 through 8 implement the macro surface, option parsing, generated type
 declarations, supported declaration types, supported member generation, and
 common Swift language features used by those members, plus runtime stubbing for
 instance methods, properties, subscripts, verification for recorded calls,
-optional and collection matchers, matcher composition, and captors.
+optional and collection matchers, matcher composition, captors, explicit
+test-double modes, partial spies, and helper APIs for hand-written fakes.
 
 Testing-framework failure adapters, generic associated-type binding, static
 member stubbing, and complex inherited requirements are covered by later feature

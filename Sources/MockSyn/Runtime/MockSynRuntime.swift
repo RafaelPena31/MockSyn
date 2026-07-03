@@ -71,7 +71,7 @@ public final class MockSynRuntime: @unchecked Sendable {
         }
 
         if let defaultValue = MockSynDefaultValueRegistry.value(for: Return.self),
-           Return.self == Void.self || mode == .relaxed || kind == .stub {
+           Return.self == Void.self || mode == .relaxed {
             return defaultValue
         }
 

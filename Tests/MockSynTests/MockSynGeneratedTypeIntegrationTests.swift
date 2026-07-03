@@ -642,4 +642,20 @@ final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif
     }
+
+    func testGeneratedDoubleModesCanBeConfiguredPerInstance() {
+        #if MOCKSYN_ENABLE
+        let relaxedMock = StubbedUserServiceMock(mode: .relaxed)
+        let strictStub = RelaxedDefaultsServiceStub(mode: .strict)
+        let relaxedSpy = MemberCacheStoreSpy(wrapping: RealMemberCacheStore(), mode: .relaxed)
+
+        XCTAssertEqual(relaxedMock.__mockSyn.mode, .relaxed)
+        XCTAssertEqual(strictStub.__mockSyn.mode, .strict)
+        XCTAssertEqual(relaxedSpy.__mockSyn.mode, .relaxed)
+        XCTAssertEqual(relaxedMock.name(id: "missing"), "")
+        XCTAssertEqual(relaxedSpy.load(id: "user"), "cached-user")
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
 }

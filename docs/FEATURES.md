@@ -109,7 +109,7 @@ Este documento lista as features planejadas para o MockSyn, agrupadas por bloco 
 | Stub | Double simples para devolver respostas. |
 | Spy | Double que registra chamadas e pode delegar para objeto real. |
 | Partial spy | Spy que delega por padrao, mas permite sobrescrever alguns membros. |
-| Fake helper | Possivel camada futura para objetos com comportamento simplificado, nao apenas stubs. |
+| Fake helper | Helper para fakes manuais reutilizarem runtime, recording e verification. |
 
 ## 9. Runtime Interno
 

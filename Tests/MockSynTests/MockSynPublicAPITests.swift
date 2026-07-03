@@ -6,6 +6,19 @@ private enum RuntimeStubError: Error, Equatable {
     case failed
 }
 
+private final class ManualFakeService: MockSynFake {
+    let __mockSyn = MockSynRuntime(kind: .fake, mode: .relaxed)
+
+    func load(id: String) -> String {
+        mockSynRecord(member: "load(id:)", arguments: [id])
+        return "fake-\(id)"
+    }
+
+    func verifyLoad(id matcher: MockSynMatcher<String>) -> MockSynVerification {
+        mockSynVerification(member: "load(id:)", matchers: [matcher.erase()])
+    }
+}
+
 final class MockSynPublicAPITests: XCTestCase {
     func testModeDescriptionsMatchMacroGeneratedSource() {
         XCTAssertEqual(MockSynMode.strict.generatedSourceName, ".strict")
@@ -25,6 +38,27 @@ final class MockSynPublicAPITests: XCTestCase {
 
         XCTAssertEqual(runtime.kind, .spy)
         XCTAssertEqual(runtime.mode, .relaxed)
+    }
+
+    func testStrictStubRuntimeDoesNotReturnRelaxedDefaults() {
+        let runtime = MockSynRuntime(kind: .stub, mode: .strict)
+
+        XCTAssertThrowsError(
+            try runtime.resolveThrowing(member: "title()", arguments: [], returnType: String.self)
+        ) { error in
+            XCTAssertEqual(error as? MockSynRuntimeError, .missingStub(member: "title()"))
+        }
+    }
+
+    func testManualFakeHelperRecordsAndVerifiesCalls() throws {
+        let fake = ManualFakeService()
+
+        XCTAssertEqual(fake.load(id: "42"), "fake-42")
+        XCTAssertEqual(fake.__mockSyn.kind, .fake)
+
+        try fake.verifyLoad(id: .value("42")).once()
+        try fake.mockSynConfirmVerified()
+        try fake.mockSynCheckUnnecessaryStubs()
     }
 
     func testMatchersSupportOptionalCollectionAndComposedRules() {
