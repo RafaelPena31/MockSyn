@@ -59,7 +59,7 @@ Initial platform support:
 | Variadic parameters | Signature supported | Signature supported |
 | Closures / `@escaping` | Supported | Supported |
 | Global actors | Supported where syntax is available | Supported |
-| Associated types | Diagnostic | Diagnostic |
+| Associated types | Supported for generated generic protocol doubles | Supported for generated generic protocol doubles |
 | Stubs | Supported | Supported |
 | Spies | Supported | Supported |
 | XCTest adapter | Supported | Supported |

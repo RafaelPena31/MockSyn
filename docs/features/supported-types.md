@@ -146,7 +146,8 @@ doubles. MockSyn does not generate `open` test doubles.
 - Final classes are not mocked directly.
 - Objective-C runtime interception is not part of the core macro-only flow.
 - Class initializer mirroring is not part of Block 3.
-- Generic and associated-type-heavy protocols are deferred to later language-feature blocks.
+- Associated-type protocols generate generic mocks, stubs, and spies when the
+  associated types can be represented as generic parameters.
 - Complex protocol inheritance constraints are deferred to later language-feature blocks.
 
 ## Compatibility Notes

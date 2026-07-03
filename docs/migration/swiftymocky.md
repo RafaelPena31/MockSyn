@@ -38,5 +38,5 @@ try service.verify.loadUser(id: .value("42")).once()
   doubles compile.
 - Map `Given` to `given` or `when`.
 - Map `Verify` to the generated `verify` API.
-- Keep unsupported associated-type protocols behind type-erased wrappers until
-  MockSyn adds explicit type binding.
+- Bind associated-type protocols through the generated generic mock, stub, or
+  spy type parameters.

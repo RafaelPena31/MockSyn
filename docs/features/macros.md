@@ -205,8 +205,8 @@ Block 11 adds explicit diagnostics, a fix-it for pure Swift `final` classes, and
 support-matrix documentation. Block 12 adds optional inspection tooling, DocC,
 migration guides, and benchmark helpers outside the generation path.
 
-Generic associated-type binding, static member stubbing, and complex inherited
-requirements are covered by later feature blocks in `docs/FEATURES.md`.
+Static member stubbing and complex inherited requirements are covered by later
+feature blocks in `docs/FEATURES.md`.
 
 Custom names are constrained to the declared peer macro name patterns. Fully
 arbitrary peer type names are not supported by Swift macros at global scope.

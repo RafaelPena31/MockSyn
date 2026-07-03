@@ -102,6 +102,12 @@ private struct MockSynPeerMacro {
                 return []
             }
 
+            let associatedTypes = protocolDeclaration.associatedTypeBindings
+            let genericConfiguration = ProtocolGenericConfiguration(
+                protocolName: protocolDeclaration.name.text,
+                associatedTypes: associatedTypes,
+                kind: kind
+            )
             let members = MemberGenerator.members(
                 from: protocolDeclaration.memberBlock.members,
                 targetKind: .protocol,
@@ -120,9 +126,11 @@ private struct MockSynPeerMacro {
                     name: protocolDeclaration.name.text,
                     access: protocolDeclaration.modifiers.mockSynAccess,
                     attributes: protocolDeclaration.attributes.mockSynForwardedAttributes,
-                    genericParameterClause: "",
+                    genericParameterClause: genericConfiguration.genericParameterClause,
                     genericArgumentClause: "",
-                    genericWhereClause: "",
+                    genericWhereClause: genericConfiguration.genericWhereClause,
+                    associatedTypes: associatedTypes,
+                    spyWrappedTypeName: genericConfiguration.spyWrappedTypeName,
                     members: members.generatedMembers
                 )
             )
@@ -169,6 +177,8 @@ private struct MockSynPeerMacro {
                     genericParameterClause: classDeclaration.genericParameterClause?.description.trimmedSource ?? "",
                     genericArgumentClause: classDeclaration.genericParameterClause?.mockSynGenericArgumentClause ?? "",
                     genericWhereClause: classDeclaration.genericWhereClause?.description.trimmedReturnClause ?? "",
+                    associatedTypes: [],
+                    spyWrappedTypeName: nil,
                     members: members.generatedMembers
                 )
             )
@@ -203,6 +213,7 @@ private struct MockSynPeerMacro {
         let access = options.access.sourceName
         let mode = options.mode.sourceName
         let superInitLine = target.superInitCall.map { "\n    \($0)" } ?? ""
+        let associatedTypeSource = target.associatedTypeSource(access: access)
         let memberSource = target.members
             .map { $0.source(access: access, options: options, kind: kind, target: target) }
             .joined(separator: "\n\n")
@@ -214,6 +225,7 @@ private struct MockSynPeerMacro {
             declarationSource = """
             #if MOCKSYN_ENABLE
             \(target.attributes)\(access) final class \(generatedName)\(target.genericParameterClause): \(target.inheritedTypeName)\(target.genericWhereClause) {
+            \(associatedTypeSource)\
               \(access) let __mockSyn: MockSynRuntime
               \(access) let __mockSynWrapped: \(target.wrappedTypeName)
 
@@ -228,6 +240,7 @@ private struct MockSynPeerMacro {
             declarationSource = """
             #if MOCKSYN_ENABLE
             \(target.attributes)\(access) final class \(generatedName)\(target.genericParameterClause): \(target.inheritedTypeName)\(target.genericWhereClause) {
+            \(associatedTypeSource)\
               \(access) let __mockSyn: MockSynRuntime
 
               \(access) init(mode: MockSynMode = \(mode)) {
@@ -250,6 +263,8 @@ private struct Target {
     let genericParameterClause: String
     let genericArgumentClause: String
     let genericWhereClause: String
+    let associatedTypes: [AssociatedTypeBinding]
+    let spyWrappedTypeName: String?
     let members: [GeneratedMember]
 
     var inheritedTypeName: String {
@@ -264,7 +279,7 @@ private struct Target {
     var wrappedTypeName: String {
         switch kind {
         case .protocol:
-            return "any \(name)"
+            return spyWrappedTypeName ?? "any \(name)"
         case .class:
             return inheritedTypeName
         }
@@ -277,6 +292,17 @@ private struct Target {
         case .class:
             return "super.init()"
         }
+    }
+
+    func associatedTypeSource(access: String) -> String {
+        guard !associatedTypes.isEmpty else {
+            return ""
+        }
+
+        let typealiasAccess = access == "private" ? "fileprivate" : access
+        return associatedTypes
+            .map { "  \(typealiasAccess) typealias \($0.name) = \($0.name)" }
+            .joined(separator: "\n") + "\n"
     }
 
     func stubbingSource(access: String) -> String {
@@ -335,6 +361,67 @@ private struct Target {
 private enum TargetKind {
     case `protocol`
     case `class`
+}
+
+private struct ProtocolGenericConfiguration {
+    let genericParameterClause: String
+    let genericWhereClause: String
+    let spyWrappedTypeName: String?
+
+    init(
+        protocolName: String,
+        associatedTypes: [AssociatedTypeBinding],
+        kind: MockSynPeerMacro.Kind
+    ) {
+        var genericParameters = associatedTypes.map(\.genericParameterSource)
+        var whereRequirements = associatedTypes.flatMap(\.whereRequirements)
+        let wrappedTypeName: String?
+
+        if kind == .spy, !associatedTypes.isEmpty {
+            wrappedTypeName = "__MockSynWrapped"
+            genericParameters.append("__MockSynWrapped: \(protocolName)")
+            whereRequirements.append(contentsOf: associatedTypes.map { "__MockSynWrapped.\($0.name) == \($0.name)" })
+        } else {
+            wrappedTypeName = nil
+        }
+
+        self.genericParameterClause = genericParameters.isEmpty ? "" : "<\(genericParameters.joined(separator: ", "))>"
+        self.genericWhereClause = whereRequirements.isEmpty ? "" : " where \(whereRequirements.joined(separator: ", "))"
+        self.spyWrappedTypeName = wrappedTypeName
+    }
+}
+
+private struct AssociatedTypeBinding {
+    let name: String
+    let genericParameterSource: String
+    let whereRequirements: [String]
+}
+
+private extension ProtocolDeclSyntax {
+    var associatedTypeBindings: [AssociatedTypeBinding] {
+        memberBlock.members.compactMap { item in
+            guard let associatedType = item.decl.as(AssociatedTypeDeclSyntax.self) else {
+                return nil
+            }
+
+            let name = associatedType.name.text
+            let inheritedTypes = associatedType.inheritanceClause?.inheritedTypes.map {
+                $0.type.description.trimmedSource
+            } ?? []
+            let genericParameterSource = inheritedTypes.isEmpty
+                ? name
+                : "\(name): \(inheritedTypes.joined(separator: " & "))"
+            let whereRequirements = associatedType.genericWhereClause?.requirements.map {
+                $0.description.trimmedSource
+            } ?? []
+
+            return AssociatedTypeBinding(
+                name: name,
+                genericParameterSource: genericParameterSource,
+                whereRequirements: whereRequirements
+            )
+        }
+    }
 }
 
 private enum GeneratedMember {
@@ -731,12 +818,6 @@ private enum MemberGenerator {
                     returnClause: subscriptDeclaration.returnClause.description.trimmedReturnClause,
                     hasSetter: subscriptDeclaration.accessorBlock?.description.range(of: "set") != nil
                 )))
-                continue
-            }
-
-            if item.decl.is(AssociatedTypeDeclSyntax.self) {
-                context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.unsupportedAssociatedType))
-                isValid = false
                 continue
             }
 

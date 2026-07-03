@@ -157,6 +157,8 @@ spy.name(id: "offline") // returns "Cached"
 
 - Static member stubbing is not generated yet.
 - `willRun` has typed overloads for zero, one, and two method arguments.
-- Associated-type protocols are still diagnosed before member/stubbing generation.
+- Associated-type protocols generate generic doubles, so stubbing is available
+  after the test binds the associated types through the generated generic
+  parameters.
 - Verification, order checks, captors, and richer matcher composition are
   available.

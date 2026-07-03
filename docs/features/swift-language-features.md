@@ -18,7 +18,7 @@ inside the macro-only architecture.
 | `@escaping` closures | Supported | Attributes inside parameter clauses are preserved by SwiftSyntax. |
 | Global actors | Supported for actor attributes ending in `Actor` | Type and member actor attributes are forwarded. |
 | `Sendable` inheritance | Supported where Swift accepts the generated type | `MockSynRuntime` is `@unchecked Sendable`. |
-| Associated types | Diagnostic | Use type erasure or concrete wrappers for now. |
+| Associated types | Supported | Protocol associated types become generic parameters on generated doubles. |
 
 ## Generic Methods
 
@@ -107,7 +107,7 @@ Generated type:
 
 ## Associated Types
 
-Protocols with `associatedtype` are rejected in this block:
+Protocols with `associatedtype` generate generic doubles:
 
 ```swift
 @Mocking
@@ -117,11 +117,38 @@ protocol Repository {
 }
 ```
 
-Diagnostic:
+Generated shape:
 
-```text
-MockSyn cannot generate protocols with associated types yet. Use a type-erased protocol or concrete wrapper.
+```swift
+final class RepositoryMock<Entity>: Repository {
+    typealias Entity = Entity
+
+    func load() -> Entity
+}
 ```
 
-Associated type support needs a deliberate API for type binding and generated
-generic doubles. It is not inferred implicitly in Block 4.
+Constraints are preserved as generic constraints:
+
+```swift
+@Stubbing
+protocol Lookup {
+    associatedtype ID: Hashable
+    associatedtype Entity: Sendable where Entity: Equatable
+    func load(id: ID) -> Entity
+}
+```
+
+Generated shape:
+
+```swift
+final class LookupStub<ID: Hashable, Entity: Sendable>: Lookup where Entity: Equatable
+```
+
+Spies add one extra generic parameter for the wrapped concrete implementation:
+
+```swift
+final class RepositorySpy<Entity, __MockSynWrapped: Repository>: Repository where __MockSynWrapped.Entity == Entity
+```
+
+This keeps delegation type-safe without storing an existential that loses the
+associated type binding.

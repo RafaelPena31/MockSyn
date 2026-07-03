@@ -15,7 +15,6 @@ next step.
 | Invalid `mode` option | Supported | Emits the supported mode values: `.strict` and `.relaxed`. |
 | Visibility widening | Supported | Rejects generated access that is wider than the annotated declaration. |
 | Operator requirements | Supported | Emits an error because operator generation is not implemented yet. |
-| Associated types | Supported | Emits an error until MockSyn has an explicit type-binding API. |
 | Complex protocol inheritance | Supported | Emits an error for inherited types that are not simple protocol names. |
 
 ## Invalid Target
@@ -120,21 +119,19 @@ MockSyn supports protocol inheritance only with simple protocol names. Extract c
 
 ## Unsupported Members
 
-Operator requirements and associated types are intentionally rejected until the
-API has explicit support for those shapes:
+Operator requirements are intentionally rejected until the API has explicit
+support for that shape:
 
 ```swift
 @Mocking
 protocol Repository {
-    associatedtype Entity
     static func == (lhs: Self, rhs: Self) -> Bool
 }
 ```
 
-Diagnostics:
+Diagnostic:
 
 ```text
-MockSyn cannot generate protocols with associated types yet. Use a type-erased protocol or concrete wrapper.
 MockSyn cannot generate operator requirements yet. Wrap the operator behind a named method.
 ```
 

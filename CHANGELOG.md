@@ -2,6 +2,26 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.13.0 - 2026-07-03
+
+### Added
+
+- Associated-type protocol support for generated mocks, stubs, and spies.
+- Generated generic parameters for protocol `associatedtype` requirements.
+- Preservation of associated-type inheritance constraints and `where` requirements.
+- Type-safe spy wrapping for associated-type protocols through a generated wrapped implementation generic.
+- Macro expansion and integration tests covering associated-type stubbing, verification, and spy delegation.
+
+### Changed
+
+- Associated-type protocols are no longer diagnosed as unsupported when their bindings can be represented as generated generic parameters.
+- Documentation and support matrix now describe associated-type generic binding as supported.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.13.0`.
+- Associated types with constraints are supported in the macro-only flow without source generation or build plugins.
+
 ## 0.12.0 - 2026-07-03
 
 ### Added
