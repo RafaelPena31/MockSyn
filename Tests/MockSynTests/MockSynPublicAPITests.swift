@@ -384,6 +384,73 @@ final class MockSynPublicAPITests: XCTestCase {
         }
     }
 
+    func testRethrowingRuntimeAndBuildersUseNonThrowingStubsAndThrowingFallbacks() throws {
+        let runtime = MockSynRuntime(kind: .spy, mode: .strict)
+
+        MockSynRethrowingStubBuilder<String>(
+            runtime: runtime,
+            member: "title()"
+        ).willReturn("stubbed")
+
+        MockSynRethrowingStubBuilder1<String, String>(
+            runtime: runtime,
+            member: "format(_:)",
+            matchers: [MockSynMatcher<String>.any.erase()]
+        ).willRun { value in
+            value.uppercased()
+        }
+
+        MockSynRethrowingStubBuilder2<Int, Int, Int>(
+            runtime: runtime,
+            member: "sum(_:_:)",
+            matchers: [MockSynMatcher<Int>.any.erase(), MockSynMatcher<Int>.any.erase()]
+        ).willRun { lhs, rhs in
+            lhs + rhs
+        }
+
+        MockSynRethrowingStubBuilder2<Int, Int, Int>(
+            runtime: runtime,
+            member: "product(_:_:)",
+            matchers: [MockSynMatcher<Int>.any.erase(), MockSynMatcher<Int>.any.erase()]
+        ).willReturn(10, 20)
+
+        XCTAssertEqual(try runtime.resolveRethrowing(member: "title()", arguments: [], returnType: String.self) {
+            throw RuntimeStubError.failed
+        }, "stubbed")
+        XCTAssertEqual(try runtime.resolveRethrowing(member: "format(_:)", arguments: ["mock"], returnType: String.self) {
+            throw RuntimeStubError.failed
+        }, "MOCK")
+        XCTAssertEqual(try runtime.resolveRethrowing(member: "sum(_:_:)", arguments: [2, 5], returnType: Int.self) {
+            throw RuntimeStubError.failed
+        }, 7)
+        XCTAssertEqual(try runtime.resolveRethrowing(member: "product(_:_:)", arguments: [2, 5], returnType: Int.self) {
+            throw RuntimeStubError.failed
+        }, 10)
+        XCTAssertEqual(try runtime.resolveRethrowing(member: "product(_:_:)", arguments: [2, 5], returnType: Int.self) {
+            throw RuntimeStubError.failed
+        }, 20)
+
+        XCTAssertThrowsError(try runtime.resolveRethrowing(member: "missing()", arguments: [], returnType: String.self) {
+            throw RuntimeStubError.failed
+        }) { error in
+            XCTAssertEqual(error as? RuntimeStubError, .failed)
+        }
+
+        MockSynRethrowingStubBuilder<Void>(
+            runtime: runtime,
+            member: "consume()"
+        ).willRun {}
+        try runtime.resolveVoidRethrowing(member: "consume()", arguments: []) {
+            throw RuntimeStubError.failed
+        }
+
+        XCTAssertThrowsError(try runtime.resolveVoidRethrowing(member: "missingVoid()", arguments: []) {
+            throw RuntimeStubError.failed
+        }) { error in
+            XCTAssertEqual(error as? RuntimeStubError, .failed)
+        }
+    }
+
     func testSubscriptSetterBuilderSupportsThrowingBehavior() {
         let runtime = MockSynRuntime(kind: .mock, mode: .strict)
 

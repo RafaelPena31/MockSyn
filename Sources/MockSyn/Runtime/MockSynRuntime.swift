@@ -99,6 +99,27 @@ public final class MockSynRuntime: @unchecked Sendable {
         let _: Void = resolve(member: member, arguments: arguments, returnType: Void.self, fallback: fallback)
     }
 
+    /// Resolves a generated `rethrows` member call while allowing only the fallback closure to throw.
+    public func resolveRethrowing<Return>(
+        member: String,
+        arguments: [Any],
+        returnType: Return.Type,
+        fallback: () throws -> Return
+    ) rethrows -> Return {
+        recordInvocation(member: member, arguments: arguments)
+
+        if let value = try! resolveStub(member: member, arguments: arguments) {
+            return value as! Return
+        }
+
+        return try fallback()
+    }
+
+    /// Resolves a generated void `rethrows` member call while allowing only the fallback closure to throw.
+    public func resolveVoidRethrowing(member: String, arguments: [Any], fallback: () throws -> Void) rethrows {
+        let _: Void = try resolveRethrowing(member: member, arguments: arguments, returnType: Void.self, fallback: fallback)
+    }
+
     /// Resolves a throwing generated void member call.
     public func resolveVoidThrowing(member: String, arguments: [Any], fallback: (() throws -> Void)? = nil) throws {
         let _: Void = try resolveThrowing(member: member, arguments: arguments, returnType: Void.self, fallback: fallback)

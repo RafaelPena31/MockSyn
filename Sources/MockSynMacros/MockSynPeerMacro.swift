@@ -848,6 +848,14 @@ private struct GeneratedFunction {
         if isStatic {
             let arguments = "[\(argumentValues)]"
 
+            if effectSpecifiers.hasRethrowsEffect {
+                if returnsValue {
+                    return "    return __mockSynStatic.resolve(member: \"\(memberName)\", arguments: \(arguments), returnType: \(returnType).self)"
+                }
+
+                return "    __mockSynStatic.resolveVoid(member: \"\(memberName)\", arguments: \(arguments))"
+            }
+
             if effectSpecifiers.range(of: "throws") != nil {
                 if returnsValue {
                     return "    return try __mockSynStatic.resolveThrowing(member: \"\(memberName)\", arguments: \(arguments), returnType: \(returnType).self)"
@@ -871,13 +879,32 @@ private struct GeneratedFunction {
             return "\(recording)\n\(delegation)"
         }
 
+        if effectSpecifiers.hasRethrowsEffect, kind == .spy {
+            let callPrefix = effectSpecifiers.callPrefix
+            let fallback = "{ \(callPrefix)self.__mockSynWrapped.\(name)(\(callArguments)) }"
+            if returnsValue {
+                return "    return \(callPrefix)__mockSyn.resolveRethrowing(member: \"\(memberName)\", arguments: [\(argumentValues)], returnType: \(returnType).self, fallback: \(fallback))"
+            }
+
+            return "    \(callPrefix)__mockSyn.resolveVoidRethrowing(member: \"\(memberName)\", arguments: [\(argumentValues)], fallback: \(fallback))"
+        }
+
+        let arguments = "[\(argumentValues)]"
+
+        if effectSpecifiers.hasRethrowsEffect {
+            if returnsValue {
+                return "    return __mockSyn.resolve(member: \"\(memberName)\", arguments: \(arguments), returnType: \(returnType).self)"
+            }
+
+            return "    __mockSyn.resolveVoid(member: \"\(memberName)\", arguments: \(arguments))"
+        }
+
         if effectSpecifiers.range(of: "async") != nil, kind == .spy && !isStatic && !hasVariadicParameter {
             let callPrefix = effectSpecifiers.callPrefix
             let call = "__mockSynWrapped.\(name)(\(callArguments))"
             return "    \(callPrefix)\(call)"
         }
 
-        let arguments = "[\(argumentValues)]"
         let fallback = spyFallback(kind: kind)
 
         if effectSpecifiers.range(of: "throws") != nil {
@@ -1047,17 +1074,18 @@ private struct GeneratedFunction {
 
     private func stubBuilderType(generatedName: String) -> String {
         let returnType = returnType.resolvingSelf(as: generatedName)
+        let builderBase = effectSpecifiers.hasRethrowsEffect ? "MockSynRethrowingStubBuilder" : "MockSynStubBuilder"
         guard stubParameters.count == 1, let parameter = stubParameters.first else {
             if stubParameters.count == 2 {
                 let firstParameter = stubParameters[0]
                 let secondParameter = stubParameters[1]
-                return "MockSynStubBuilder2<\(firstParameter.matcherType.resolvingSelf(as: generatedName)), \(secondParameter.matcherType.resolvingSelf(as: generatedName)), \(returnType)>"
+                return "\(builderBase)2<\(firstParameter.matcherType.resolvingSelf(as: generatedName)), \(secondParameter.matcherType.resolvingSelf(as: generatedName)), \(returnType)>"
             }
 
-            return "MockSynStubBuilder<\(returnType)>"
+            return "\(builderBase)<\(returnType)>"
         }
 
-        return "MockSynStubBuilder1<\(parameter.matcherType.resolvingSelf(as: generatedName)), \(returnType)>"
+        return "\(builderBase)1<\(parameter.matcherType.resolvingSelf(as: generatedName)), \(returnType)>"
     }
 }
 
@@ -1593,6 +1621,10 @@ private extension String {
 
     var hasThrowingEffect: Bool {
         range(of: "throws") != nil
+    }
+
+    var hasRethrowsEffect: Bool {
+        range(of: "rethrows") != nil
     }
 
     var signatureSuffix: String {

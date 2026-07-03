@@ -11,6 +11,7 @@ adds richer matchers and captors that plug into those generated member APIs.
 | --- | --- | --- | --- |
 | Sync methods | Supported | Supported as overrides | Instance members can be configured through `given` / `when`. |
 | `throws` methods | Supported | Supported as overrides | Void throwing methods are callable and do nothing for mocks/stubs. |
+| `rethrows` methods | Supported | Supported as overrides | Generated stubs return or run non-throwing behavior; spies can delegate fallback calls that rethrow from closure parameters. |
 | `async` methods | Supported | Supported as overrides | Void async methods are callable and do nothing for mocks/stubs. |
 | `async throws` methods | Supported | Supported as overrides | Spy instance methods delegate to the wrapped implementation. |
 | `Void` methods | Supported | Supported as overrides | Callable immediately and recorded for verification. |
@@ -82,6 +83,34 @@ stubs and invocations for different return types do not share the same bucket.
 If two complex return types sanitize to the same DSL suffix, MockSyn keeps the
 first generated name and appends `Overload2`, `Overload3`, and so on to the
 later colliding DSL methods while preserving distinct runtime keys.
+
+## Rethrowing Methods
+
+Swift only allows a `rethrows` implementation to throw when the error comes from
+one of its throwing function parameters. Generated `rethrows` mocks and stubs
+therefore use non-throwing runtime resolution and generated `given` APIs return
+`MockSynRethrowingStubBuilder` variants. Those builders support `willReturn` and
+non-throwing `willRun`; they intentionally do not expose `willThrow`.
+
+```swift
+@Mocking
+protocol Transformer {
+    func transform(_ operation: @escaping () throws -> String) rethrows -> String
+}
+
+#if MOCKSYN_ENABLE
+let transformer = TransformerMock()
+transformer.given.transform(.any).willReturn("stubbed")
+
+let value = try transformer.transform {
+    throw NetworkError.offline
+}
+#endif
+```
+
+Spies use a dedicated rethrowing runtime path. When a matching non-throwing stub
+exists it is returned; otherwise the generated spy delegates to the wrapped
+implementation and can rethrow errors from the supplied closure parameter.
 
 ## Effectful Property Getters
 

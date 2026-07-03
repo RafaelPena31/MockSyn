@@ -1177,6 +1177,95 @@ final class MockSynMacroTests: XCTestCase {
         )
     }
 
+    func testSpyingGeneratesRethrowingMembersWithRethrowingFallbackResolution() {
+        assertExpansion(
+            """
+            @Spying
+            protocol RethrowingService {
+                func transform(_ operation: @escaping () throws -> String) rethrows -> String
+                func consume(_ operation: @escaping () throws -> Void) rethrows
+            }
+            """,
+            expandedSource: """
+              protocol RethrowingService {
+                  func transform(_ operation: @escaping () throws -> String) rethrows -> String
+                  func consume(_ operation: @escaping () throws -> Void) rethrows
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class RethrowingServiceSpy: RethrowingService {
+                internal let __mockSyn: MockSynRuntime
+                internal let __mockSynWrapped: any RethrowingService
+
+                internal init(wrapping __mockSynWrapped: any RethrowingService, mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .spy, mode: mode)
+                  self.__mockSynWrapped = __mockSynWrapped
+                }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func transform(_ operation: MockSynMatcher<() throws -> String>) -> MockSynRethrowingStubBuilder1<() throws -> String, String> {
+                    MockSynRethrowingStubBuilder1<() throws -> String, String>(runtime: __mockSyn, member: "transform(_:)", matchers: [operation.erase()])
+                  }
+
+                  internal func consume(_ operation: MockSynMatcher<() throws -> Void>) -> MockSynRethrowingStubBuilder1<() throws -> Void, Void> {
+                    MockSynRethrowingStubBuilder1<() throws -> Void, Void>(runtime: __mockSyn, member: "consume(_:)", matchers: [operation.erase()])
+                  }
+                }
+
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func transform(_ operation: MockSynMatcher<() throws -> String>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "transform(_:)", matchers: [operation.erase()])
+                  }
+
+                  internal func consume(_ operation: MockSynMatcher<() throws -> Void>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "consume(_:)", matchers: [operation.erase()])
+                  }
+                }
+
+                internal func transform(_ operation: @escaping () throws -> String) rethrows -> String {
+                  return try __mockSyn.resolveRethrowing(member: "transform(_:)", arguments: [operation as Any], returnType: String.self, fallback: {
+                      try self.__mockSynWrapped.transform(operation)
+                    })
+                }
+
+                internal func consume(_ operation: @escaping () throws -> Void) rethrows {
+                  try __mockSyn.resolveVoidRethrowing(member: "consume(_:)", arguments: [operation as Any], fallback: {
+                      try self.__mockSynWrapped.consume(operation)
+                    })
+                }
+              }
+              #endif
+              """
+        )
+    }
+
     func testSpyingGeneratesDelegatingUnderscoredSubscript() {
         assertExpansion(
             """
@@ -1432,6 +1521,149 @@ final class MockSynMacroTests: XCTestCase {
 
                 internal static func save() throws {
                   try __mockSynStatic.resolveVoidThrowing(member: "save()", arguments: [])
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testMockingGeneratesRethrowingMembersWithNonThrowingResolution() {
+        assertExpansion(
+            """
+            @Mocking
+            protocol RethrowingService {
+                func transform(_ operation: @escaping () throws -> String) rethrows -> String
+                func consume(_ operation: @escaping () throws -> Void) rethrows
+                static func make(_ operation: @escaping () throws -> String) rethrows -> String
+                static func save(_ operation: @escaping () throws -> Void) rethrows
+            }
+            """,
+            expandedSource: """
+              protocol RethrowingService {
+                  func transform(_ operation: @escaping () throws -> String) rethrows -> String
+                  func consume(_ operation: @escaping () throws -> Void) rethrows
+                  static func make(_ operation: @escaping () throws -> String) rethrows -> String
+                  static func save(_ operation: @escaping () throws -> Void) rethrows
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class RethrowingServiceMock: RethrowingService {
+                internal static let __mockSynStatic = MockSynRuntime(kind: .mock, mode: .strict)
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+                internal static var given: __MockSynStaticGiven {
+                  __MockSynStaticGiven(__mockSyn: __mockSynStatic)
+                }
+
+                internal static var when: __MockSynStaticGiven {
+                  given
+                }
+
+                internal static var verify: __MockSynStaticVerify {
+                  __MockSynStaticVerify(__mockSyn: __mockSynStatic)
+                }
+
+                internal static func confirmStaticVerified() throws {
+                  try __mockSynStatic.confirmVerified()
+                }
+
+                internal static func checkUnnecessaryStaticStubs() throws {
+                  try __mockSynStatic.checkUnnecessaryStubs()
+                }
+
+                internal static func resetStatic(_ scope: MockSynResetScope = .all) {
+                  __mockSynStatic.reset(scope)
+                }
+
+                internal struct __MockSynStaticGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func make(_ operation: MockSynMatcher<() throws -> String>) -> MockSynRethrowingStubBuilder1<() throws -> String, String> {
+                    MockSynRethrowingStubBuilder1<() throws -> String, String>(runtime: __mockSyn, member: "make(_:)", matchers: [operation.erase()])
+                  }
+
+                  internal func save(_ operation: MockSynMatcher<() throws -> Void>) -> MockSynRethrowingStubBuilder1<() throws -> Void, Void> {
+                    MockSynRethrowingStubBuilder1<() throws -> Void, Void>(runtime: __mockSyn, member: "save(_:)", matchers: [operation.erase()])
+                  }
+                }
+
+                internal struct __MockSynStaticVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func make(_ operation: MockSynMatcher<() throws -> String>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "make(_:)", matchers: [operation.erase()])
+                  }
+
+                  internal func save(_ operation: MockSynMatcher<() throws -> Void>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "save(_:)", matchers: [operation.erase()])
+                  }
+                }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func transform(_ operation: MockSynMatcher<() throws -> String>) -> MockSynRethrowingStubBuilder1<() throws -> String, String> {
+                    MockSynRethrowingStubBuilder1<() throws -> String, String>(runtime: __mockSyn, member: "transform(_:)", matchers: [operation.erase()])
+                  }
+
+                  internal func consume(_ operation: MockSynMatcher<() throws -> Void>) -> MockSynRethrowingStubBuilder1<() throws -> Void, Void> {
+                    MockSynRethrowingStubBuilder1<() throws -> Void, Void>(runtime: __mockSyn, member: "consume(_:)", matchers: [operation.erase()])
+                  }
+                }
+
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func transform(_ operation: MockSynMatcher<() throws -> String>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "transform(_:)", matchers: [operation.erase()])
+                  }
+
+                  internal func consume(_ operation: MockSynMatcher<() throws -> Void>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "consume(_:)", matchers: [operation.erase()])
+                  }
+                }
+
+                internal func transform(_ operation: @escaping () throws -> String) rethrows -> String {
+                  return __mockSyn.resolve(member: "transform(_:)", arguments: [operation as Any], returnType: String.self)
+                }
+
+                internal func consume(_ operation: @escaping () throws -> Void) rethrows {
+                  __mockSyn.resolveVoid(member: "consume(_:)", arguments: [operation as Any])
+                }
+
+                internal static func make(_ operation: @escaping () throws -> String) rethrows -> String {
+                  return __mockSynStatic.resolve(member: "make(_:)", arguments: [operation as Any], returnType: String.self)
+                }
+
+                internal static func save(_ operation: @escaping () throws -> Void) rethrows {
+                  __mockSynStatic.resolveVoid(member: "save(_:)", arguments: [operation as Any])
                 }
               }
               #endif

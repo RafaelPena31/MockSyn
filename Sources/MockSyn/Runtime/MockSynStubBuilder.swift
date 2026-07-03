@@ -88,6 +88,81 @@ public struct MockSynStubBuilder2<FirstArgument, SecondArgument, Return> {
     }
 }
 
+/// Builder returned by generated `given` APIs for `rethrows` members without arguments.
+public struct MockSynRethrowingStubBuilder<Return> {
+    private let runtime: MockSynRuntime
+    private let member: String
+    private let matchers: [MockSynAnyMatcher]
+
+    public init(runtime: MockSynRuntime, member: String, matchers: [MockSynAnyMatcher] = []) {
+        self.runtime = runtime
+        self.member = member
+        self.matchers = matchers
+    }
+
+    /// Configures one or more return values. Multiple values are returned sequentially.
+    public func willReturn(_ values: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    }
+
+    /// Configures the member to run a custom non-throwing closure.
+    public func willRun(_ body: @escaping () -> Return) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .runs { _ in
+            body()
+        })
+    }
+}
+
+/// Builder returned by generated `given` APIs for `rethrows` members with one argument.
+public struct MockSynRethrowingStubBuilder1<Argument, Return> {
+    private let runtime: MockSynRuntime
+    private let member: String
+    private let matchers: [MockSynAnyMatcher]
+
+    public init(runtime: MockSynRuntime, member: String, matchers: [MockSynAnyMatcher]) {
+        self.runtime = runtime
+        self.member = member
+        self.matchers = matchers
+    }
+
+    /// Configures one or more return values. Multiple values are returned sequentially.
+    public func willReturn(_ values: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    }
+
+    /// Configures the member to run a custom non-throwing closure receiving the call argument.
+    public func willRun(_ body: @escaping (Argument) -> Return) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .runs { arguments in
+            body(arguments[0] as! Argument)
+        })
+    }
+}
+
+/// Builder returned by generated `given` APIs for `rethrows` members with two arguments.
+public struct MockSynRethrowingStubBuilder2<FirstArgument, SecondArgument, Return> {
+    private let runtime: MockSynRuntime
+    private let member: String
+    private let matchers: [MockSynAnyMatcher]
+
+    public init(runtime: MockSynRuntime, member: String, matchers: [MockSynAnyMatcher]) {
+        self.runtime = runtime
+        self.member = member
+        self.matchers = matchers
+    }
+
+    /// Configures one or more return values. Multiple values are returned sequentially.
+    public func willReturn(_ values: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    }
+
+    /// Configures the member to run a custom non-throwing closure receiving both call arguments.
+    public func willRun(_ body: @escaping (FirstArgument, SecondArgument) -> Return) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .runs { arguments in
+            body(arguments[0] as! FirstArgument, arguments[1] as! SecondArgument)
+        })
+    }
+}
+
 /// Generated property stubbing entrypoint.
 public struct MockSynPropertyStubber<Value> {
     private let runtime: MockSynRuntime

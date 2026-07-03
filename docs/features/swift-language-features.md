@@ -12,6 +12,7 @@ inside the macro-only architecture.
 | Generic classes | Supported | Generated subclasses mirror generic parameters and `where` clauses. |
 | `where` clauses | Supported | Preserved on generated generic classes and methods. |
 | `Self` requirements | Supported for placeholder behavior | Mocks/stubs compile by using placeholder bodies. |
+| `rethrows` methods | Supported | Preserves `rethrows`; stubs cannot independently throw and spies rethrow only through fallback closure parameters. |
 | `inout` parameters | Supported | Spies delegate with `&` when the method is otherwise delegatable. |
 | Variadic parameters | Signature supported with sync spy delegation | Spies delegate one variadic parameter up to 8 values. Async and multiple-variadic methods remain stub-driven. |
 | Closures | Supported | Closure parameter signatures are preserved. |
@@ -75,6 +76,23 @@ final class BoxMock<Value>: Box<Value> where Value: Sendable
 
 Class doubles mirror non-variadic class initializers and forward arguments to
 the matching `super.init`.
+
+## Rethrows
+
+`rethrows` method signatures are preserved exactly on generated mocks, stubs,
+and spies. Generated stubbing APIs use `MockSynRethrowingStubBuilder` variants,
+which support `willReturn` and non-throwing `willRun` but not `willThrow`.
+
+```swift
+@Mocking
+protocol Runner {
+    func run(_ operation: @escaping () throws -> String) rethrows -> String
+}
+```
+
+Spies use a rethrowing runtime path: they return a matching non-throwing stub
+when one exists, or delegate to the wrapped implementation and rethrow only if
+the supplied closure parameter throws.
 
 ## Inout And Closures
 

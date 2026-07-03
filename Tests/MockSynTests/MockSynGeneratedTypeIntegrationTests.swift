@@ -296,6 +296,31 @@ protocol StaticReturnOverloadedService {
 }
 
 @Mocking
+protocol RethrowingService {
+    func transform(_ operation: @escaping () throws -> String) rethrows -> String
+    func consume(_ operation: @escaping () throws -> Void) rethrows
+
+    static func make(_ operation: @escaping () throws -> String) rethrows -> String
+    static func save(_ operation: @escaping () throws -> Void) rethrows
+}
+
+@Spying
+protocol RethrowingSpyService {
+    func transform(_ operation: @escaping () throws -> String) rethrows -> String
+    func consume(_ operation: @escaping () throws -> Void) rethrows
+}
+
+private struct RealRethrowingSpyService: RethrowingSpyService {
+    func transform(_ operation: @escaping () throws -> String) rethrows -> String {
+        try operation()
+    }
+
+    func consume(_ operation: @escaping () throws -> Void) rethrows {
+        try operation()
+    }
+}
+
+@Mocking
 protocol EffectfulPropertyService {
     var asyncName: String { get async }
     var throwingName: String { get throws }
@@ -1069,6 +1094,75 @@ final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
         try StaticReturnOverloadedServiceMock.verify.makeReturningString().once()
         try StaticReturnOverloadedServiceMock.verify.makeReturningInt().once()
         StaticReturnOverloadedServiceMock.resetStatic()
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedRethrowingMembersPreserveRethrowsAndUseNonThrowingStubs() throws {
+        #if MOCKSYN_ENABLE
+        RethrowingServiceMock.resetStatic()
+        let mock = RethrowingServiceMock()
+        var consumed = false
+        var staticConsumed = false
+
+        mock.given.transform(.any).willReturn("stubbed")
+        mock.given.consume(.any).willRun { _ in
+            consumed = true
+        }
+        RethrowingServiceMock.given.make(.any).willReturn("static-stubbed")
+        RethrowingServiceMock.given.save(.any).willRun { _ in
+            staticConsumed = true
+        }
+
+        let transformed = try mock.transform {
+            throw StubbedServiceError.offline
+        }
+        try mock.consume {
+            throw StubbedServiceError.offline
+        }
+        let staticValue = try RethrowingServiceMock.make {
+            throw StubbedServiceError.offline
+        }
+        try RethrowingServiceMock.save {
+            throw StubbedServiceError.offline
+        }
+
+        XCTAssertEqual(transformed, "stubbed")
+        XCTAssertTrue(consumed)
+        XCTAssertTrue(staticConsumed)
+        XCTAssertEqual(staticValue, "static-stubbed")
+
+        try mock.verify.transform(.any).once()
+        try mock.verify.consume(.any).once()
+        try RethrowingServiceMock.verify.make(.any).once()
+        try RethrowingServiceMock.verify.save(.any).once()
+        RethrowingServiceMock.resetStatic()
+
+        let stubbedSpy = RethrowingSpyServiceSpy(wrapping: RealRethrowingSpyService())
+        stubbedSpy.given.transform(.any).willReturn("spy-stubbed")
+
+        let stubbedSpyValue = try stubbedSpy.transform {
+            throw StubbedServiceError.offline
+        }
+
+        XCTAssertEqual(stubbedSpyValue, "spy-stubbed")
+        try stubbedSpy.verify.transform(.any).once()
+
+        let spy = RethrowingSpyServiceSpy(wrapping: RealRethrowingSpyService())
+        let delegated = spy.transform {
+            "delegated"
+        }
+
+        XCTAssertEqual(delegated, "delegated")
+        XCTAssertThrowsError(try spy.consume {
+            throw StubbedServiceError.offline
+        }) { error in
+            XCTAssertEqual(error as? StubbedServiceError, .offline)
+        }
+
+        try spy.verify.transform(.any).once()
+        try spy.verify.consume(.any).once()
         #else
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif

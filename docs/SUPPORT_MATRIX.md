@@ -46,6 +46,7 @@ Initial platform support:
 | Objective-C runtime interception | Supported via explicit `MockSynObjCInterception` API when `ObjectiveC.runtime` is available | Supported via explicit `MockSynObjCInterception` API when `ObjectiveC.runtime` is available |
 | Sync members | Supported | Supported |
 | `throws` members | Supported | Supported |
+| `rethrows` members | Supported with non-throwing stubs and rethrowing spy fallback | Supported with non-throwing stubs and rethrowing spy fallback |
 | `async` members | Supported | Supported |
 | `async throws` members | Supported | Supported |
 | Properties | Supported, including `get async`, `get throws`, and `get async throws` | Supported, including `get async`, `get throws`, and `get async throws` |

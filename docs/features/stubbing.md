@@ -12,6 +12,7 @@ without a source generator or generated file cache.
 | `willReturn` | Supported | Accepts one or more values. Multiple values are returned sequentially. |
 | `willThrow` | Supported | Works on generated `throws` members. A non-throwing member that receives a throwing stub fails fast. |
 | `willRun` | Supported | Supports zero, one, and two argument generated method builders, property setters, and subscript setters. |
+| `rethrows` stubs | Supported | Generated `rethrows` APIs use dedicated builders with `willReturn` and non-throwing `willRun`; they do not expose `willThrow`. |
 | Argument-specific stubs | Supported | Uses typed matchers such as `.any`, `.value`, `.matching`, optional, collection, composed, and captor matchers. |
 | Property getter stubs | Supported | `mock.given.name.get.willReturn("value")`. |
 | Property setter stubs | Supported | `mock.given.name.set(.any).willRun { value in ... }`. |
@@ -78,6 +79,32 @@ service.given.doubled(.any).willRun { value in
 `willRun` is typed for generated members with zero, one, or two parameters.
 Members with more parameters can still use `willReturn` and `willThrow`; richer
 arity support can be added without changing the macro syntax.
+
+## Rethrows
+
+Generated `rethrows` members preserve the original signature, but their stubbing
+surface is intentionally narrower than `throws`. A `rethrows` implementation may
+only throw through one of its throwing function parameters, so MockSyn generates
+`MockSynRethrowingStubBuilder` variants that do not provide `willThrow`.
+
+```swift
+@Mocking
+protocol TransactionRunner {
+    func run(_ operation: @escaping () throws -> String) rethrows -> String
+}
+
+#if MOCKSYN_ENABLE
+let runner = TransactionRunnerMock()
+runner.given.run(.any).willReturn("cached")
+runner.given.run(.any).willRun { _ in
+    "computed"
+}
+#endif
+```
+
+Use `willReturn` for deterministic values and non-throwing `willRun` for custom
+behavior. If the test needs the call itself to throw, let the closure parameter
+throw and use a spy or real implementation path that invokes that closure.
 
 ## Properties
 

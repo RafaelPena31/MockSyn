@@ -2,6 +2,26 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.26.0 - 2026-07-03
+
+### Added
+
+- Faithful `rethrows` preservation for generated instance protocol methods.
+- Faithful `rethrows` preservation for generated static protocol methods.
+- `MockSynRethrowingStubBuilder`, `MockSynRethrowingStubBuilder1`, and `MockSynRethrowingStubBuilder2` for generated `rethrows` stubbing APIs.
+- Runtime `resolveRethrowing` and `resolveVoidRethrowing` paths so spies can use non-throwing stubs while delegating fallback calls that may rethrow from the passed closure.
+- Macro expansion, runtime, and generated integration tests proving mocks, static mocks, and spies compile and execute with `rethrows`.
+
+### Changed
+
+- Generated `rethrows` stubbing APIs intentionally do not expose `willThrow`; Swift only allows `rethrows` implementations to throw through their throwing function parameters.
+- Documentation now distinguishes throwing stubs from `rethrows` stubs.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.26.0`.
+- Strict missing-stub failures for generated `rethrows` mocks still use the non-throwing resolution path, matching Swift's restriction that a `rethrows` function cannot throw an independent framework error.
+
 ## 0.25.0 - 2026-07-03
 
 ### Added
