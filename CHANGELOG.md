@@ -2,6 +2,24 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.21.0 - 2026-07-03
+
+### Added
+
+- Compile-time diagnostics for `final` methods and properties declared inside subclassable classes.
+- Fix-it support to remove `final` from unsupported class members when subclass generation is acceptable.
+- Macro expansion tests proving MockSyn does not emit invalid overrides for final class members.
+
+### Changed
+
+- Final Swift class support is now documented as a complete macro-only limitation: final types and final members are rejected early with actionable diagnostics instead of relying on later Swift compiler failures.
+- Documentation now distinguishes pure Swift `final class` diagnostics from `final` member diagnostics on otherwise subclassable classes.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.21.0`.
+- MockSyn still does not mock pure Swift final classes directly. Swift macros cannot make final classes subclassable or intercept their statically dispatched members.
+
 ## 0.20.0 - 2026-07-03
 
 ### Added

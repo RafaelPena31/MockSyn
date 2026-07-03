@@ -11,6 +11,7 @@ next step.
 | Unsupported macro target | Supported | Emits a macro-specific error when `@Mocking`, `@Stubbing`, or `@Spying` is used on an unsupported declaration. |
 | Pure Swift `final` class | Supported | Emits an error explaining that final Swift classes cannot be mocked by subclass generation. |
 | Final-class fix-it | Supported | Offers `Remove 'final'` when subclass generation is acceptable. |
+| Final class member | Supported | Emits an error when a method or property cannot be overridden because the member itself is `final`. |
 | Invalid `access` option | Supported | Emits the supported access values. |
 | Invalid `mode` option | Supported | Emits the supported mode values: `.strict` and `.relaxed`. |
 | Visibility widening | Supported | Rejects generated access that is wider than the annotated declaration. |
@@ -67,6 +68,34 @@ final class UserService: UserServicing {
     }
 }
 ```
+
+## Final Class Member
+
+```swift
+@Mocking
+class UserService {
+    final func loadUser(id: String) -> User {
+        fatalError("production implementation")
+    }
+}
+```
+
+Diagnostic:
+
+```text
+MockSyn cannot mock final class members by subclass generation. Remove 'final' from the member or extract a protocol.
+```
+
+Fix-it:
+
+```text
+Remove 'final'
+```
+
+This case is separate from a `final class`: the type can be subclassed, but the
+specific member cannot be overridden. MockSyn rejects the macro expansion early
+so tests do not receive a generated subclass that fails later with an invalid
+`override`.
 
 ## Invalid Options
 

@@ -3151,6 +3151,68 @@ final class MockSynMacroTests: XCTestCase {
         )
     }
 
+    func testMockingClassWithFinalMethodEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Mocking
+            class UserService {
+                final func load() -> String {
+                    "real"
+                }
+            }
+            """,
+            expandedSource: """
+              class UserService {
+                  final func load() -> String {
+                      "real"
+                  }
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "MockSyn cannot mock final class members by subclass generation. Remove 'final' from the member or extract a protocol.",
+                    line: 1,
+                    column: 1,
+                    severity: .error,
+                    fixIts: [
+                        FixItSpec(message: "Remove 'final'")
+                    ]
+                )
+            ]
+        )
+    }
+
+    func testStubbingClassWithFinalPropertyEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Stubbing
+            class AnalyticsService {
+                final var token: String {
+                    "real"
+                }
+            }
+            """,
+            expandedSource: """
+              class AnalyticsService {
+                  final var token: String {
+                      "real"
+                  }
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "MockSyn cannot mock final class members by subclass generation. Remove 'final' from the member or extract a protocol.",
+                    line: 1,
+                    column: 1,
+                    severity: .error,
+                    fixIts: [
+                        FixItSpec(message: "Remove 'final'")
+                    ]
+                )
+            ]
+        )
+    }
+
     func testPublicAccessOnInternalProtocolEmitsDiagnostic() {
         assertExpansion(
             """

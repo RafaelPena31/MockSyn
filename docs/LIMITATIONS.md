@@ -7,6 +7,7 @@ MockSyn is inspired by MockK and Mockito, but Swift does not provide the same ru
 | Case | Reason |
 | --- | --- |
 | Pure Swift final classes | They cannot be subclassed or intercepted. |
+| Final methods and properties on classes | Subclass generation cannot override final members. |
 | Private methods | Generated code cannot access private implementation details. |
 | Global functions | Macros on protocols do not intercept global functions. |
 | Concrete static methods | Static calls on concrete types are not dynamically intercepted. |
@@ -39,6 +40,10 @@ final class UserService: UserServicing {
     func fetchUser(id: String) async throws -> User { fatalError() }
 }
 ```
+
+The same rule applies to `final` methods or properties inside a non-final class.
+If the member must stay final in production, put the test-facing contract behind
+a protocol and annotate that protocol instead.
 
 ### Global Function
 

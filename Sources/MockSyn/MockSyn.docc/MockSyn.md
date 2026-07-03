@@ -37,5 +37,5 @@ them.
 ## Diagnostics
 
 MockSyn emits compile-time diagnostics for unsupported declarations, pure Swift
-final classes, invalid macro options, unsupported class operator members, and
-visibility issues.
+final classes, final class members, invalid macro options, unsupported class
+operator members, and visibility issues.

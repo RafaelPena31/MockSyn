@@ -173,6 +173,12 @@ Final class:
 MockSyn cannot mock a pure Swift final class directly. Extract a protocol and apply @Mocking to the protocol.
 ```
 
+Final class member:
+
+```text
+MockSyn cannot mock final class members by subclass generation. Remove 'final' from the member or extract a protocol.
+```
+
 Invalid access option:
 
 ```text

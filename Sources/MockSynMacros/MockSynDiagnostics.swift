@@ -24,6 +24,11 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
         message: "MockSyn cannot mock a pure Swift final class directly. Extract a protocol and apply @Mocking to the protocol."
     )
 
+    static let finalClassMember = MockSynDiagnostic(
+        id: "finalClassMember",
+        message: "MockSyn cannot mock final class members by subclass generation. Remove 'final' from the member or extract a protocol."
+    )
+
     static let invalidAccess = MockSynDiagnostic(
         id: "invalidAccess",
         message: "MockSyn access must be one of: internal, public, package, fileprivate, private"

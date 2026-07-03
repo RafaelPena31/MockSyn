@@ -1078,6 +1078,13 @@ private enum MemberGenerator {
 
         for item in memberBlock {
             if let function = item.decl.as(FunctionDeclSyntax.self) {
+                if targetKind == .class,
+                   let finalModifier = function.modifiers.finalModifier {
+                    diagnoseFinalMember(finalModifier, attribute: attribute, context: context)
+                    isValid = false
+                    continue
+                }
+
                 let isNamedMember = function.name.text.isNamedMember
                 guard isNamedMember || targetKind == .protocol else {
                     context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.unsupportedOperatorRequirement))
@@ -1105,8 +1112,18 @@ private enum MemberGenerator {
                 continue
             }
 
-            if let property = item.decl.as(VariableDeclSyntax.self),
-               let generatedProperty = GeneratedProperty(property, targetKind: targetKind) {
+            if let property = item.decl.as(VariableDeclSyntax.self) {
+                if targetKind == .class,
+                   let finalModifier = property.modifiers.finalModifier {
+                    diagnoseFinalMember(finalModifier, attribute: attribute, context: context)
+                    isValid = false
+                    continue
+                }
+
+                guard let generatedProperty = GeneratedProperty(property, targetKind: targetKind) else {
+                    continue
+                }
+
                 generatedMembers.append(.property(generatedProperty))
                 continue
             }
@@ -1152,6 +1169,28 @@ private enum MemberGenerator {
         }
 
         return MemberGenerationResult(generatedMembers: generatedMembers, isValid: isValid)
+    }
+
+    private static func diagnoseFinalMember(
+        _ finalModifier: DeclModifierSyntax,
+        attribute: AttributeSyntax,
+        context: some MacroExpansionContext
+    ) {
+        let fixIt = FixIt(
+            message: MockSynFixItMessage.removeFinal,
+            changes: [
+                .replaceText(
+                    range: finalModifier.name.position..<finalModifier.name.endPosition,
+                    with: "",
+                    in: Syntax(finalModifier.root)
+                )
+            ]
+        )
+        context.diagnose(Diagnostic(
+            node: Syntax(attribute),
+            message: MockSynDiagnostic.finalClassMember,
+            fixIts: [fixIt]
+        ))
     }
 }
 

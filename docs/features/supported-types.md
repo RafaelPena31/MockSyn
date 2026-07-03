@@ -14,6 +14,7 @@ for common requirements starts in Block 3.
 | `NSObject` classes | Supported as non-final classes | Generates a final subclass. |
 | `@objc dynamic` members | Type accepted when class is subclassable | Supported members are generated as Swift overrides; runtime interception is not implemented. |
 | Final classes | Not supported | Emits a compile-time diagnostic. |
+| Final methods/properties on classes | Not supported | Emits a compile-time diagnostic with fix-it. |
 
 ## Protocols
 
@@ -111,7 +112,7 @@ interception. The generated type is a Swift subclass. Once a supported member is
 generated as an override, its behavior follows the generated mock/stub/spy rules
 instead of Objective-C runtime interception.
 
-## Final Classes
+## Final Classes And Final Members
 
 Final classes are rejected.
 
@@ -125,6 +126,22 @@ Diagnostic:
 
 ```text
 MockSyn cannot mock a pure Swift final class directly. Extract a protocol and apply @Mocking to the protocol.
+```
+
+Final methods and properties inside a subclassable class are also rejected,
+because the generated subclass cannot override that member:
+
+```swift
+@Mocking
+class UserService {
+    final func load() -> String { "real" }
+}
+```
+
+Diagnostic:
+
+```text
+MockSyn cannot mock final class members by subclass generation. Remove 'final' from the member or extract a protocol.
 ```
 
 ## Access Control

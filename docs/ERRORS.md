@@ -15,6 +15,7 @@ MockSyn has two kinds of errors: compile-time diagnostics from macros and runtim
 | --- | --- |
 | Macro on unsupported declaration | Emit an error explaining valid targets. |
 | Pure Swift final class | Emit an error recommending protocol extraction. |
+| Final class member | Emit an error recommending removing `final` from the member or extracting a protocol. |
 | Invalid mode option | Emit an error explaining the supported mode values. |
 | Private member requirement | Emit an error because generated code cannot satisfy inaccessible requirements. |
 | Unsupported class operator | Emit an error recommending a protocol operator requirement. |
@@ -29,6 +30,8 @@ MockSyn cannot mock a pure Swift final class directly. Extract a protocol and ap
 
 Actionable diagnostics may include fix-its. The final-class diagnostic suggests
 removing `final` when subclass generation is acceptable for the annotated type.
+The final-member diagnostic offers the same fix-it for the specific method or
+property that cannot be overridden.
 
 ## Runtime Failures
 

@@ -139,7 +139,7 @@ Este documento lista as features planejadas para o MockSyn, agrupadas por bloco 
 | --- | --- |
 | Tipo invalido | Erro claro quando macro e usada em algo nao suportado. |
 | Membro invalido | Erro claro para requisito nao geravel. |
-| Final class diagnostic | Explica que uma final class Swift pura nao e mockavel diretamente. |
+| Final class/member diagnostic | Explica que uma final class Swift pura e membros final nao sao mockaveis diretamente por subclass. |
 | Protocol inheritance diagnostic | Explica limites de heranca suportada. |
 | Fix-its | Sugestoes automaticas quando possivel. |
 | Matriz de suporte | Documentacao explicita do que e ou nao suportado. |

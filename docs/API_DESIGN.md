@@ -259,3 +259,18 @@ Expected diagnostic:
 ```text
 MockSyn cannot mock a pure Swift final class directly. Extract a protocol and apply @Mocking to the protocol.
 ```
+
+Final members inside otherwise subclassable classes use a separate diagnostic:
+
+```swift
+@Mocking
+class UserService {
+    final func fetchUser(id: String) async throws -> User { fatalError() }
+}
+```
+
+Expected diagnostic:
+
+```text
+MockSyn cannot mock final class members by subclass generation. Remove 'final' from the member or extract a protocol.
+```
