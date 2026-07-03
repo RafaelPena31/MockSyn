@@ -2,6 +2,20 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.30.0 - 2026-07-03
+
+### Changed
+
+- Split the macro generator into focused internal files for peer expansion, target rendering, member parsing, generated functions, properties, subscripts, initializers, and SwiftSyntax helpers.
+- Split runtime internals so argument rendering, invocation tracking, and stub rule resolution live outside the main `MockSynRuntime` file.
+- Split public API, generated integration, and macro expansion tests by behavior domain instead of keeping large procedural test files.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.30.0`.
+- This release is a structural refactor only. Public APIs and generated source behavior are unchanged.
+- All Swift source and test files are now below 500 lines.
+
 ## 0.29.0 - 2026-07-03
 
 ### Added

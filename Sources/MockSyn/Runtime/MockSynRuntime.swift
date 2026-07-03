@@ -282,7 +282,7 @@ public final class MockSynRuntime: @unchecked Sendable {
             .joined(separator: "\n")
     }
 
-    fileprivate static func arguments(_ arguments: [Any], match matchers: [MockSynAnyMatcher]) -> Bool {
+    static func arguments(_ arguments: [Any], match matchers: [MockSynAnyMatcher]) -> Bool {
         guard arguments.count == matchers.count else {
             return false
         }
@@ -294,94 +294,5 @@ public final class MockSynRuntime: @unchecked Sendable {
 
     private static func argumentDescription(_ arguments: [Any]) -> String {
         arguments.map(MockSynArgumentRenderer.render).joined(separator: ", ")
-    }
-}
-
-private enum MockSynArgumentRenderer {
-    static func render(_ value: Any) -> String {
-        if let type = value as? Any.Type {
-            return "\(String(describing: type)).Type"
-        }
-
-        if let string = value as? String {
-            return String(reflecting: string)
-        }
-
-        if String(describing: value) == "(Function)" {
-            return "<closure>"
-        }
-
-        let mirror = Mirror(reflecting: value)
-        switch mirror.displayStyle {
-        case .optional:
-            guard let child = mirror.children.first else {
-                return "nil"
-            }
-
-            return render(child.value)
-        case .collection:
-            return "[" + mirror.children.map { render($0.value) }.joined(separator: ", ") + "]"
-        case .set:
-            return "Set([" + mirror.children.map { render($0.value) }.sorted().joined(separator: ", ") + "])"
-        case .dictionary:
-            let entries = mirror.children.map { child in
-                let pair = Array(Mirror(reflecting: child.value).children)
-                return "\(render(pair[0].value)): \(render(pair[1].value))"
-            }
-
-            return "[" + entries.sorted().joined(separator: ", ") + "]"
-        default:
-            if let customDebug = value as? CustomDebugStringConvertible {
-                return customDebug.debugDescription
-            }
-
-            return String(reflecting: value)
-        }
-    }
-}
-
-private final class MockSynStubRule: @unchecked Sendable {
-    private let matchers: [MockSynAnyMatcher]
-    private var behavior: MockSynErasedStubBehavior
-    private(set) var wasUsed = false
-
-    init(matchers: [MockSynAnyMatcher], behavior: MockSynErasedStubBehavior) {
-        self.matchers = matchers
-        self.behavior = behavior
-    }
-
-    func matches(_ arguments: [Any]) -> Bool {
-        MockSynRuntime.arguments(arguments, match: matchers)
-    }
-
-    func resolve(_ arguments: [Any]) throws -> Any {
-        wasUsed = true
-        return try behavior.resolve(arguments)
-    }
-}
-
-private final class MockSynInvocation: @unchecked Sendable {
-    let member: String
-    let arguments: [Any]
-    let sequence: UInt64
-    var isVerified = false
-
-    init(member: String, arguments: [Any], sequence: UInt64) {
-        self.member = member
-        self.arguments = arguments
-        self.sequence = sequence
-    }
-}
-
-private enum MockSynInvocationClock {
-    private static let lock = NSRecursiveLock()
-    private static var current: UInt64 = 0
-
-    static func next() -> UInt64 {
-        lock.lock()
-        defer { lock.unlock() }
-
-        current += 1
-        return current
     }
 }

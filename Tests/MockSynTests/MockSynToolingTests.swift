@@ -22,14 +22,14 @@ final class MockSynToolingTests: XCTestCase {
 
     func testInspectorDoctorAndVersionCommands() throws {
         let version = try runTool("tools/mocksyn-inspect.sh", "version")
-        XCTAssertTrue(version.contains("MockSyn version 0.29.0"))
+        XCTAssertTrue(version.contains("MockSyn version 0.30.0"))
 
         let doctor = try runTool("tools/mocksyn-inspect.sh", "doctor")
         XCTAssertTrue(doctor.contains("MockSyn Inspector Doctor"))
         XCTAssertTrue(doctor.contains("OK Package.swift"))
         XCTAssertTrue(doctor.contains("OK DocC catalog"))
         XCTAssertTrue(doctor.contains("OK benchmark tool"))
-        XCTAssertTrue(doctor.contains("OK latest version 0.29.0"))
+        XCTAssertTrue(doctor.contains("OK latest version 0.30.0"))
     }
 
     func testInspectorDocCCommandCanValidateCatalog() throws {
