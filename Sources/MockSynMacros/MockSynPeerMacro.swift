@@ -863,11 +863,13 @@ private struct GeneratedProperty {
 
 private struct GeneratedSubscript {
     let attributes: String
+    let genericParameterClause: String
     let parameterClause: String
     let callArguments: String
     let argumentValues: String
     let stubParameters: [GeneratedParameter]
     let returnClause: String
+    let genericWhereClause: String
     let hasSetter: Bool
 
     func source(access: String, kind: MockSynPeerMacro.Kind, target: Target) -> String {
@@ -878,7 +880,7 @@ private struct GeneratedSubscript {
         let setterSource = hasSetter ? "\n    set {\n      __mockSyn.resolveVoid(member: \"\(signatureName).set\", arguments: \(setArguments))\n    }" : ""
 
         return """
-          \(attributes)\(access) \(declarationPrefix)subscript\(parameterClause)\(returnClause) {
+          \(attributes)\(access) \(declarationPrefix)subscript\(genericParameterClause)\(parameterClause)\(returnClause)\(genericWhereClause) {
             get {
               \(getterBody)
             }\(setterSource)
@@ -890,7 +892,7 @@ private struct GeneratedSubscript {
         let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
 
         return """
-            \(access) func `subscript`\(stubParameterClause) -> MockSynSubscriptStubber<\(returnType)> {
+            \(access) func `subscript`\(genericParameterClause)\(stubParameterClause) -> MockSynSubscriptStubber<\(returnType)>\(genericWhereClause) {
               MockSynSubscriptStubber(runtime: __mockSyn, getMember: "\(signatureName).get", setMember: "\(signatureName).set", indexMatchers: [\(matcherList)])
             }
         """
@@ -900,14 +902,14 @@ private struct GeneratedSubscript {
         let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
 
         return """
-            \(access) func `subscript`\(stubParameterClause) -> MockSynSubscriptVerification<\(returnType)> {
+            \(access) func `subscript`\(genericParameterClause)\(stubParameterClause) -> MockSynSubscriptVerification<\(returnType)>\(genericWhereClause) {
               MockSynSubscriptVerification(runtime: __mockSyn, getMember: "\(signatureName).get", setMember: "\(signatureName).set", indexMatchers: [\(matcherList)])
             }
         """
     }
 
     private var signatureName: String {
-        "subscript\(parameterClause.signatureSuffix)"
+        "subscript\(genericParameterClause)\(parameterClause.signatureSuffix)\(genericWhereClause)"
     }
 
     private var returnType: String {
@@ -977,11 +979,13 @@ private enum MemberGenerator {
             if let subscriptDeclaration = item.decl.as(SubscriptDeclSyntax.self) {
                 generatedMembers.append(.subscriptMember(GeneratedSubscript(
                     attributes: subscriptDeclaration.attributes.mockSynForwardedAttributes,
+                    genericParameterClause: subscriptDeclaration.genericParameterClause?.description.trimmedSource ?? "",
                     parameterClause: subscriptDeclaration.parameterClause.description.trimmedSource,
                     callArguments: subscriptDeclaration.parameterClause.subscriptCallArguments,
                     argumentValues: subscriptDeclaration.parameterClause.argumentValues,
                     stubParameters: subscriptDeclaration.parameterClause.generatedParameters,
                     returnClause: subscriptDeclaration.returnClause.description.trimmedReturnClause,
+                    genericWhereClause: subscriptDeclaration.genericWhereClause?.description.trimmedReturnClause ?? "",
                     hasSetter: subscriptDeclaration.accessorBlock?.description.range(of: "set") != nil
                 )))
                 continue

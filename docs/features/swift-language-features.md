@@ -20,6 +20,7 @@ inside the macro-only architecture.
 | `Sendable` inheritance | Supported where Swift accepts the generated type | `MockSynRuntime` is `@unchecked Sendable`. |
 | Associated types | Supported | Protocol associated types become generic parameters on generated doubles. |
 | Effectful property getters | Supported | Preserves `get async`, `get throws`, and `get async throws`. |
+| Generic subscripts | Supported | Preserves generic parameter clauses and generic `where` clauses. |
 
 ## Generic Methods
 
@@ -38,6 +39,22 @@ func map<Value>(_ value: Value) -> Value where Value: Sendable
 
 Non-void mocks and stubs still use placeholder `fatalError` bodies until the
 stubbing block provides configured return values.
+
+## Generic Subscripts
+
+Generic subscripts preserve the same syntax as generic methods:
+
+```swift
+@Mocking
+protocol GenericLookup {
+    subscript<Value: Sendable>(key: String, default defaultValue: Value) -> Value { get set }
+    subscript<Value>(optional key: String) -> Value? where Value: Equatable { get }
+}
+```
+
+The generated subscript and generated DSL methods keep `<Value: Sendable>` and
+`where Value: Equatable`, so stubbing and verification remain type-checked by
+Swift.
 
 ## Generic Classes
 

@@ -2,6 +2,26 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.18.0 - 2026-07-03
+
+### Added
+
+- Generic subscript generation for protocol and class doubles.
+- Preservation of subscript generic parameter clauses such as `<Value: Sendable>`.
+- Preservation of subscript generic `where` clauses on generated members and generated `given`, `when`, and `verify` APIs.
+- Runtime-backed stubbing and verification coverage for generic subscript getters and setters.
+- Macro expansion and integration tests proving generic subscripts compile and route through `MockSynRuntime`.
+
+### Changed
+
+- Generic subscript runtime member keys now include generic clauses and `where` clauses to avoid collisions between otherwise-identical generic subscript requirements.
+- Documentation and support matrix now describe generic subscripts as supported.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.18.0`.
+- When a generic type appears only in a subscript return type, tests can bind the generated `MockSynSubscriptStubber` or `MockSynSubscriptVerification` type explicitly.
+
 ## 0.17.0 - 2026-07-03
 
 ### Added

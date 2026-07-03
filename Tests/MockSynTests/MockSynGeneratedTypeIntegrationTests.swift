@@ -146,6 +146,12 @@ protocol StubbedUserService {
     subscript(key: String) -> String? { get set }
 }
 
+@Mocking
+protocol GenericSubscriptService {
+    subscript<Value: Sendable>(key: String, default defaultValue: Value) -> Value { get set }
+    subscript<Value>(optional key: String) -> Value? where Value: Equatable { get }
+}
+
 @Stubbing
 protocol RelaxedDefaultsService {
     var optionalName: String? { get }
@@ -594,6 +600,36 @@ final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
         XCTAssertEqual(mock["theme"], "dark")
         mock["theme"] = "light"
         XCTAssertEqual(assignedValue, "light")
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedMockUsesGenericSubscriptStubbingAndVerification() throws {
+        #if MOCKSYN_ENABLE
+        let mock = GenericSubscriptServiceMock()
+        var assignedValue: String?
+
+        mock.given.subscript(key: .value("name"), default: .value("fallback")).get.willReturn("Rafael")
+        mock.given.subscript(key: .value("name"), default: .value("fallback")).set(.value("assigned")).willRun { newValue in
+            assignedValue = newValue
+        }
+        let optionalStub: MockSynSubscriptStubber<Int?> = mock.given.subscript(optional: .value("score"))
+        optionalStub.get.willReturn(42)
+
+        let name: String = mock["name", default: "fallback"]
+        mock["name", default: "fallback"] = "assigned"
+        let score: Int? = mock[optional: "score"]
+
+        XCTAssertEqual(name, "Rafael")
+        XCTAssertEqual(assignedValue, "assigned")
+        XCTAssertEqual(score, 42)
+
+        try mock.verify.subscript(key: .value("name"), default: .value("fallback")).get.once()
+        try mock.verify.subscript(key: .value("name"), default: .value("fallback")).set(.value("assigned")).once()
+        let optionalVerification: MockSynSubscriptVerification<Int?> = mock.verify.subscript(optional: .value("score"))
+        try optionalVerification.get.once()
+        try mock.confirmVerified()
         #else
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif

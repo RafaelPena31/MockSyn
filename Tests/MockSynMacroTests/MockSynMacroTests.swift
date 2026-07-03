@@ -632,6 +632,96 @@ final class MockSynMacroTests: XCTestCase {
         )
     }
 
+    func testMockingGeneratesGenericSubscriptMembers() {
+        assertExpansion(
+            """
+            @Mocking
+            protocol GenericLookup {
+                subscript<Value: Sendable>(key: String, default defaultValue: Value) -> Value { get set }
+                subscript<Value>(optional key: String) -> Value? where Value: Equatable { get }
+            }
+            """,
+            expandedSource: """
+              protocol GenericLookup {
+                  subscript<Value: Sendable>(key: String, default defaultValue: Value) -> Value { get set }
+                  subscript<Value>(optional key: String) -> Value? where Value: Equatable { get }
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class GenericLookupMock: GenericLookup {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func `subscript`<Value: Sendable>(key: MockSynMatcher<String>, default defaultValue: MockSynMatcher<Value>) -> MockSynSubscriptStubber<Value> {
+                    MockSynSubscriptStubber(runtime: __mockSyn, getMember: "subscript<Value: Sendable>(key:default:).get", setMember: "subscript<Value: Sendable>(key:default:).set", indexMatchers: [key.erase(), defaultValue.erase()])
+                  }
+
+                  internal func `subscript`<Value>(optional key: MockSynMatcher<String>) -> MockSynSubscriptStubber<Value?> where Value: Equatable {
+                    MockSynSubscriptStubber(runtime: __mockSyn, getMember: "subscript<Value>(optional:) where Value: Equatable.get", setMember: "subscript<Value>(optional:) where Value: Equatable.set", indexMatchers: [key.erase()])
+                  }
+                }
+
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func `subscript`<Value: Sendable>(key: MockSynMatcher<String>, default defaultValue: MockSynMatcher<Value>) -> MockSynSubscriptVerification<Value> {
+                    MockSynSubscriptVerification(runtime: __mockSyn, getMember: "subscript<Value: Sendable>(key:default:).get", setMember: "subscript<Value: Sendable>(key:default:).set", indexMatchers: [key.erase(), defaultValue.erase()])
+                  }
+
+                  internal func `subscript`<Value>(optional key: MockSynMatcher<String>) -> MockSynSubscriptVerification<Value?> where Value: Equatable {
+                    MockSynSubscriptVerification(runtime: __mockSyn, getMember: "subscript<Value>(optional:) where Value: Equatable.get", setMember: "subscript<Value>(optional:) where Value: Equatable.set", indexMatchers: [key.erase()])
+                  }
+                }
+
+                internal subscript <Value: Sendable>(key: String, default defaultValue: Value) -> Value {
+                  get {
+                    __mockSyn.resolve(member: "subscript<Value: Sendable>(key:default:).get", arguments: [key as Any, defaultValue as Any], returnType: Value.self)
+                  }
+                  set {
+                    __mockSyn.resolveVoid(member: "subscript<Value: Sendable>(key:default:).set", arguments: [key as Any, defaultValue as Any, newValue as Any])
+                  }
+                }
+
+                internal subscript <Value>(optional key: String) -> Value? where Value: Equatable {
+                  get {
+                    __mockSyn.resolve(member: "subscript<Value>(optional:) where Value: Equatable.get", arguments: [key as Any], returnType: Value?.self)
+                  }
+                }
+              }
+              #endif
+              """
+        )
+    }
+
     func testSpyingGeneratesDelegatingProtocolMembers() {
         assertExpansion(
             """

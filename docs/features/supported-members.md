@@ -17,7 +17,7 @@ adds richer matchers and captors that plug into those generated member APIs.
 | `get` properties | Supported | Supported as overrides | Instance getters can be configured through generated property stubs. Effectful getters preserve `async`, `throws`, and `async throws`. |
 | `get set` properties | Supported | Supported as overrides | Setters are callable; getter behavior follows the getter rule. |
 | Static requirements | Supported for protocols | Not a class feature in this block | Static methods/properties are generated for protocol conformance. |
-| Subscripts | Supported | Supported as overrides | Protocol spies delegate readable subscripts. |
+| Subscripts | Supported | Supported as overrides | Protocol spies delegate readable subscripts. Generic parameter and `where` clauses are preserved. |
 | Initializers | Supported for protocol mocks/stubs | Not generated for class initializers | Spy initializer requirements are not generated in this block. |
 | Overloads | Supported when signatures are valid Swift | Supported when overridable | Overload resolution is left to Swift. |
 | Operators | Supported for protocol requirements | Diagnostic | Protocol operators generate real static operators and named DSL aliases. |
@@ -169,6 +169,34 @@ example `<~>` becomes `operator_u3c_u7e_u3e`.
 Class operator members are still rejected because MockSyn does not intercept
 concrete static dispatch through subclass generation.
 
+## Generic Subscripts
+
+Generic subscripts preserve their generic parameter clause and generic `where`
+clause in the generated member and in the generated `given`, `when`, and
+`verify` APIs:
+
+```swift
+@Mocking
+protocol GenericLookup {
+    subscript<Value: Sendable>(key: String, default defaultValue: Value) -> Value { get set }
+    subscript<Value>(optional key: String) -> Value? where Value: Equatable { get }
+}
+
+#if MOCKSYN_ENABLE
+let lookup = GenericLookupMock()
+
+lookup.given.subscript(key: .value("name"), default: .value("fallback")).get.willReturn("Rafael")
+
+let value: String = lookup["name", default: "fallback"]
+
+try lookup.verify.subscript(key: .value("name"), default: .value("fallback")).get.once()
+#endif
+```
+
+MockSyn includes the generic clause and `where` clause in the internal member
+key for generic subscripts. That keeps otherwise-identical generic subscript
+requirements from sharing the same runtime stubs or verification records.
+
 ## Limitations
 
 - Generic methods, generic classes, `Self` requirements, `where` clauses,
@@ -179,6 +207,7 @@ concrete static dispatch through subclass generation.
   Spies cannot delegate static protocol requirements through an instance wrapper.
 - Async spy property getters delegate directly after recording; targeted
   property stubs for those async getters are not applied before delegation.
+- Generic subscripts are supported for generated members and generated DSL APIs.
 - Properties without explicit type annotations are ignored by the member
   generator.
 - Verification APIs are available for generated instance and static methods,

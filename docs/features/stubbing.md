@@ -126,6 +126,22 @@ like `subscript(label key: String)`, the DSL is:
 settings.given.subscript(label: .value("theme")).get.willReturn("dark")
 ```
 
+Generic subscripts keep their generic constraints on the generated DSL method:
+
+```swift
+lookup.given.subscript(key: .value("name"), default: .value("fallback")).get.willReturn("Rafael")
+
+let value: String = lookup["name", default: "fallback"]
+```
+
+When a generic type appears only in the return type, bind the generated builder
+explicitly:
+
+```swift
+let stub: MockSynSubscriptStubber<Int?> = lookup.given.subscript(optional: .value("score"))
+stub.get.willReturn(42)
+```
+
 ## Relaxed Defaults
 
 Stubs default to `.relaxed`, so unstubbed supported return types can return a

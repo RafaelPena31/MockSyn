@@ -48,7 +48,7 @@ Initial platform support:
 | `async` members | Supported | Supported |
 | `async throws` members | Supported | Supported |
 | Properties | Supported, including `get async`, `get throws`, and `get async throws` | Supported, including `get async`, `get throws`, and `get async throws` |
-| Subscripts | Supported | Supported |
+| Subscripts | Supported, including generic subscripts | Supported, including generic subscripts |
 | Static protocol members | Supported with type-level stubbing/verification | Supported with type-level stubbing/verification |
 | Protocol initializers | Supported for mocks/stubs | Supported for mocks/stubs |
 | Protocol operator requirements | Supported with named type-level stubbing/verification DSL | Supported with named type-level stubbing/verification DSL |

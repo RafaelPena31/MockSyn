@@ -35,7 +35,7 @@ Este documento lista as features planejadas para o MockSyn, agrupadas por bloco 
 | Properties `get set` | Propriedades leitura e escrita. |
 | Metodos `Void` | Chamadas que nao retornam valor, mas precisam ser registradas e verificadas. |
 | Static requirements | Requisitos estaticos de protocolo, quando geraveis por macro. |
-| Subscripts | Suporte a `subscript`. |
+| Subscripts | Suporte a `subscript`, incluindo subscripts genericos com constraints. |
 | Initializers | Suporte onde fizer sentido para conformidade ou geracao de classe. |
 | Overloads | Metodos com mesmo nome, mas assinaturas diferentes. |
 | Operators | Suporte a requisitos de operador em protocolos com aliases nomeados para stubbing e verificacao; diagnostico para operadores de classe. |
