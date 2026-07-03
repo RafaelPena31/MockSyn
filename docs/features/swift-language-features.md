@@ -73,7 +73,8 @@ Generated class shape:
 final class BoxMock<Value>: Box<Value> where Value: Sendable
 ```
 
-Class doubles still require an accessible zero-argument initializer.
+Class doubles mirror non-variadic class initializers and forward arguments to
+the matching `super.init`.
 
 ## Inout And Closures
 

@@ -95,7 +95,10 @@ macro-first core.
 
 Macros operate on syntax available at the annotated declaration. They do not
 perform arbitrary semantic analysis across the whole project. This affects
-typealiases and some initializer scenarios.
+typealiases and some initializer scenarios. Variadic class initializers are
+diagnosed because Swift cannot forward captured variadic arrays to `super.init`,
+and required class initializers are diagnosed for class spies because the exact
+required signature cannot receive the wrapped spy instance.
 
 ## Custom Generated Names
 

@@ -60,9 +60,15 @@ let base: UserService = service
 #endif
 ```
 
-Generated class doubles call `super.init()` from their generated initializer. This
-means class doubles currently require an accessible zero-argument initializer.
-Class initializer mirroring is deferred beyond Block 3.
+Generated class doubles call the matching superclass initializer. Classes with
+an explicit zero-argument initializer still generate `super.init()`, while
+parameterized initializers generate matching forwarding calls such as
+`super.init(seed: seed)`.
+
+Mocks and stubs support `required` initializers by emitting the exact required
+initializer and a configurable initializer with `mode:`. Class spies cannot
+mirror `required` initializers because the exact required initializer cannot
+accept the wrapped instance used by the spy model.
 
 ## Spies For Classes
 
@@ -142,10 +148,11 @@ doubles. MockSyn does not generate `open` test doubles.
 
 ## Limitations
 
-- Classes must be subclassable and have an accessible zero-argument initializer.
+- Classes must be subclassable. Non-variadic class initializers are mirrored.
 - Final classes are not mocked directly.
 - Objective-C runtime interception is not part of the core macro-only flow.
-- Class initializer mirroring is not part of Block 3.
+- Variadic class initializers are diagnosed because Swift cannot forward
+  captured variadic arrays to `super.init`.
 - Associated-type protocols generate generic mocks, stubs, and spies when the
   associated types can be represented as generic parameters.
 - Qualified and complex protocol inheritance syntax is supported when Swift

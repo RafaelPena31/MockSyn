@@ -201,15 +201,17 @@ private struct MockSynPeerMacro {
 
         let access = options.access.sourceName
         let mode = options.mode.sourceName
-        let superInitLine = target.superInitCall.map { "\n    \($0)" } ?? ""
         let associatedTypeSource = target.associatedTypeSource(access: access)
         let staticRuntimeSource = target.staticRuntimeSource(access: access, kind: kind, mode: mode)
         let memberSource = target.members
             .map { $0.source(access: access, options: options, kind: kind, target: target, generatedName: generatedName) }
             .joined(separator: "\n\n")
-        let generatedMembers = memberSource.isEmpty ? "" : "\n\n\(memberSource)"
         let stubbingSource = target.stubbingSource(access: access, generatedName: generatedName)
         let staticStubbingSource = target.staticStubbingSource(access: access, generatedName: generatedName)
+        let initializerSource = target.primaryInitializerSource(access: access, kind: kind, mode: mode)
+        let generatedMembers = memberSource.isEmpty
+            ? ""
+            : "\(initializerSource.isEmpty ? "" : "\n\n")\(memberSource)"
 
         let declarationSource: String
         if kind == .spy {
@@ -221,10 +223,7 @@ private struct MockSynPeerMacro {
               \(access) let __mockSyn: MockSynRuntime
               \(access) let __mockSynWrapped: \(target.wrappedTypeName)
 
-              \(access) init(wrapping __mockSynWrapped: \(target.wrappedTypeName), mode: MockSynMode = \(mode)) {
-                self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: mode)
-                self.__mockSynWrapped = __mockSynWrapped\(superInitLine)
-              }\(staticStubbingSource)\(stubbingSource)\(generatedMembers)
+            \(initializerSource)\(staticStubbingSource)\(stubbingSource)\(generatedMembers)
             }
             #endif
             """
@@ -236,9 +235,7 @@ private struct MockSynPeerMacro {
             \(staticRuntimeSource)\
               \(access) let __mockSyn: MockSynRuntime
 
-              \(access) init(mode: MockSynMode = \(mode)) {
-                self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: mode)\(superInitLine)
-              }\(staticStubbingSource)\(stubbingSource)\(generatedMembers)
+            \(initializerSource)\(staticStubbingSource)\(stubbingSource)\(generatedMembers)
             }
             #endif
             """
@@ -278,17 +275,41 @@ private struct Target {
         }
     }
 
-    var superInitCall: String? {
-        switch kind {
-        case .protocol:
-            return nil
-        case .class:
-            return "super.init()"
+    var hasStaticMembers: Bool {
+        members.contains { $0.isStatic }
+    }
+
+    var hasInitializerMembers: Bool {
+        members.contains { member in
+            if case .initializer = member {
+                return true
+            }
+
+            return false
         }
     }
 
-    var hasStaticMembers: Bool {
-        members.contains { $0.isStatic }
+    func primaryInitializerSource(access: String, kind doubleKind: MockSynPeerMacro.Kind, mode: String) -> String {
+        if kind == .class, hasInitializerMembers {
+            return ""
+        }
+
+        if doubleKind == .spy {
+            let superInitLine = kind == .class ? "\n    super.init()" : ""
+            return """
+              \(access) init(wrapping __mockSynWrapped: \(wrappedTypeName), mode: MockSynMode = \(mode)) {
+                self.__mockSyn = MockSynRuntime(kind: \(doubleKind.runtimeKind), mode: mode)
+                self.__mockSynWrapped = __mockSynWrapped\(superInitLine)
+              }
+            """
+        }
+
+        let superInitLine = kind == .class ? "\n    super.init()" : ""
+        return """
+          \(access) init(mode: MockSynMode = \(mode)) {
+            self.__mockSyn = MockSynRuntime(kind: \(doubleKind.runtimeKind), mode: mode)\(superInitLine)
+          }
+        """
     }
 
     func associatedTypeSource(access: String) -> String {
@@ -507,7 +528,7 @@ private enum GeneratedMember {
     ) -> String {
         switch self {
         case .initializer(let initializer):
-            return initializer.source(access: access, options: options, kind: kind)
+            return initializer.source(access: access, options: options, kind: kind, target: target)
         case .function(let function):
             return function.source(access: access, kind: kind, target: target, generatedName: generatedName)
         case .property(let property):
@@ -567,12 +588,64 @@ private enum GeneratedMember {
 }
 
 private struct GeneratedInitializer {
+    let optionalMark: String
     let parameterClause: String
+    let callArguments: String
+    let effectSpecifiers: String
+    let isRequired: Bool
 
-    func source(access: String, options: MockSynMacroOptions, kind: MockSynPeerMacro.Kind) -> String {
+    func source(access: String, options: MockSynMacroOptions, kind: MockSynPeerMacro.Kind, target: Target) -> String {
+        if target.kind == .class {
+            return classSource(access: access, options: options, kind: kind, target: target)
+        }
+
         return """
-          \(access) init\(parameterClause) {
+          \(access) init\(optionalMark)\(parameterClause)\(effectSpecifiers) {
             self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: \(options.mode.sourceName))
+          }
+        """
+    }
+
+    private func classSource(
+        access: String,
+        options: MockSynMacroOptions,
+        kind: MockSynPeerMacro.Kind,
+        target: Target
+    ) -> String {
+        if isRequired {
+            return """
+              \(access) required init\(optionalMark)\(parameterClause)\(effectSpecifiers) {
+                self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: \(options.mode.sourceName))
+                \(effectSpecifiers.callPrefix)super.init(\(callArguments))
+              }
+
+            \(configurableClassSource(access: access, options: options, kind: kind, target: target))
+            """
+        }
+
+        return configurableClassSource(access: access, options: options, kind: kind, target: target)
+    }
+
+    private func configurableClassSource(
+        access: String,
+        options: MockSynMacroOptions,
+        kind: MockSynPeerMacro.Kind,
+        target: Target
+    ) -> String {
+        if kind == .spy {
+            return """
+              \(access) init\(optionalMark)\(parameterClause.spyInitializerParameterClause(wrappedTypeName: target.wrappedTypeName, mode: options.mode.sourceName))\(effectSpecifiers) {
+                self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: mode)
+                self.__mockSynWrapped = __mockSynWrapped
+                \(effectSpecifiers.callPrefix)super.init(\(callArguments))
+              }
+            """
+        }
+
+        return """
+          \(access) init\(optionalMark)\(parameterClause.appendingModeParameter(defaultMode: options.mode.sourceName))\(effectSpecifiers) {
+            self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: mode)
+            \(effectSpecifiers.callPrefix)super.init(\(callArguments))
           }
         """
     }
@@ -1053,11 +1126,26 @@ private enum MemberGenerator {
                 continue
             }
 
-            if targetKind == .protocol,
-               let initializer = item.decl.as(InitializerDeclSyntax.self),
-               doubleKind != .spy {
+            if let initializer = item.decl.as(InitializerDeclSyntax.self),
+               (targetKind == .class || doubleKind != .spy) {
+                if targetKind == .class, initializer.signature.parameterClause.hasVariadicParameter {
+                    context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.unsupportedVariadicClassInitializer))
+                    isValid = false
+                    continue
+                }
+
+                if targetKind == .class, doubleKind == .spy, initializer.modifiers.containsRequired {
+                    context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.unsupportedRequiredClassSpyInitializer))
+                    isValid = false
+                    continue
+                }
+
                 generatedMembers.append(.initializer(GeneratedInitializer(
-                    parameterClause: initializer.signature.parameterClause.description.trimmedSource
+                    optionalMark: initializer.optionalMark?.text ?? "",
+                    parameterClause: initializer.signature.parameterClause.description.trimmedSource,
+                    callArguments: initializer.signature.parameterClause.callArguments,
+                    effectSpecifiers: initializer.signature.effectSpecifiers?.description.trimmedEffectSpecifiers ?? "",
+                    isRequired: initializer.modifiers.containsRequired
                 )))
                 continue
             }
@@ -1092,6 +1180,12 @@ private extension DeclModifierListSyntax {
     var containsStatic: Bool {
         contains { modifier in
             modifier.name.text == "static"
+        }
+    }
+
+    var containsRequired: Bool {
+        contains { modifier in
+            modifier.name.text == "required"
         }
     }
 }
@@ -1306,6 +1400,19 @@ private extension String {
 
     func resolvingParameterSelf(as generatedName: String) -> String {
         replacingOccurrences(of: ": Self", with: ": \(generatedName)")
+    }
+
+    func appendingModeParameter(defaultMode: String) -> String {
+        let parameter = "mode: MockSynMode = \(defaultMode)"
+        let content = dropFirst().dropLast().trimmingCharacters(in: .whitespacesAndNewlines)
+        return content.isEmpty ? "(\(parameter))" : "(\(content), \(parameter))"
+    }
+
+    func spyInitializerParameterClause(wrappedTypeName: String, mode: String) -> String {
+        let prefix = "wrapping __mockSynWrapped: \(wrappedTypeName)"
+        let suffix = "mode: MockSynMode = \(mode)"
+        let content = dropFirst().dropLast().trimmingCharacters(in: .whitespacesAndNewlines)
+        return content.isEmpty ? "(\(prefix), \(suffix))" : "(\(prefix), \(content), \(suffix))"
     }
 
     var mockSynOperatorDslName: String {

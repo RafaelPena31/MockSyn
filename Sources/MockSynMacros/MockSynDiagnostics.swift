@@ -44,6 +44,16 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
         message: "MockSyn cannot generate class operator members. Move the operator behind a protocol requirement."
     )
 
+    static let unsupportedRequiredClassSpyInitializer = MockSynDiagnostic(
+        id: "unsupportedRequiredClassSpyInitializer",
+        message: "MockSyn cannot mirror required class initializers for spies because class spies need a wrapped instance. Prefer a protocol spy or remove the required initializer."
+    )
+
+    static let unsupportedVariadicClassInitializer = MockSynDiagnostic(
+        id: "unsupportedVariadicClassInitializer",
+        message: "MockSyn cannot mirror variadic class initializers because Swift cannot forward captured variadic arrays to super.init."
+    )
+
     private init(id: String, message: String) {
         self.message = message
         self.diagnosticID = MessageID(domain: "MockSyn", id: id)

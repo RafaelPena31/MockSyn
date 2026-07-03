@@ -2,6 +2,27 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.20.0 - 2026-07-03
+
+### Added
+
+- Class initializer mirroring for generated mocks, stubs, and supported class spies.
+- Generated class initializer overloads that forward parameters to the matching `super.init(...)`.
+- Per-instance `mode:` overrides on mirrored class mock/stub initializers.
+- Support for `required` class initializers on mocks and stubs through an exact required initializer plus a configurable convenience-shaped initializer.
+- Compile-time diagnostics for variadic class initializers and required class initializers on spies.
+- Macro expansion and integration tests proving parameterized class initializers compile, call the superclass initializer, and preserve runtime mode selection.
+
+### Changed
+
+- Class doubles no longer require an accessible zero-argument initializer when the annotated class declares non-variadic initializers that MockSyn can mirror.
+- Documentation and support matrix now describe class initializer mirroring and its remaining Swift language limits.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.20.0`.
+- Variadic class initializers remain unsupported because Swift cannot forward captured variadic arrays to `super.init`. Class spies with `required init` remain unsupported because their required exact initializer cannot receive the wrapped instance required by the spy model.
+
 ## 0.19.0 - 2026-07-03
 
 ### Added

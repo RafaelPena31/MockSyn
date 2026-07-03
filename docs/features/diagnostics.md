@@ -15,6 +15,8 @@ next step.
 | Invalid `mode` option | Supported | Emits the supported mode values: `.strict` and `.relaxed`. |
 | Visibility widening | Supported | Rejects generated access that is wider than the annotated declaration. |
 | Class operator members | Supported | Emits an error because subclass generation does not intercept concrete static operators. |
+| Variadic class initializers | Supported | Emits an error because Swift cannot forward captured variadic arrays to `super.init`. |
+| Required class initializer on spies | Supported | Emits an error because the exact required initializer cannot receive the wrapped spy instance. |
 
 ## Invalid Target
 
@@ -127,6 +129,40 @@ Diagnostic:
 
 ```text
 MockSyn cannot generate class operator members. Move the operator behind a protocol requirement.
+```
+
+Variadic class initializers are rejected because the macro receives the captured
+variadic values as an array, and Swift has no general splat syntax for
+forwarding that array to `super.init`:
+
+```swift
+@Mocking
+class SeededService {
+    init(values: Int...) {}
+}
+```
+
+Diagnostic:
+
+```text
+MockSyn cannot mirror variadic class initializers because Swift cannot forward captured variadic arrays to super.init.
+```
+
+Class spies also reject `required` class initializers. The exact required
+signature must be implemented by the subclass, but MockSyn class spies need a
+wrapped instance parameter:
+
+```swift
+@Spying
+class CacheStore {
+    required init(seed: String) {}
+}
+```
+
+Diagnostic:
+
+```text
+MockSyn cannot mirror required class initializers for spies because class spies need a wrapped instance. Prefer a protocol spy or remove the required initializer.
 ```
 
 ## Support Matrix

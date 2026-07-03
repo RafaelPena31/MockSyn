@@ -51,6 +51,7 @@ Initial platform support:
 | Subscripts | Supported, including generic subscripts | Supported, including generic subscripts |
 | Static protocol members | Supported with type-level stubbing/verification | Supported with type-level stubbing/verification |
 | Protocol initializers | Supported for mocks/stubs | Supported for mocks/stubs |
+| Class initializers | Mirrored for non-variadic class initializers; required initializers supported for mocks/stubs | Mirrored for non-variadic class initializers; required initializers supported for mocks/stubs |
 | Protocol operator requirements | Supported with named type-level stubbing/verification DSL | Supported with named type-level stubbing/verification DSL |
 | Class operator members | Diagnostic | Diagnostic |
 | Generic methods | Supported | Supported |

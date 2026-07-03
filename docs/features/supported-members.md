@@ -18,7 +18,7 @@ adds richer matchers and captors that plug into those generated member APIs.
 | `get set` properties | Supported | Supported as overrides | Setters are callable; getter behavior follows the getter rule. |
 | Static requirements | Supported for protocols | Not a class feature in this block | Static methods/properties are generated for protocol conformance. |
 | Subscripts | Supported | Supported as overrides | Protocol spies delegate readable subscripts. Generic parameter and `where` clauses are preserved. |
-| Initializers | Supported for protocol mocks/stubs | Not generated for class initializers | Spy initializer requirements are not generated in this block. |
+| Initializers | Supported for protocol mocks/stubs | Mirrored for non-variadic class initializers | Required class initializers are supported for mocks/stubs. Class spies diagnose required initializers. |
 | Overloads | Supported when signatures are valid Swift | Supported when overridable | Overload resolution is left to Swift. |
 | Operators | Supported for protocol requirements | Diagnostic | Protocol operators generate real static operators and named DSL aliases. |
 
@@ -127,12 +127,29 @@ let service = SeededServiceMock(seed: "test")
 #endif
 ```
 
-Generated initializer requirements use the macro's configured mode. They do not
-add a custom `mode:` parameter because they must match the protocol requirement.
+Generated protocol initializer requirements use the macro's configured mode.
+They do not add a custom `mode:` parameter because they must match the protocol
+requirement.
 
-Class initializer mirroring is not part of Block 3. Class doubles still require
-an accessible zero-argument initializer for the generated convenience initializer
-that MockSyn provides.
+Class doubles mirror non-variadic class initializers and forward parameters to
+the matching superclass initializer:
+
+```swift
+@Mocking
+class SeededService {
+    init(seed: String) {}
+}
+
+#if MOCKSYN_ENABLE
+let service = SeededServiceMock(seed: "test", mode: .relaxed)
+#endif
+```
+
+Mocks and stubs support `required` class initializers by generating the exact
+required initializer plus a configurable initializer that accepts `mode:`.
+Class spies require a wrapped instance, so required class initializers on spies
+emit a diagnostic. Variadic class initializers also emit a diagnostic because
+Swift cannot forward captured variadic arrays to `super.init`.
 
 ## Operators
 
@@ -211,6 +228,10 @@ requirements from sharing the same runtime stubs or verification records.
 - Variadic spy delegation supports one synchronous variadic parameter with 0
   through 8 forwarded values. Async variadic methods and methods with multiple
   variadic parameters remain stub-driven.
+- Class initializer mirroring supports non-variadic class initializers. Required
+  class initializers are supported for mocks and stubs; class spies diagnose
+  required initializers because the exact required signature cannot receive the
+  wrapped instance.
 - Properties without explicit type annotations are ignored by the member
   generator.
 - Verification APIs are available for generated instance and static methods,

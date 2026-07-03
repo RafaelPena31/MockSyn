@@ -24,9 +24,9 @@ Implement member generation for declarations already accepted by MockSyn:
     exists.
 - Generate spy delegation for supported instance methods and readable members
   when the wrapped implementation can be called directly.
-- Limit generated initializer requirements to protocols for mocks and stubs.
-  Class initializer mirroring and spy initializer requirements remain out of
-  scope.
+- Limit generated initializer requirements to protocols for mocks and stubs in
+  Block 3. Later releases add class initializer mirroring for non-variadic class
+  initializers where Swift subclassing supports forwarding.
 
 ## Verification
 
