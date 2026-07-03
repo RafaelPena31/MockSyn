@@ -404,6 +404,18 @@ final class MockSynMacroTests: XCTestCase {
                   given
                 }
 
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
@@ -437,6 +449,42 @@ final class MockSynMacroTests: XCTestCase {
 
                   internal func `subscript`(key: MockSynMatcher<String>) -> MockSynSubscriptStubber<String?> {
                     MockSynSubscriptStubber(runtime: __mockSyn, getMember: "subscript(key:).get", setMember: "subscript(key:).set", indexMatchers: [key.erase()])
+                  }
+                }
+
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var currentUser: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "currentUser.get", setMember: "currentUser.set")
+                  }
+
+                  internal var token: MockSynPropertyVerification<String?> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "token.get", setMember: "token.set")
+                  }
+
+                  internal func load(id: MockSynMatcher<String>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "load(id:)", matchers: [id.erase()])
+                  }
+
+                  internal func combine(_ name: MockSynMatcher<String>, retry: MockSynMatcher<Int>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "combine(_:retry:)", matchers: [name.erase(), retry.erase()])
+                  }
+
+                  internal func save(_ user: MockSynMatcher<String>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "save(_:)", matchers: [user.erase()])
+                  }
+
+                  internal func refresh() -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "refresh()", matchers: [])
+                  }
+
+                  internal func fetch(id: MockSynMatcher<String>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "fetch(id:)", matchers: [id.erase()])
+                  }
+
+                  internal func `subscript`(key: MockSynMatcher<String>) -> MockSynSubscriptVerification<String?> {
+                    MockSynSubscriptVerification(runtime: __mockSyn, getMember: "subscript(key:).get", setMember: "subscript(key:).set", indexMatchers: [key.erase()])
                   }
                 }
 
@@ -562,6 +610,18 @@ final class MockSynMacroTests: XCTestCase {
                   given
                 }
 
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
@@ -606,6 +666,50 @@ final class MockSynMacroTests: XCTestCase {
                   }
                 }
 
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var count: MockSynPropertyVerification<Int> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "count.get", setMember: "count.set")
+                  }
+
+                  internal var token: MockSynPropertyVerification<String?> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "token.get", setMember: "token.set")
+                  }
+
+                  internal func load(id: MockSynMatcher<String>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "load(id:)", matchers: [id.erase()])
+                  }
+
+                  internal func fail() -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "fail()", matchers: [])
+                  }
+
+                  internal func mutate(_ value: MockSynMatcher<Int>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "mutate(_:)", matchers: [value.erase()])
+                  }
+
+                  internal func normalize(_ value: MockSynMatcher<Int>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "normalize(_:)", matchers: [value.erase()])
+                  }
+
+                  internal func stream() -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "stream()", matchers: [])
+                  }
+
+                  internal func save(_ value: MockSynMatcher<String>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "save(_:)", matchers: [value.erase()])
+                  }
+
+                  internal func `subscript`(key: MockSynMatcher<String>) -> MockSynSubscriptVerification<String?> {
+                    MockSynSubscriptVerification(runtime: __mockSyn, getMember: "subscript(key:).get", setMember: "subscript(key:).set", indexMatchers: [key.erase()])
+                  }
+
+                  internal func `subscript`(label key: MockSynMatcher<String>) -> MockSynSubscriptVerification<String?> {
+                    MockSynSubscriptVerification(runtime: __mockSyn, getMember: "subscript(label:).get", setMember: "subscript(label:).set", indexMatchers: [key.erase()])
+                  }
+                }
+
                 internal var count: Int {
                   get {
                     __mockSyn.resolve(member: "count.get", arguments: [], returnType: Int.self, fallback: {
@@ -638,10 +742,12 @@ final class MockSynMacroTests: XCTestCase {
                 }
 
                 internal func mutate(_ value: inout Int) {
+                  __mockSyn.record(member: "mutate(_:)", arguments: [value as Any])
                   __mockSynWrapped.mutate(&value)
                 }
 
                 internal func normalize(_ value: inout Int) -> String {
+                  __mockSyn.record(member: "normalize(_:)", arguments: [value as Any])
                   return __mockSynWrapped.normalize(&value)
                 }
 
@@ -704,11 +810,31 @@ final class MockSynMacroTests: XCTestCase {
                   given
                 }
 
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
                   internal func `subscript`(_ key: MockSynMatcher<String>) -> MockSynSubscriptStubber<String?> {
                     MockSynSubscriptStubber(runtime: __mockSyn, getMember: "subscript(_:).get", setMember: "subscript(_:).set", indexMatchers: [key.erase()])
+                  }
+                }
+
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func `subscript`(_ key: MockSynMatcher<String>) -> MockSynSubscriptVerification<String?> {
+                    MockSynSubscriptVerification(runtime: __mockSyn, getMember: "subscript(_:).get", setMember: "subscript(_:).set", indexMatchers: [key.erase()])
                   }
                 }
 
@@ -763,6 +889,18 @@ final class MockSynMacroTests: XCTestCase {
                   given
                 }
 
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
@@ -788,6 +926,34 @@ final class MockSynMacroTests: XCTestCase {
 
                   internal func collect(_ values: MockSynMatcher<[Int]>) -> MockSynStubBuilder1<[Int], Int> {
                     MockSynStubBuilder1<[Int], Int>(runtime: __mockSyn, member: "collect(_:)", matchers: [values.erase()])
+                  }
+                }
+
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var title: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "title.get", setMember: "title.set")
+                  }
+
+                  internal func map<Value>(_ value: MockSynMatcher<Value>) -> MockSynVerification where Value: Sendable {
+                    MockSynVerification(runtime: __mockSyn, member: "map(_:)", matchers: [value.erase()])
+                  }
+
+                  internal func update(_ value: MockSynMatcher<Int>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "update(_:)", matchers: [value.erase()])
+                  }
+
+                  internal func handle(_ action: MockSynMatcher<(String) -> Void>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "handle(_:)", matchers: [action.erase()])
+                  }
+
+                  internal func clone() -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "clone()", matchers: [])
+                  }
+
+                  internal func collect(_ values: MockSynMatcher<[Int]>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "collect(_:)", matchers: [values.erase()])
                   }
                 }
 
@@ -856,6 +1022,18 @@ final class MockSynMacroTests: XCTestCase {
                   given
                 }
 
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
@@ -872,7 +1050,24 @@ final class MockSynMacroTests: XCTestCase {
                   }
                 }
 
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func update(_ value: MockSynMatcher<Int>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "update(_:)", matchers: [value.erase()])
+                  }
+
+                  internal func handle(_ action: MockSynMatcher<(String) -> Void>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "handle(_:)", matchers: [action.erase()])
+                  }
+
+                  internal func collect(_ values: MockSynMatcher<[Int]>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "collect(_:)", matchers: [values.erase()])
+                  }
+                }
+
                 internal func update(_ value: inout Int) {
+                  __mockSyn.record(member: "update(_:)", arguments: [value as Any])
                   __mockSynWrapped.update(&value)
                 }
 
@@ -921,11 +1116,31 @@ final class MockSynMacroTests: XCTestCase {
                   given
                 }
 
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
                   internal func refresh() -> MockSynStubBuilder<Void> {
                     MockSynStubBuilder<Void>(runtime: __mockSyn, member: "refresh()", matchers: [])
+                  }
+                }
+
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func refresh() -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "refresh()", matchers: [])
                   }
                 }
 
@@ -971,11 +1186,31 @@ final class MockSynMacroTests: XCTestCase {
                   given
                 }
 
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
                   internal func load(_ value: MockSynMatcher<Value>) -> MockSynStubBuilder1<Value, Value> {
                     MockSynStubBuilder1<Value, Value>(runtime: __mockSyn, member: "load(_:)", matchers: [value.erase()])
+                  }
+                }
+
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func load(_ value: MockSynMatcher<Value>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "load(_:)", matchers: [value.erase()])
                   }
                 }
 
@@ -1075,6 +1310,18 @@ final class MockSynMacroTests: XCTestCase {
                   given
                 }
 
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
@@ -1096,6 +1343,30 @@ final class MockSynMacroTests: XCTestCase {
 
                   internal func `subscript`(key: MockSynMatcher<String>) -> MockSynSubscriptStubber<String> {
                     MockSynSubscriptStubber(runtime: __mockSyn, getMember: "subscript(key:).get", setMember: "subscript(key:).set", indexMatchers: [key.erase()])
+                  }
+                }
+
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var storedToken: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "storedToken.get", setMember: "storedToken.set")
+                  }
+
+                  internal var token: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "token.get", setMember: "token.set")
+                  }
+
+                  internal func load(id: MockSynMatcher<String>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "load(id:)", matchers: [id.erase()])
+                  }
+
+                  internal func save(_ user: MockSynMatcher<String>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "save(_:)", matchers: [user.erase()])
+                  }
+
+                  internal func `subscript`(key: MockSynMatcher<String>) -> MockSynSubscriptVerification<String> {
+                    MockSynSubscriptVerification(runtime: __mockSyn, getMember: "subscript(key:).get", setMember: "subscript(key:).set", indexMatchers: [key.erase()])
                   }
                 }
 

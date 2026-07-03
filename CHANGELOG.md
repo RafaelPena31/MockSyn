@@ -2,6 +2,26 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.6.0 - 2026-07-03
+
+### Added
+
+- Runtime invocation store for generated mocks, stubs, and spies.
+- Generated `verify` APIs for instance methods, properties, and subscripts.
+- Verification counts: `.once`, `.never`, `.times`, `.atLeast`, and `.atMost`.
+- Argument-specific verification using existing typed matchers.
+- `confirmVerified()` to detect unverified recorded calls.
+- `checkUnnecessaryStubs()` to detect configured stubs that were never used.
+- Cross-mock order verification with `MockSynVerifier.verifyOrder`.
+- Timeout verification with async `wasCalled(_:timeout:)`.
+- Explicit recording for spy methods with `inout` parameters before delegation.
+- Documentation for the verification feature block.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.6.0`.
+- Captors, richer matchers, and testing-framework failure adapters remain planned for later blocks.
+
 ## 0.5.0 - 2026-07-02
 
 ### Added

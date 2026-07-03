@@ -23,6 +23,7 @@ public final class MockSynRuntime: @unchecked Sendable {
 
     private let lock = NSRecursiveLock()
     private var stubs: [String: [MockSynStubRule]] = [:]
+    private var invocations: [MockSynInvocation] = []
 
     /// Creates runtime state for a generated test double.
     public init(kind: MockSynDoubleKind, mode: MockSynMode) {
@@ -59,6 +60,8 @@ public final class MockSynRuntime: @unchecked Sendable {
         returnType: Return.Type,
         fallback: (() throws -> Return)? = nil
     ) throws -> Return {
+        recordInvocation(member: member, arguments: arguments)
+
         if let value = try resolveStub(member: member, arguments: arguments) {
             return value as! Return
         }
@@ -85,6 +88,81 @@ public final class MockSynRuntime: @unchecked Sendable {
         let _: Void = try resolveThrowing(member: member, arguments: arguments, returnType: Void.self, fallback: fallback)
     }
 
+    /// Records a generated member call without resolving stubs.
+    public func record(member: String, arguments: [Any]) {
+        recordInvocation(member: member, arguments: arguments)
+    }
+
+    /// Verifies recorded invocations for a generated member and marks matching calls as verified.
+    public func verify(member: String, matchers: [MockSynAnyMatcher], count: MockSynVerificationCount) throws {
+        let matchingInvocations = matchingInvocations(member: member, matchers: matchers)
+        guard count.matches(matchingInvocations.count) else {
+            throw MockSynVerificationError.expected(member: member, count: count, actual: matchingInvocations.count)
+        }
+
+        lock.lock()
+        defer { lock.unlock() }
+
+        for invocation in matchingInvocations {
+            invocation.isVerified = true
+        }
+    }
+
+    /// Fails when any recorded invocation has not been verified.
+    public func confirmVerified() throws {
+        lock.lock()
+        let unverifiedMembers = invocations
+            .filter { !$0.isVerified }
+            .map(\.member)
+        lock.unlock()
+
+        guard unverifiedMembers.isEmpty else {
+            throw MockSynVerificationError.unverifiedInvocations(unverifiedMembers)
+        }
+    }
+
+    /// Fails when configured stubs were never matched by a call.
+    public func checkUnnecessaryStubs() throws {
+        lock.lock()
+        let unusedMembers = stubs.flatMap { member, rules in
+            rules.filter { !$0.wasUsed }.map { _ in member }
+        }
+        lock.unlock()
+
+        guard unusedMembers.isEmpty else {
+            throw MockSynVerificationError.unnecessaryStubs(unusedMembers)
+        }
+    }
+
+    func firstInvocationSequence(member: String, matchers: [MockSynAnyMatcher]) throws -> UInt64 {
+        guard let invocation = matchingInvocations(member: member, matchers: matchers).first else {
+            throw MockSynVerificationError.expected(member: member, count: .atLeast(1), actual: 0)
+        }
+
+        return invocation.sequence
+    }
+
+    func invocationCount(member: String, matchers: [MockSynAnyMatcher]) -> Int {
+        matchingInvocations(member: member, matchers: matchers).count
+    }
+
+    private func recordInvocation(member: String, arguments: [Any]) {
+        lock.lock()
+        defer { lock.unlock() }
+
+        invocations.append(MockSynInvocation(member: member, arguments: arguments, sequence: MockSynInvocationClock.next()))
+    }
+
+    private func matchingInvocations(member: String, matchers: [MockSynAnyMatcher]) -> [MockSynInvocation] {
+        lock.lock()
+        let snapshot = invocations
+        lock.unlock()
+
+        return snapshot.filter { invocation in
+            invocation.member == member && MockSynRuntime.arguments(invocation.arguments, match: matchers)
+        }
+    }
+
     private func resolveStub(member: String, arguments: [Any]) throws -> Any? {
         lock.lock()
         defer { lock.unlock() }
@@ -99,18 +177,8 @@ public final class MockSynRuntime: @unchecked Sendable {
 
         return nil
     }
-}
 
-private final class MockSynStubRule: @unchecked Sendable {
-    private let matchers: [MockSynAnyMatcher]
-    private var behavior: MockSynErasedStubBehavior
-
-    init(matchers: [MockSynAnyMatcher], behavior: MockSynErasedStubBehavior) {
-        self.matchers = matchers
-        self.behavior = behavior
-    }
-
-    func matches(_ arguments: [Any]) -> Bool {
+    fileprivate static func arguments(_ arguments: [Any], match matchers: [MockSynAnyMatcher]) -> Bool {
         guard arguments.count == matchers.count else {
             return false
         }
@@ -119,8 +187,50 @@ private final class MockSynStubRule: @unchecked Sendable {
             matcher.matches(argument)
         }
     }
+}
+
+private final class MockSynStubRule: @unchecked Sendable {
+    private let matchers: [MockSynAnyMatcher]
+    private var behavior: MockSynErasedStubBehavior
+    private(set) var wasUsed = false
+
+    init(matchers: [MockSynAnyMatcher], behavior: MockSynErasedStubBehavior) {
+        self.matchers = matchers
+        self.behavior = behavior
+    }
+
+    func matches(_ arguments: [Any]) -> Bool {
+        MockSynRuntime.arguments(arguments, match: matchers)
+    }
 
     func resolve(_ arguments: [Any]) throws -> Any {
-        try behavior.resolve(arguments)
+        wasUsed = true
+        return try behavior.resolve(arguments)
+    }
+}
+
+private final class MockSynInvocation: @unchecked Sendable {
+    let member: String
+    let arguments: [Any]
+    let sequence: UInt64
+    var isVerified = false
+
+    init(member: String, arguments: [Any], sequence: UInt64) {
+        self.member = member
+        self.arguments = arguments
+        self.sequence = sequence
+    }
+}
+
+private enum MockSynInvocationClock {
+    private static let lock = NSRecursiveLock()
+    private static var current: UInt64 = 0
+
+    static func next() -> UInt64 {
+        lock.lock()
+        defer { lock.unlock() }
+
+        current += 1
+        return current
     }
 }

@@ -258,11 +258,14 @@ private struct Target {
     }
 
     func stubbingSource(access: String) -> String {
-        let memberSources = members
+        let stubbingMemberSources = members
             .compactMap { $0.stubbingSource(access: access) }
             .joined(separator: "\n\n")
+        let verificationMemberSources = members
+            .compactMap { $0.verificationSource(access: access) }
+            .joined(separator: "\n\n")
 
-        guard !memberSources.isEmpty else {
+        guard !stubbingMemberSources.isEmpty || !verificationMemberSources.isEmpty else {
             return ""
         }
 
@@ -276,10 +279,28 @@ private struct Target {
             given
           }
 
+          \(access) var verify: __MockSynVerify {
+            __MockSynVerify(__mockSyn: __mockSyn)
+          }
+
+          \(access) func confirmVerified() throws {
+            try __mockSyn.confirmVerified()
+          }
+
+          \(access) func checkUnnecessaryStubs() throws {
+            try __mockSyn.checkUnnecessaryStubs()
+          }
+
           \(access) struct __MockSynGiven {
             \(access) let __mockSyn: MockSynRuntime
 
-        \(memberSources)
+        \(stubbingMemberSources)
+          }
+
+          \(access) struct __MockSynVerify {
+            \(access) let __mockSyn: MockSynRuntime
+
+        \(verificationMemberSources)
           }
         """
     }
@@ -324,6 +345,19 @@ private enum GeneratedMember {
             return property.stubbingSource(access: access)
         case .subscriptMember(let subscriptMember):
             return subscriptMember.stubbingSource(access: access)
+        }
+    }
+
+    func verificationSource(access: String) -> String? {
+        switch self {
+        case .initializer:
+            return nil
+        case .function(let function):
+            return function.verificationSource(access: access)
+        case .property(let property):
+            return property.verificationSource(access: access)
+        case .subscriptMember(let subscriptMember):
+            return subscriptMember.verificationSource(access: access)
         }
     }
 }
@@ -383,7 +417,9 @@ private struct GeneratedFunction {
         if kind == .spy, !isStatic, hasInoutParameter {
             let callPrefix = effectSpecifiers.callPrefix
             let call = "__mockSynWrapped.\(name)(\(callArguments))"
-            return returnsValue ? "    return \(callPrefix)\(call)" : "    \(callPrefix)\(call)"
+            let recording = "    __mockSyn.record(member: \"\(signatureName)\", arguments: [\(argumentValues)])"
+            let delegation = returnsValue ? "    return \(callPrefix)\(call)" : "    \(callPrefix)\(call)"
+            return "\(recording)\n\(delegation)"
         }
 
         if effectSpecifiers.range(of: "async") != nil, kind == .spy && !isStatic && !hasVariadicParameter {
@@ -437,6 +473,21 @@ private struct GeneratedFunction {
         return """
             \(access) func \(name)\(genericParameterClause)\(stubParameterClause) -> \(stubBuilderType)\(genericWhereClause) {
               \(stubBuilderType)(runtime: __mockSyn, member: "\(signatureName)", matchers: \(matchers))
+            }
+        """
+    }
+
+    func verificationSource(access: String) -> String? {
+        guard !isStatic else {
+            return nil
+        }
+
+        let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
+        let matchers = matcherList.isEmpty ? "[]" : "[\(matcherList)]"
+
+        return """
+            \(access) func \(name)\(genericParameterClause)\(stubParameterClause) -> MockSynVerification\(genericWhereClause) {
+              MockSynVerification(runtime: __mockSyn, member: "\(signatureName)", matchers: \(matchers))
             }
         """
     }
@@ -507,6 +558,18 @@ private struct GeneratedProperty {
             }
         """
     }
+
+    func verificationSource(access: String) -> String? {
+        guard !isStatic else {
+            return nil
+        }
+
+        return """
+            \(access) var \(name): MockSynPropertyVerification<\(type)> {
+              MockSynPropertyVerification(runtime: __mockSyn, getMember: "\(name).get", setMember: "\(name).set")
+            }
+        """
+    }
 }
 
 private struct GeneratedSubscript {
@@ -540,6 +603,16 @@ private struct GeneratedSubscript {
         return """
             \(access) func `subscript`\(stubParameterClause) -> MockSynSubscriptStubber<\(returnType)> {
               MockSynSubscriptStubber(runtime: __mockSyn, getMember: "\(signatureName).get", setMember: "\(signatureName).set", indexMatchers: [\(matcherList)])
+            }
+        """
+    }
+
+    func verificationSource(access: String) -> String? {
+        let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
+
+        return """
+            \(access) func `subscript`\(stubParameterClause) -> MockSynSubscriptVerification<\(returnType)> {
+              MockSynSubscriptVerification(runtime: __mockSyn, getMember: "\(signatureName).get", setMember: "\(signatureName).set", indexMatchers: [\(matcherList)])
             }
         """
     }

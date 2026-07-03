@@ -157,5 +157,5 @@ spy.name(id: "offline") // returns "Cached"
 - Static member stubbing is not generated yet.
 - `willRun` has typed overloads for zero, one, and two method arguments.
 - Associated-type protocols are still diagnosed before member/stubbing generation.
-- Verification, invocation recording assertions, captors, and order checks are
-  handled by later blocks.
+- Verification and order checks are available in Block 6. Captors and richer
+  matcher composition are handled by later blocks.

@@ -2,7 +2,8 @@
 
 Block 3 added member generation for declarations that MockSyn already accepts.
 Block 5 connects generated instance members to the runtime stubbing registry.
-Verification, invocation assertions, and captors are implemented by later blocks.
+Block 6 records invocations and exposes generated verification APIs. Captors are
+implemented by later blocks.
 
 ## What It Does
 
@@ -12,7 +13,7 @@ Verification, invocation assertions, and captors are implemented by later blocks
 | `throws` methods | Supported | Supported as overrides | Void throwing methods are callable and do nothing for mocks/stubs. |
 | `async` methods | Supported | Supported as overrides | Void async methods are callable and do nothing for mocks/stubs. |
 | `async throws` methods | Supported | Supported as overrides | Spy instance methods delegate to the wrapped implementation. |
-| `Void` methods | Supported | Supported as overrides | Callable immediately; recording comes in the runtime block. |
+| `Void` methods | Supported | Supported as overrides | Callable immediately and recorded for verification. |
 | `get` properties | Supported | Supported as overrides | Instance getters can be configured through generated property stubs. |
 | `get set` properties | Supported | Supported as overrides | Setters are callable; getter behavior follows the getter rule. |
 | Static requirements | Supported for protocols | Not a class feature in this block | Static methods/properties are generated for protocol conformance. |
@@ -75,8 +76,8 @@ spy.load(id: "user")
 ```
 
 Protocol spy setters are intentionally no-op in this block because assigning
-through an existential `let` wrapper is not generally valid Swift. Recording and
-setter verification are handled later by the runtime and verification blocks.
+through an existential `let` wrapper is not generally valid Swift. Calls routed
+through generated members are recorded for verification.
 
 ## Initializers
 
@@ -128,4 +129,5 @@ MockSyn cannot generate operator requirements yet. Wrap the operator behind a na
   delegate static protocol requirements through an instance wrapper.
 - Properties without explicit type annotations are ignored by the member
   generator.
-- Verification APIs are not available in this block.
+- Verification APIs are available for generated instance methods, properties,
+  and subscripts. Static member verification is not generated yet.
