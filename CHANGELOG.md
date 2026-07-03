@@ -2,6 +2,24 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.28.0 - 2026-07-03
+
+### Added
+
+- `tools/mocksyn-inspect.sh version` command that reads the latest documented version from `CHANGELOG.md`.
+- `tools/mocksyn-inspect.sh doctor` command that validates required local files, optional tooling scripts, and Swift/Xcode command availability.
+- `tools/mocksyn-inspect.sh docc --validate` command that runs `xcrun docc convert` against the package DocC catalog using a temporary output directory.
+- Automated tooling tests for inspector help, version, doctor, and DocC validation commands.
+
+### Changed
+
+- Inspector help and tooling documentation now describe the stronger inspection commands instead of only command routing.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.28.0`.
+- The inspector remains an optional shell CLI and is not a SwiftPM plugin.
+
 ## 0.27.0 - 2026-07-03
 
 ### Added

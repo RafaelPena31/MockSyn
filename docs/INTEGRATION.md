@@ -66,7 +66,7 @@ This prevents generated mocks from existing in normal Debug app runs.
 ## SwiftPM Consumer Integration
 
 ```swift
-.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.27.0")
+.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.28.0")
 ```
 
 In the target containing annotations:
@@ -108,6 +108,9 @@ MockSyn ships local helper scripts for project maintainers:
 
 ```bash
 tools/mocksyn-inspect.sh --help
+tools/mocksyn-inspect.sh doctor
+tools/mocksyn-inspect.sh version
+tools/mocksyn-inspect.sh docc --validate
 tools/export-macro-expansion.sh --help
 tools/benchmark.sh --help
 ```

@@ -3,7 +3,7 @@ import XCTest
 final class MockSynToolingTests: XCTestCase {
     func testOptionalToolingScriptsExposeHelpCommands() throws {
         let expectedHelp = [
-            ("tools/mocksyn-inspect.sh", ["MockSyn Inspector", "support-matrix", "macro-expansion", "benchmarks", "docc"]),
+            ("tools/mocksyn-inspect.sh", ["MockSyn Inspector", "support-matrix", "macro-expansion", "benchmarks", "docc", "doctor", "version"]),
             ("tools/export-macro-expansion.sh", ["Export MockSyn Macro Expansion", "swift build", "dump-macro-expansions"]),
             ("tools/benchmark.sh", ["MockSyn Benchmark", "swift test", "MockSynPerformance", "MOCKSYN_RUN_BENCHMARKS"]),
         ]
@@ -18,6 +18,24 @@ final class MockSynToolingTests: XCTestCase {
                 )
             }
         }
+    }
+
+    func testInspectorDoctorAndVersionCommands() throws {
+        let version = try runTool("tools/mocksyn-inspect.sh", "version")
+        XCTAssertTrue(version.contains("MockSyn version 0.28.0"))
+
+        let doctor = try runTool("tools/mocksyn-inspect.sh", "doctor")
+        XCTAssertTrue(doctor.contains("MockSyn Inspector Doctor"))
+        XCTAssertTrue(doctor.contains("OK Package.swift"))
+        XCTAssertTrue(doctor.contains("OK DocC catalog"))
+        XCTAssertTrue(doctor.contains("OK benchmark tool"))
+        XCTAssertTrue(doctor.contains("OK latest version 0.28.0"))
+    }
+
+    func testInspectorDocCCommandCanValidateCatalog() throws {
+        let output = try runTool("tools/mocksyn-inspect.sh", "docc", "--validate")
+
+        XCTAssertTrue(output.contains("DocC validation passed"))
     }
 
     func testBlockTwelveDocumentationFilesExist() throws {
@@ -42,10 +60,10 @@ final class MockSynToolingTests: XCTestCase {
         }
     }
 
-    private func runTool(_ relativePath: String, _ argument: String) throws -> String {
+    private func runTool(_ relativePath: String, _ arguments: String...) throws -> String {
         let process = Process()
         process.executableURL = repositoryRoot.appendingPathComponent(relativePath)
-        process.arguments = [argument]
+        process.arguments = arguments
 
         let pipe = Pipe()
         process.standardOutput = pipe
