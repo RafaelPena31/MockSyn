@@ -66,7 +66,7 @@ This prevents generated mocks from existing in normal Debug app runs.
 ## SwiftPM Consumer Integration
 
 ```swift
-.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.11.0")
+.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.12.0")
 ```
 
 In the target containing annotations:
@@ -101,3 +101,16 @@ The runtime APIs used by generated code are referenced only inside `#if MOCKSYN_
 ## Generated Artifact Location
 
 Generated types are not written to a project folder. They exist as compiler macro expansion output. Xcode and SwiftPM may cache build artifacts in DerivedData or `.build`, but MockSyn does not manage those caches.
+
+## Optional Inspection Tools
+
+MockSyn ships local helper scripts for project maintainers:
+
+```bash
+tools/mocksyn-inspect.sh --help
+tools/export-macro-expansion.sh --help
+tools/benchmark.sh --help
+```
+
+These tools are not SwiftPM plugins and never run automatically in consumer
+builds.

@@ -54,6 +54,18 @@ MockSyn should benchmark:
 - 1,000 verifications;
 - concurrent async invocations.
 
+Print the benchmark plan with:
+
+```bash
+tools/benchmark.sh --print-plan
+```
+
+Run benchmark tests when a `MockSynPerformance` suite exists:
+
+```bash
+tools/benchmark.sh --run
+```
+
 ## Regression Policy
 
 A change should not be accepted if it creates a significant unexplained increase in:

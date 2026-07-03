@@ -2,6 +2,22 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.12.0 - 2026-07-03
+
+### Added
+
+- Optional `tools/mocksyn-inspect.sh` CLI for local support-matrix, macro expansion, benchmark, and DocC commands.
+- `tools/export-macro-expansion.sh` helper for compiler macro expansion inspection.
+- `tools/benchmark.sh` helper with the MockSyn benchmark plan and optional run command.
+- DocC catalog for the `MockSyn` target.
+- Migration guides for Mockable, Cuckoo, and SwiftyMocky.
+- Documentation for the optional tooling feature block.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.12.0`.
+- Optional tools are scripts, not SwiftPM plugins, and do not run during consumer builds.
+
 ## 0.11.0 - 2026-07-03
 
 ### Added

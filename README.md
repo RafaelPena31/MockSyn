@@ -2,12 +2,12 @@
 
 MockSyn is a Swift macro-first framework for generating mocks, stubs, and spies with an API inspired by MockK and Mockito.
 
-The framework is implemented incrementally by feature block. Block 11 covers compile-time diagnostics, fix-its, and the explicit support matrix.
+The framework is implemented incrementally by feature block. Block 12 covers optional inspection tooling, DocC, migration guides, and benchmark helpers.
 
 ## Installation
 
 ```swift
-.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.11.0")
+.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.12.0")
 ```
 
 ## Core Directives
@@ -32,6 +32,7 @@ The framework is implemented incrementally by feature block. Block 11 covers com
 - [Runtime Internals](docs/features/runtime-internals.md)
 - [Test Integration](docs/features/test-integration.md)
 - [Diagnostics](docs/features/diagnostics.md)
+- [Tooling](docs/features/tooling.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [API Design](docs/API_DESIGN.md)
 - [Integration](docs/INTEGRATION.md)
@@ -42,4 +43,5 @@ The framework is implemented incrementally by feature block. Block 11 covers com
 - [Support Matrix](docs/SUPPORT_MATRIX.md)
 - [Limitations](docs/LIMITATIONS.md)
 - [Testing Strategy](docs/TESTING_STRATEGY.md)
+- [Migration Guides](docs/migration)
 - [Changelog](CHANGELOG.md)

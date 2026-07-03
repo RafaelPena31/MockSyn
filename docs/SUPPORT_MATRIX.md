@@ -66,6 +66,9 @@ Initial platform support:
 | Swift Testing adapter | Optional when available | Supported as optional adapter |
 | Sendable strictness | Best effort | First-class diagnostics |
 | Compile-time fix-its | Supported where actionable | Supported where actionable |
+| Optional inspection CLI | Supported outside build flow | Supported outside build flow |
+| DocC catalog | Supported | Supported |
+| Migration guides | Supported | Supported |
 
 ## Conditional APIs
 

@@ -28,6 +28,13 @@ This folder contains the required design and feature documentation for MockSyn.
 - [Runtime Internals](features/runtime-internals.md)
 - [Test Integration](features/test-integration.md)
 - [Diagnostics](features/diagnostics.md)
+- [Tooling](features/tooling.md)
+
+## Migration Guides
+
+- [Mockable](migration/mockable.md)
+- [Cuckoo](migration/cuckoo.md)
+- [SwiftyMocky](migration/swiftymocky.md)
 
 ## Non-Negotiable Product Decisions
 

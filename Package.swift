@@ -36,7 +36,8 @@ let package = Package(
 
         .target(
             name: "MockSyn",
-            dependencies: ["MockSynMacros"]
+            dependencies: ["MockSynMacros"],
+            exclude: ["MockSyn.docc"]
         ),
 
         .testTarget(
