@@ -38,6 +38,10 @@ Initial platform support:
 | Feature | Swift 5.9 | Swift 6 |
 | --- | --- | --- |
 | Protocol mocks | Supported | Supported |
+| Simple protocol inheritance | Supported | Supported |
+| Non-final class doubles | Supported | Supported |
+| `NSObject` subclasses | Supported as subclass generation | Supported as subclass generation |
+| Objective-C runtime interception | Not supported in core | Not supported in core |
 | Stubs | Supported | Supported |
 | Spies | Supported | Supported |
 | async/throws | Supported | Supported |

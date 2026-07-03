@@ -18,6 +18,7 @@ This folder contains the required design and feature documentation for MockSyn.
 ## Feature Docs
 
 - [Macros](features/macros.md)
+- [Supported Types](features/supported-types.md)
 
 ## Non-Negotiable Product Decisions
 

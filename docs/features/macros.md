@@ -191,14 +191,17 @@ Wider generated visibility than the annotated declaration:
 MockSyn cannot generate a public double for an internal declaration
 ```
 
-## Limitations In Block 1
+## Current Limitations
 
 Block 1 implements the macro surface, option parsing, generated type declaration,
-default `MOCKSYN_ENABLE` guard, runtime metadata, and diagnostics.
+default `MOCKSYN_ENABLE` guard, runtime metadata, and diagnostics. Block 2 adds
+supported declaration types: protocols, simple protocol inheritance, non-final
+classes, and subclassable `NSObject` classes.
 
-The generated types currently support protocols with no requirements. Method,
-property, subscript, initializer, async, throws, generic, and inherited protocol
-requirements are covered by later feature blocks in `docs/FEATURES.md`.
+The generated types currently support declarations whose required behavior can be
+satisfied without generated members. Method, property, subscript, initializer,
+async, throws, generic, and complex inherited requirements are covered by later
+feature blocks in `docs/FEATURES.md`.
 
 Custom names are constrained to the declared peer macro name patterns. Fully
 arbitrary peer type names are not supported by Swift macros at global scope.

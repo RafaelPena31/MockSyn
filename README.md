@@ -7,7 +7,7 @@ The framework is implemented incrementally by feature block. Block 1 covers the 
 ## Installation
 
 ```swift
-.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.1.0")
+.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.2.0")
 ```
 
 ## Core Directives

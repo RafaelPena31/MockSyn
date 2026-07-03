@@ -93,12 +93,22 @@ private struct MockSynPeerMacro {
         context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         if let protocolDeclaration = declaration.as(ProtocolDeclSyntax.self) {
-            return try expandProtocol(attribute: attribute, declaration: protocolDeclaration)
+            return try expand(
+                attribute: attribute,
+                target: .protocol(name: protocolDeclaration.name.text, access: protocolDeclaration.modifiers.mockSynAccess)
+            )
         }
 
-        if let classDeclaration = declaration.as(ClassDeclSyntax.self), classDeclaration.modifiers.containsFinal {
-            context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.finalClass))
-            return []
+        if let classDeclaration = declaration.as(ClassDeclSyntax.self) {
+            if classDeclaration.modifiers.containsFinal {
+                context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.finalClass))
+                return []
+            }
+
+            return try expand(
+                attribute: attribute,
+                target: .class(name: classDeclaration.name.text, access: classDeclaration.modifiers.mockSynAccess)
+            )
         }
 
         context.diagnose(Diagnostic(
@@ -108,41 +118,40 @@ private struct MockSynPeerMacro {
         return []
     }
 
-    private func expandProtocol(
+    private func expand(
         attribute: AttributeSyntax,
-        declaration: ProtocolDeclSyntax
+        target: Target
     ) throws -> [DeclSyntax] {
-        let declarationAccess = declaration.modifiers.mockSynAccess
         let options = try MockSynMacroOptions.parse(
             from: attribute,
             defaultAccess: .internal,
             defaultMode: kind.defaultMode
         )
 
-        guard options.access <= declarationAccess else {
+        guard options.access <= target.access else {
             throw MockSynDiagnostic.publicAccessOnInternalDeclaration
         }
 
-        let protocolName = declaration.name.text
-        let generatedName = options.name ?? "\(protocolName)\(kind.suffix)"
+        let generatedName = options.name ?? "\(target.name)\(kind.suffix)"
         guard generatedName.hasPrefix(kind.allowedAffix) || generatedName.hasSuffix(kind.allowedAffix) else {
             throw MockSynDiagnostic.invalidGeneratedName(macroName: kind.macroName, affix: kind.allowedAffix)
         }
 
         let access = options.access.sourceName
         let mode = options.mode.sourceName
+        let superInitLine = target.superInitCall.map { "\n    \($0)" } ?? ""
 
         let declarationSource: String
         if kind == .spy {
             declarationSource = """
             #if MOCKSYN_ENABLE
-            \(access) final class \(generatedName): \(protocolName) {
+            \(access) final class \(generatedName): \(target.name) {
               \(access) let __mockSyn: MockSynRuntime
-              \(access) let __mockSynWrapped: any \(protocolName)
+              \(access) let __mockSynWrapped: \(target.wrappedTypeName)
 
-              \(access) init(wrapping __mockSynWrapped: any \(protocolName), mode: MockSynMode = \(mode)) {
+              \(access) init(wrapping __mockSynWrapped: \(target.wrappedTypeName), mode: MockSynMode = \(mode)) {
                 self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: mode)
-                self.__mockSynWrapped = __mockSynWrapped
+                self.__mockSynWrapped = __mockSynWrapped\(superInitLine)
               }
             }
             #endif
@@ -150,11 +159,11 @@ private struct MockSynPeerMacro {
         } else {
             declarationSource = """
             #if MOCKSYN_ENABLE
-            \(access) final class \(generatedName): \(protocolName) {
+            \(access) final class \(generatedName): \(target.name) {
               \(access) let __mockSyn: MockSynRuntime
 
               \(access) init(mode: MockSynMode = \(mode)) {
-                self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: mode)
+                self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: mode)\(superInitLine)
               }
             }
             #endif
@@ -162,5 +171,42 @@ private struct MockSynPeerMacro {
         }
 
         return [DeclSyntax(stringLiteral: declarationSource)]
+    }
+}
+
+private enum Target {
+    case `protocol`(name: String, access: MockSynGeneratedAccess)
+    case `class`(name: String, access: MockSynGeneratedAccess)
+
+    var name: String {
+        switch self {
+        case .protocol(let name, _), .class(let name, _):
+            return name
+        }
+    }
+
+    var access: MockSynGeneratedAccess {
+        switch self {
+        case .protocol(_, let access), .class(_, let access):
+            return access
+        }
+    }
+
+    var wrappedTypeName: String {
+        switch self {
+        case .protocol(let name, _):
+            return "any \(name)"
+        case .class(let name, _):
+            return name
+        }
+    }
+
+    var superInitCall: String? {
+        switch self {
+        case .protocol:
+            return nil
+        case .class:
+            return "super.init()"
+        }
     }
 }

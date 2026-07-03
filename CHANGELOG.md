@@ -2,6 +2,21 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.2.0 - 2026-07-02
+
+### Added
+
+- Supported type generation for simple protocol inheritance.
+- Supported subclass generation for non-final classes.
+- Supported subclass generation for subclassable `NSObject` and `@objc dynamic` class scenarios.
+- Diagnostics coverage for final classes across `@Mocking`, `@Stubbing`, and `@Spying`.
+- Documentation for supported declaration types and Objective-C runtime limitations.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.2.0`.
+- Block 2 defines supported declaration types. Member generation remains planned for later feature blocks.
+
 ## 0.1.0 - 2026-07-02
 
 ### Added

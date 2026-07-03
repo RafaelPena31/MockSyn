@@ -194,6 +194,164 @@ final class MockSynMacroTests: XCTestCase {
         )
     }
 
+    func testMockingSupportsSimpleProtocolInheritance() {
+        assertExpansion(
+            """
+            protocol UserService {
+            }
+
+            @Mocking
+            protocol AdminUserService: UserService {
+            }
+            """,
+            expandedSource: """
+              protocol UserService {
+              }
+              protocol AdminUserService: UserService {
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class AdminUserServiceMock: AdminUserService {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testMockingGeneratesSubclassForNonFinalClass() {
+        assertExpansion(
+            """
+            @Mocking
+            class UserService {
+            }
+            """,
+            expandedSource: """
+              class UserService {
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class UserServiceMock: UserService {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                  super.init()
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testStubbingGeneratesSubclassForNonFinalClass() {
+        assertExpansion(
+            """
+            @Stubbing
+            class AnalyticsService {
+            }
+            """,
+            expandedSource: """
+              class AnalyticsService {
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class AnalyticsServiceStub: AnalyticsService {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .relaxed) {
+                  self.__mockSyn = MockSynRuntime(kind: .stub, mode: mode)
+                  super.init()
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testSpyingGeneratesSubclassForNonFinalClassWithWrappedImplementation() {
+        assertExpansion(
+            """
+            @Spying
+            class CacheStore {
+            }
+            """,
+            expandedSource: """
+              class CacheStore {
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class CacheStoreSpy: CacheStore {
+                internal let __mockSyn: MockSynRuntime
+                internal let __mockSynWrapped: CacheStore
+
+                internal init(wrapping __mockSynWrapped: CacheStore, mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .spy, mode: mode)
+                  self.__mockSynWrapped = __mockSynWrapped
+                  super.init()
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testMockingGeneratesSubclassForNSObjectBackedClass() {
+        assertExpansion(
+            """
+            @Mocking
+            @objcMembers
+            class LegacyService: NSObject {
+            }
+            """,
+            expandedSource: """
+              @objcMembers
+              class LegacyService: NSObject {
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class LegacyServiceMock: LegacyService {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                  super.init()
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testMockingTreatsOpenClassAsPublicDeclaration() {
+        assertExpansion(
+            """
+            @Mocking(access: .public)
+            open class UserService {
+            }
+            """,
+            expandedSource: """
+              open class UserService {
+              }
+
+              #if MOCKSYN_ENABLE
+              public final class UserServiceMock: UserService {
+                public let __mockSyn: MockSynRuntime
+
+                public init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                  super.init()
+                }
+              }
+              #endif
+              """
+        )
+    }
+
     func testMacroOnUnsupportedDeclarationEmitsDiagnostic() {
         assertExpansion(
             """
@@ -282,6 +440,50 @@ final class MockSynMacroTests: XCTestCase {
         )
     }
 
+    func testStubbingOnFinalClassEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Stubbing
+            final class AnalyticsService {
+            }
+            """,
+            expandedSource: """
+              final class AnalyticsService {
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "MockSyn cannot mock a pure Swift final class directly. Extract a protocol and apply @Mocking to the protocol.",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ]
+        )
+    }
+
+    func testSpyingOnFinalClassEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Spying
+            final class CacheStore {
+            }
+            """,
+            expandedSource: """
+              final class CacheStore {
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "MockSyn cannot mock a pure Swift final class directly. Extract a protocol and apply @Mocking to the protocol.",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ]
+        )
+    }
+
     func testPublicAccessOnInternalProtocolEmitsDiagnostic() {
         assertExpansion(
             """
@@ -291,6 +493,28 @@ final class MockSynMacroTests: XCTestCase {
             """,
             expandedSource: """
               protocol UserService {
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "MockSyn cannot generate a public double for an internal declaration",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ]
+        )
+    }
+
+    func testPublicAccessOnInternalClassEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Mocking(access: .public)
+            class UserService {
+            }
+            """,
+            expandedSource: """
+              class UserService {
               }
               """,
             diagnostics: [

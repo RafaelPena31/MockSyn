@@ -93,6 +93,10 @@ extension DeclModifierListSyntax {
             return .public
         }
 
+        if contains(where: { $0.name.tokenKind == .keyword(.open) }) {
+            return .public
+        }
+
         if contains(where: { $0.name.tokenKind == .keyword(.package) }) {
             return .package
         }

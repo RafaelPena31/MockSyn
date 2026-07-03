@@ -6,7 +6,7 @@ MockSyn is inspired by MockK and Mockito, but Swift does not provide the same ru
 
 | Case | Reason |
 | --- | --- |
-| Pure Swift final classes | They cannot be reliably subclassed or intercepted. |
+| Pure Swift final classes | They cannot be subclassed or intercepted. |
 | Private methods | Generated code cannot access private implementation details. |
 | Global functions | Macros on protocols do not intercept global functions. |
 | Concrete static methods | Static calls on concrete types are not dynamically intercepted. |
@@ -63,11 +63,17 @@ protocol IDFactory {
 
 ## Objective-C
 
-Objective-C runtime support is not part of the core. A future optional module may support `NSObject` and `@objc dynamic` cases, but it must remain separate from the Swift macro-first core.
+Subclassable `NSObject` classes are supported through the same subclass generation
+model used for other non-final classes.
+
+Objective-C runtime interception is not part of the core. MockSyn does not swizzle
+methods or intercept Objective-C messages. A future optional module may add
+Objective-C runtime behavior, but it must remain separate from the Swift
+macro-first core.
 
 ## Macro Limits
 
-Macros operate on syntax available at the annotated declaration. They do not perform arbitrary semantic analysis across the whole project. This affects protocol inheritance, typealiases, overloads, and complex generic constraints.
+Macros operate on syntax available at the annotated declaration. They do not perform arbitrary semantic analysis across the whole project. This affects complex protocol inheritance, typealiases, overloads, and complex generic constraints.
 
 ## Custom Generated Names
 
