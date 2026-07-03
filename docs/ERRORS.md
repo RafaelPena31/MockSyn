@@ -17,7 +17,7 @@ MockSyn has two kinds of errors: compile-time diagnostics from macros and runtim
 | Pure Swift final class | Emit an error recommending protocol extraction. |
 | Invalid mode option | Emit an error explaining the supported mode values. |
 | Private member requirement | Emit an error because generated code cannot satisfy inaccessible requirements. |
-| Unsupported operator | Emit an error or warning depending on planned support. |
+| Unsupported class operator | Emit an error recommending a protocol operator requirement. |
 | Invalid access override | Emit an error when requested access is wider than allowed. |
 | Unsupported generic shape | Emit an error describing the unsupported generic construct. |
 

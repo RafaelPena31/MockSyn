@@ -107,9 +107,6 @@ private struct MockSynPeerMacro {
                 attribute: attribute,
                 context: context
             )
-            guard members.isValid else {
-                return []
-            }
 
             return try expand(
                 attribute: attribute,
@@ -208,11 +205,11 @@ private struct MockSynPeerMacro {
         let associatedTypeSource = target.associatedTypeSource(access: access)
         let staticRuntimeSource = target.staticRuntimeSource(access: access, kind: kind, mode: mode)
         let memberSource = target.members
-            .map { $0.source(access: access, options: options, kind: kind, target: target) }
+            .map { $0.source(access: access, options: options, kind: kind, target: target, generatedName: generatedName) }
             .joined(separator: "\n\n")
         let generatedMembers = memberSource.isEmpty ? "" : "\n\n\(memberSource)"
-        let stubbingSource = target.stubbingSource(access: access)
-        let staticStubbingSource = target.staticStubbingSource(access: access)
+        let stubbingSource = target.stubbingSource(access: access, generatedName: generatedName)
+        let staticStubbingSource = target.staticStubbingSource(access: access, generatedName: generatedName)
 
         let declarationSource: String
         if kind == .spy {
@@ -313,12 +310,12 @@ private struct Target {
         return "  \(access) static let __mockSynStatic = MockSynRuntime(kind: \(kind.runtimeKind), mode: \(mode))\n"
     }
 
-    func staticStubbingSource(access: String) -> String {
+    func staticStubbingSource(access: String, generatedName: String) -> String {
         let stubbingMemberSources = members
-            .compactMap { $0.staticStubbingSource(access: access) }
+            .compactMap { $0.staticStubbingSource(access: access, generatedName: generatedName) }
             .joined(separator: "\n\n")
         let verificationMemberSources = members
-            .compactMap { $0.staticVerificationSource(access: access) }
+            .compactMap { $0.staticVerificationSource(access: access, generatedName: generatedName) }
             .joined(separator: "\n\n")
 
         guard !stubbingMemberSources.isEmpty || !verificationMemberSources.isEmpty else {
@@ -365,12 +362,12 @@ private struct Target {
         """
     }
 
-    func stubbingSource(access: String) -> String {
+    func stubbingSource(access: String, generatedName: String) -> String {
         let stubbingMemberSources = members
-            .compactMap { $0.stubbingSource(access: access) }
+            .compactMap { $0.stubbingSource(access: access, generatedName: generatedName) }
             .joined(separator: "\n\n")
         let verificationMemberSources = members
-            .compactMap { $0.verificationSource(access: access) }
+            .compactMap { $0.verificationSource(access: access, generatedName: generatedName) }
             .joined(separator: "\n\n")
 
         guard !stubbingMemberSources.isEmpty || !verificationMemberSources.isEmpty else {
@@ -505,13 +502,14 @@ private enum GeneratedMember {
         access: String,
         options: MockSynMacroOptions,
         kind: MockSynPeerMacro.Kind,
-        target: Target
+        target: Target,
+        generatedName: String
     ) -> String {
         switch self {
         case .initializer(let initializer):
             return initializer.source(access: access, options: options, kind: kind)
         case .function(let function):
-            return function.source(access: access, kind: kind, target: target)
+            return function.source(access: access, kind: kind, target: target, generatedName: generatedName)
         case .property(let property):
             return property.source(access: access, kind: kind, target: target)
         case .subscriptMember(let subscriptMember):
@@ -519,12 +517,12 @@ private enum GeneratedMember {
         }
     }
 
-    func stubbingSource(access: String) -> String? {
+    func stubbingSource(access: String, generatedName: String) -> String? {
         switch self {
         case .initializer:
             return nil
         case .function(let function):
-            return function.stubbingSource(access: access)
+            return function.stubbingSource(access: access, generatedName: generatedName)
         case .property(let property):
             return property.stubbingSource(access: access)
         case .subscriptMember(let subscriptMember):
@@ -532,23 +530,23 @@ private enum GeneratedMember {
         }
     }
 
-    func staticStubbingSource(access: String) -> String? {
+    func staticStubbingSource(access: String, generatedName: String) -> String? {
         switch self {
         case .initializer, .subscriptMember:
             return nil
         case .function(let function):
-            return function.staticStubbingSource(access: access)
+            return function.staticStubbingSource(access: access, generatedName: generatedName)
         case .property(let property):
             return property.staticStubbingSource(access: access)
         }
     }
 
-    func verificationSource(access: String) -> String? {
+    func verificationSource(access: String, generatedName: String) -> String? {
         switch self {
         case .initializer:
             return nil
         case .function(let function):
-            return function.verificationSource(access: access)
+            return function.verificationSource(access: access, generatedName: generatedName)
         case .property(let property):
             return property.verificationSource(access: access)
         case .subscriptMember(let subscriptMember):
@@ -556,12 +554,12 @@ private enum GeneratedMember {
         }
     }
 
-    func staticVerificationSource(access: String) -> String? {
+    func staticVerificationSource(access: String, generatedName: String) -> String? {
         switch self {
         case .initializer, .subscriptMember:
             return nil
         case .function(let function):
-            return function.staticVerificationSource(access: access)
+            return function.staticVerificationSource(access: access, generatedName: generatedName)
         case .property(let property):
             return property.staticVerificationSource(access: access)
         }
@@ -583,6 +581,7 @@ private struct GeneratedInitializer {
 private struct GeneratedFunction {
     let attributes: String
     let name: String
+    let dslName: String
     let genericParameterClause: String
     let parameterClause: String
     let callArguments: String
@@ -596,13 +595,15 @@ private struct GeneratedFunction {
     let hasVariadicParameter: Bool
     let returnsValue: Bool
 
-    func source(access: String, kind: MockSynPeerMacro.Kind, target: Target) -> String {
+    func source(access: String, kind: MockSynPeerMacro.Kind, target: Target, generatedName: String) -> String {
         let declarationPrefix = target.kind == .class && !isStatic ? "override " : ""
         let staticPrefix = target.kind == .protocol && isStatic ? "static " : ""
         let body = bodySource(kind: kind)
+        let parameterClause = parameterClause.resolvingParameterSelf(as: generatedName)
+        let functionName = name.isNamedMember ? name : "\(name) "
 
         return """
-          \(attributes)\(access) \(declarationPrefix)\(staticPrefix)func \(name)\(genericParameterClause)\(parameterClause)\(effectSpecifiers)\(returnClause)\(genericWhereClause) {
+          \(attributes)\(access) \(declarationPrefix)\(staticPrefix)func \(functionName)\(genericParameterClause)\(parameterClause)\(effectSpecifiers)\(returnClause)\(genericWhereClause) {
         \(body)
           }
         """
@@ -675,76 +676,80 @@ private struct GeneratedFunction {
         returnClause.returnTypeName
     }
 
-    func stubbingSource(access: String) -> String? {
+    func stubbingSource(access: String, generatedName: String) -> String? {
         guard !isStatic else {
             return nil
         }
 
-        return functionStubbingSource(access: access)
+        return functionStubbingSource(access: access, generatedName: generatedName)
     }
 
-    func staticStubbingSource(access: String) -> String? {
+    func staticStubbingSource(access: String, generatedName: String) -> String? {
         guard isStatic else {
             return nil
         }
 
-        return functionStubbingSource(access: access)
+        return functionStubbingSource(access: access, generatedName: generatedName)
     }
 
-    private func functionStubbingSource(access: String) -> String {
+    private func functionStubbingSource(access: String, generatedName: String) -> String {
         let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
         let matchers = matcherList.isEmpty ? "[]" : "[\(matcherList)]"
+        let stubParameterClause = stubParameterClause(generatedName: generatedName)
+        let stubBuilderType = stubBuilderType(generatedName: generatedName)
 
         return """
-            \(access) func \(name)\(genericParameterClause)\(stubParameterClause) -> \(stubBuilderType)\(genericWhereClause) {
+            \(access) func \(dslName)\(genericParameterClause)\(stubParameterClause) -> \(stubBuilderType)\(genericWhereClause) {
               \(stubBuilderType)(runtime: __mockSyn, member: "\(signatureName)", matchers: \(matchers))
             }
         """
     }
 
-    func verificationSource(access: String) -> String? {
+    func verificationSource(access: String, generatedName: String) -> String? {
         guard !isStatic else {
             return nil
         }
 
-        return functionVerificationSource(access: access)
+        return functionVerificationSource(access: access, generatedName: generatedName)
     }
 
-    func staticVerificationSource(access: String) -> String? {
+    func staticVerificationSource(access: String, generatedName: String) -> String? {
         guard isStatic else {
             return nil
         }
 
-        return functionVerificationSource(access: access)
+        return functionVerificationSource(access: access, generatedName: generatedName)
     }
 
-    private func functionVerificationSource(access: String) -> String {
+    private func functionVerificationSource(access: String, generatedName: String) -> String {
         let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
         let matchers = matcherList.isEmpty ? "[]" : "[\(matcherList)]"
+        let stubParameterClause = stubParameterClause(generatedName: generatedName)
 
         return """
-            \(access) func \(name)\(genericParameterClause)\(stubParameterClause) -> MockSynVerification\(genericWhereClause) {
+            \(access) func \(dslName)\(genericParameterClause)\(stubParameterClause) -> MockSynVerification\(genericWhereClause) {
               MockSynVerification(runtime: __mockSyn, member: "\(signatureName)", matchers: \(matchers))
             }
         """
     }
 
-    private var stubParameterClause: String {
-        "(\(stubParameters.map { $0.matcherParameterSource }.joined(separator: ", ")))"
+    private func stubParameterClause(generatedName: String) -> String {
+        "(\(stubParameters.map { $0.matcherParameterSource(generatedName: generatedName) }.joined(separator: ", ")))"
     }
 
-    private var stubBuilderType: String {
+    private func stubBuilderType(generatedName: String) -> String {
+        let returnType = returnType.resolvingSelf(as: generatedName)
         guard stubParameters.count == 1, let parameter = stubParameters.first else {
             if stubParameters.count == 2 {
                 let firstParameter = stubParameters[0]
                 let secondParameter = stubParameters[1]
-                return "MockSynStubBuilder2<\(firstParameter.matcherType), \(secondParameter.matcherType), \(returnType)>"
+                return "MockSynStubBuilder2<\(firstParameter.matcherType.resolvingSelf(as: generatedName)), \(secondParameter.matcherType.resolvingSelf(as: generatedName)), \(returnType)>"
             }
 
             return "MockSynStubBuilder<\(returnType)>"
         }
 
-        return "MockSynStubBuilder1<\(parameter.matcherType), \(returnType)>"
+        return "MockSynStubBuilder1<\(parameter.matcherType.resolvingSelf(as: generatedName)), \(returnType)>"
     }
 }
 
@@ -891,7 +896,7 @@ private struct GeneratedSubscript {
     }
 
     private var stubParameterClause: String {
-        "(\(stubParameters.map { $0.matcherParameterSource }.joined(separator: ", ")))"
+        "(\(stubParameters.map { $0.matcherParameterSource(generatedName: "Self") }.joined(separator: ", ")))"
     }
 }
 
@@ -913,7 +918,8 @@ private enum MemberGenerator {
 
         for item in memberBlock {
             if let function = item.decl.as(FunctionDeclSyntax.self) {
-                guard function.name.text.isNamedMember else {
+                let isNamedMember = function.name.text.isNamedMember
+                guard isNamedMember || targetKind == .protocol else {
                     context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.unsupportedOperatorRequirement))
                     isValid = false
                     continue
@@ -922,6 +928,7 @@ private enum MemberGenerator {
                 generatedMembers.append(.function(GeneratedFunction(
                     attributes: function.attributes.mockSynForwardedAttributes,
                     name: function.name.text,
+                    dslName: isNamedMember ? function.name.text : function.name.text.mockSynOperatorDslName,
                     genericParameterClause: function.genericParameterClause?.description.trimmedSource ?? "",
                     parameterClause: function.signature.parameterClause.description.trimmedSource,
                     callArguments: function.signature.parameterClause.callArguments,
@@ -1075,7 +1082,8 @@ private struct GeneratedParameter {
     let localName: String
     let matcherType: String
 
-    var matcherParameterSource: String {
+    func matcherParameterSource(generatedName: String) -> String {
+        let matcherType = matcherType.resolvingSelf(as: generatedName)
         if label == "_" {
             return "_ \(localName): MockSynMatcher<\(matcherType)>"
         }
@@ -1178,5 +1186,25 @@ private extension String {
     var isNamedMember: Bool {
         let firstCharacter = self[startIndex]
         return firstCharacter == "_" || firstCharacter.isLetter
+    }
+
+    func resolvingSelf(as generatedName: String) -> String {
+        self == "Self" ? generatedName : self
+    }
+
+    func resolvingParameterSelf(as generatedName: String) -> String {
+        replacingOccurrences(of: ": Self", with: ": \(generatedName)")
+    }
+
+    var mockSynOperatorDslName: String {
+        let aliases = ["==": "equalTo", "!=": "notEqualTo", "<": "lessThan", "<=": "lessThanOrEqualTo", ">": "greaterThan", ">=": "greaterThanOrEqualTo", "+": "plus", "-": "minus", "*": "multiply", "/": "divide", "%": "remainder"]
+        if let alias = aliases[self] {
+            return alias
+        }
+
+        let encoded = unicodeScalars
+            .map { "u\(String($0.value, radix: 16))" }
+            .joined(separator: "_")
+        return "operator_\(encoded)"
     }
 }

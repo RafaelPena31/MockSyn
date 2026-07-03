@@ -200,6 +200,12 @@ protocol StaticThrowingService {
 }
 
 @Mocking
+protocol OperatorComparableService {
+    static func == (lhs: Self, rhs: Self) -> Bool
+    static func + (lhs: Self, rhs: Self) -> Self
+}
+
+@Mocking
 protocol QualifiedSendableService: Swift.Sendable {
     func refresh()
 }
@@ -719,6 +725,40 @@ final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
         try StaticThrowingServiceMock.verify.fetch().once()
         try StaticThrowingServiceMock.verify.save().once()
         StaticThrowingServiceMock.resetStatic()
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedOperatorRequirementsSupportStubbingAndVerification() throws {
+        #if MOCKSYN_ENABLE
+        OperatorComparableServiceMock.resetStatic()
+        let lhs = OperatorComparableServiceMock()
+        let rhs = OperatorComparableServiceMock()
+
+        OperatorComparableServiceMock.given.equalTo(
+            lhs: .matching { $0 === lhs },
+            rhs: .matching { $0 === rhs }
+        ).willReturn(true)
+        OperatorComparableServiceMock.given.plus(
+            lhs: .matching { $0 === lhs },
+            rhs: .matching { $0 === rhs }
+        ).willReturn(lhs)
+
+        XCTAssertTrue(lhs == rhs)
+        XCTAssertTrue((lhs + rhs) === lhs)
+
+        try OperatorComparableServiceMock.verify.equalTo(
+            lhs: .matching { $0 === lhs },
+            rhs: .matching { $0 === rhs }
+        ).once()
+        try OperatorComparableServiceMock.verify.plus(
+            lhs: .matching { $0 === lhs },
+            rhs: .matching { $0 === rhs }
+        ).once()
+        try OperatorComparableServiceMock.confirmStaticVerified()
+        try OperatorComparableServiceMock.checkUnnecessaryStaticStubs()
+        OperatorComparableServiceMock.resetStatic()
         #else
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif

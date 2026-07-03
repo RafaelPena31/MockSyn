@@ -1189,8 +1189,8 @@ final class MockSynMacroTests: XCTestCase {
                     MockSynStubBuilder1<(String) -> Void, Void>(runtime: __mockSyn, member: "handle(_:)", matchers: [action.erase()])
                   }
 
-                  internal func clone() -> MockSynStubBuilder<Self> {
-                    MockSynStubBuilder<Self>(runtime: __mockSyn, member: "clone()", matchers: [])
+                  internal func clone() -> MockSynStubBuilder<ProcessorMock> {
+                    MockSynStubBuilder<ProcessorMock>(runtime: __mockSyn, member: "clone()", matchers: [])
                   }
 
                   internal func collect(_ values: MockSynMatcher<[Int]>) -> MockSynStubBuilder1<[Int], Int> {
@@ -1988,27 +1988,101 @@ final class MockSynMacroTests: XCTestCase {
         )
     }
 
-    func testOperatorRequirementEmitsDiagnostic() {
+    func testOperatorRequirementsGenerateStaticOperatorAndNamedDsl() {
         assertExpansion(
             """
             @Mocking
             protocol ComparableService {
-                static func == (lhs: ComparableService, rhs: ComparableService) -> Bool
+                static func == (lhs: Self, rhs: Self) -> Bool
+                static func + (lhs: Self, rhs: Self) -> Self
+                static func <~> (lhs: Self, rhs: Self) -> Bool
             }
             """,
             expandedSource: """
               protocol ComparableService {
-                  static func == (lhs: ComparableService, rhs: ComparableService) -> Bool
+                  static func == (lhs: Self, rhs: Self) -> Bool
+                  static func + (lhs: Self, rhs: Self) -> Self
+                  static func <~> (lhs: Self, rhs: Self) -> Bool
               }
-              """,
-            diagnostics: [
-                DiagnosticSpec(
-                    message: "MockSyn cannot generate operator requirements yet. Wrap the operator behind a named method.",
-                    line: 1,
-                    column: 1,
-                    severity: .error
-                )
-            ]
+
+              #if MOCKSYN_ENABLE
+              internal final class ComparableServiceMock: ComparableService {
+                internal static let __mockSynStatic = MockSynRuntime(kind: .mock, mode: .strict)
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+                internal static var given: __MockSynStaticGiven {
+                  __MockSynStaticGiven(__mockSyn: __mockSynStatic)
+                }
+
+                internal static var when: __MockSynStaticGiven {
+                  given
+                }
+
+                internal static var verify: __MockSynStaticVerify {
+                  __MockSynStaticVerify(__mockSyn: __mockSynStatic)
+                }
+
+                internal static func confirmStaticVerified() throws {
+                  try __mockSynStatic.confirmVerified()
+                }
+
+                internal static func checkUnnecessaryStaticStubs() throws {
+                  try __mockSynStatic.checkUnnecessaryStubs()
+                }
+
+                internal static func resetStatic(_ scope: MockSynResetScope = .all) {
+                  __mockSynStatic.reset(scope)
+                }
+
+                internal struct __MockSynStaticGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func equalTo(lhs: MockSynMatcher<ComparableServiceMock>, rhs: MockSynMatcher<ComparableServiceMock>) -> MockSynStubBuilder2<ComparableServiceMock, ComparableServiceMock, Bool> {
+                    MockSynStubBuilder2<ComparableServiceMock, ComparableServiceMock, Bool>(runtime: __mockSyn, member: "==(lhs:rhs:)", matchers: [lhs.erase(), rhs.erase()])
+                  }
+
+                  internal func plus(lhs: MockSynMatcher<ComparableServiceMock>, rhs: MockSynMatcher<ComparableServiceMock>) -> MockSynStubBuilder2<ComparableServiceMock, ComparableServiceMock, ComparableServiceMock> {
+                    MockSynStubBuilder2<ComparableServiceMock, ComparableServiceMock, ComparableServiceMock>(runtime: __mockSyn, member: "+(lhs:rhs:)", matchers: [lhs.erase(), rhs.erase()])
+                  }
+
+                  internal func operator_u3c_u7e_u3e(lhs: MockSynMatcher<ComparableServiceMock>, rhs: MockSynMatcher<ComparableServiceMock>) -> MockSynStubBuilder2<ComparableServiceMock, ComparableServiceMock, Bool> {
+                    MockSynStubBuilder2<ComparableServiceMock, ComparableServiceMock, Bool>(runtime: __mockSyn, member: "<~>(lhs:rhs:)", matchers: [lhs.erase(), rhs.erase()])
+                  }
+                }
+
+                internal struct __MockSynStaticVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func equalTo(lhs: MockSynMatcher<ComparableServiceMock>, rhs: MockSynMatcher<ComparableServiceMock>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "==(lhs:rhs:)", matchers: [lhs.erase(), rhs.erase()])
+                  }
+
+                  internal func plus(lhs: MockSynMatcher<ComparableServiceMock>, rhs: MockSynMatcher<ComparableServiceMock>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "+(lhs:rhs:)", matchers: [lhs.erase(), rhs.erase()])
+                  }
+
+                  internal func operator_u3c_u7e_u3e(lhs: MockSynMatcher<ComparableServiceMock>, rhs: MockSynMatcher<ComparableServiceMock>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "<~>(lhs:rhs:)", matchers: [lhs.erase(), rhs.erase()])
+                  }
+                }
+
+                internal static func == (lhs: ComparableServiceMock, rhs: ComparableServiceMock) -> Bool {
+                  return __mockSynStatic.resolve(member: "==(lhs:rhs:)", arguments: [lhs as Any, rhs as Any], returnType: Bool.self)
+                }
+
+                internal static func + (lhs: ComparableServiceMock, rhs: ComparableServiceMock) -> Self {
+                  return __mockSynStatic.resolve(member: "+(lhs:rhs:)", arguments: [lhs as Any, rhs as Any], returnType: Self.self)
+                }
+
+                internal static func <~> (lhs: ComparableServiceMock, rhs: ComparableServiceMock) -> Bool {
+                  return __mockSynStatic.resolve(member: "<~>(lhs:rhs:)", arguments: [lhs as Any, rhs as Any], returnType: Bool.self)
+                }
+              }
+              #endif
+              """
         )
     }
 
@@ -2031,7 +2105,7 @@ final class MockSynMacroTests: XCTestCase {
               """,
             diagnostics: [
                 DiagnosticSpec(
-                    message: "MockSyn cannot generate operator requirements yet. Wrap the operator behind a named method.",
+                    message: "MockSyn cannot generate class operator members. Move the operator behind a protocol requirement.",
                     line: 1,
                     column: 1,
                     severity: .error

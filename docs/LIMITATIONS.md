@@ -11,7 +11,7 @@ MockSyn is inspired by MockK and Mockito, but Swift does not provide the same ru
 | Global functions | Macros on protocols do not intercept global functions. |
 | Concrete static methods | Static calls on concrete types are not dynamically intercepted. |
 | Arbitrary constructors | Swift macros do not intercept constructor calls. |
-| Operator requirements | Block 3 emits a diagnostic instead of generating operators. |
+| Class operator members | Class operator overriding is not part of the subclass-generation model. |
 | Runtime bytecode-style interception | Swift does not have a JVM-like bytecode agent model. |
 | Fully arbitrary generated peer names | Swift attached peer macros at global scope must declare name patterns. |
 
@@ -61,6 +61,25 @@ protocol IDFactory {
     static func make() -> UUID
 }
 ```
+
+### Operators
+
+Protocol operator requirements are supported through generated static operators
+and named DSL aliases:
+
+```swift
+@Mocking
+protocol ComparableService {
+    static func == (lhs: Self, rhs: Self) -> Bool
+}
+
+#if MOCKSYN_ENABLE
+ComparableServiceMock.given.equalTo(lhs: .any, rhs: .any).willReturn(true)
+#endif
+```
+
+Class operator members still produce a diagnostic because MockSyn does not
+intercept concrete static dispatch on subclasses.
 
 ## Objective-C
 

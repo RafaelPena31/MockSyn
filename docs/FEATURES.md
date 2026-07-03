@@ -38,7 +38,7 @@ Este documento lista as features planejadas para o MockSyn, agrupadas por bloco 
 | Subscripts | Suporte a `subscript`. |
 | Initializers | Suporte onde fizer sentido para conformidade ou geracao de classe. |
 | Overloads | Metodos com mesmo nome, mas assinaturas diferentes. |
-| Operators | Possivel suporte avancado ou diagnostico claro quando nao suportado. |
+| Operators | Suporte a requisitos de operador em protocolos com aliases nomeados para stubbing e verificacao; diagnostico para operadores de classe. |
 
 ## 4. Recursos Da Linguagem Swift
 

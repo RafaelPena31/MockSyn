@@ -51,11 +51,12 @@ Initial platform support:
 | Subscripts | Supported | Supported |
 | Static protocol members | Supported with type-level stubbing/verification | Supported with type-level stubbing/verification |
 | Protocol initializers | Supported for mocks/stubs | Supported for mocks/stubs |
-| Operator requirements | Diagnostic | Diagnostic |
+| Protocol operator requirements | Supported with named type-level stubbing/verification DSL | Supported with named type-level stubbing/verification DSL |
+| Class operator members | Diagnostic | Diagnostic |
 | Generic methods | Supported | Supported |
 | Generic classes | Supported | Supported |
 | `where` clauses | Supported for generated methods/classes | Supported for generated methods/classes |
-| `Self` requirements | Supported for placeholder behavior | Supported for placeholder behavior |
+| `Self` requirements | Supported for generated methods and direct operator parameters/returns | Supported for generated methods and direct operator parameters/returns |
 | `inout` parameters | Supported | Supported |
 | Variadic parameters | Signature supported | Signature supported |
 | Closures / `@escaping` | Supported | Supported |

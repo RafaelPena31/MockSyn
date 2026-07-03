@@ -20,7 +20,7 @@ adds richer matchers and captors that plug into those generated member APIs.
 | Subscripts | Supported | Supported as overrides | Protocol spies delegate readable subscripts. |
 | Initializers | Supported for protocol mocks/stubs | Not generated for class initializers | Spy initializer requirements are not generated in this block. |
 | Overloads | Supported when signatures are valid Swift | Supported when overridable | Overload resolution is left to Swift. |
-| Operators | Diagnostic | Diagnostic | Operators are intentionally rejected for now. |
+| Operators | Supported for protocol requirements | Diagnostic | Protocol operators generate real static operators and named DSL aliases. |
 
 ## Runtime Behavior
 
@@ -103,20 +103,38 @@ that MockSyn provides.
 
 ## Operators
 
-Operator requirements are rejected with a diagnostic:
+Protocol operator requirements generate static operator implementations for
+conformance and named entries on the type-level `given`, `when`, and `verify`
+APIs:
 
 ```swift
 @Mocking
 protocol ComparableService {
-    static func == (lhs: ComparableService, rhs: ComparableService) -> Bool
+    static func == (lhs: Self, rhs: Self) -> Bool
+    static func + (lhs: Self, rhs: Self) -> Self
 }
+
+#if MOCKSYN_ENABLE
+let lhs = ComparableServiceMock()
+let rhs = ComparableServiceMock()
+
+ComparableServiceMock.given.equalTo(lhs: .any, rhs: .any).willReturn(true)
+ComparableServiceMock.given.plus(lhs: .any, rhs: .any).willReturn(lhs)
+
+lhs == rhs
+lhs + rhs
+
+try ComparableServiceMock.verify.equalTo(lhs: .any, rhs: .any).once()
+#endif
 ```
 
-Diagnostic:
+Common operators use readable aliases such as `equalTo`, `notEqualTo`,
+`lessThan`, `plus`, `minus`, `multiply`, `divide`, and `remainder`. Custom
+operators use a deterministic fallback name based on Unicode scalar values, for
+example `<~>` becomes `operator_u3c_u7e_u3e`.
 
-```text
-MockSyn cannot generate operator requirements yet. Wrap the operator behind a named method.
-```
+Class operator members are still rejected because MockSyn does not intercept
+concrete static dispatch through subclass generation.
 
 ## Limitations
 

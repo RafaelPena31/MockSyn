@@ -2,6 +2,26 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.16.0 - 2026-07-03
+
+### Added
+
+- Protocol operator requirement generation for static operators such as `==`, `+`, and custom operator symbols.
+- Named operator DSL entries for generated type-level `given`, `when`, and `verify` APIs, including common aliases like `equalTo` and `plus`.
+- Deterministic fallback names for custom operators using Unicode scalar encoding, for example `operator_u3c_u7e_u3e`.
+- Macro expansion and integration tests proving generated operators compile, route through `MockSynRuntime`, support stubbing, and support verification.
+
+### Changed
+
+- Protocol operator requirements are no longer rejected with a compile-time diagnostic.
+- Generated stubbing builders now resolve direct `Self` return types to the generated double type inside nested DSL structs, avoiding accidental use of the nested `Self`.
+- Documentation and support matrix now describe protocol operators as supported and class operator members as diagnostic-only.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.16.0`.
+- Operator APIs are named in the DSL because Swift does not allow expressions such as `mock.given.==(...)`.
+
 ## 0.15.0 - 2026-07-03
 
 ### Added

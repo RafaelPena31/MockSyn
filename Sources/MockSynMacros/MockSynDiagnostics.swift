@@ -41,7 +41,7 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
 
     static let unsupportedOperatorRequirement = MockSynDiagnostic(
         id: "unsupportedOperatorRequirement",
-        message: "MockSyn cannot generate operator requirements yet. Wrap the operator behind a named method."
+        message: "MockSyn cannot generate class operator members. Move the operator behind a protocol requirement."
     )
 
     private init(id: String, message: String) {

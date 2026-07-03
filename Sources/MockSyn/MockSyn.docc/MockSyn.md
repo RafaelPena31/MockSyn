@@ -33,21 +33,5 @@ counts, verifies order, reports failures, and supports reset scopes.
 ## Diagnostics
 
 MockSyn emits compile-time diagnostics for unsupported declarations, pure Swift
-final classes, invalid macro options, operator requirements, and complex
-protocol inheritance.
-
-## Topics
-
-### Configuration
-
-- ``MockSynAccess``
-- ``MockSynMode``
-
-### Runtime
-
-- ``MockSynRuntime``
-- ``MockSynMatcher``
-- ``MockSynCaptor``
-- ``MockSynVerification``
-- ``MockSynFailureReporter``
-- ``MockSynFake``
+final classes, invalid macro options, unsupported class operator members, and
+visibility issues.

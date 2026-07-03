@@ -14,7 +14,7 @@ next step.
 | Invalid `access` option | Supported | Emits the supported access values. |
 | Invalid `mode` option | Supported | Emits the supported mode values: `.strict` and `.relaxed`. |
 | Visibility widening | Supported | Rejects generated access that is wider than the annotated declaration. |
-| Operator requirements | Supported | Emits an error because operator generation is not implemented yet. |
+| Class operator members | Supported | Emits an error because subclass generation does not intercept concrete static operators. |
 
 ## Invalid Target
 
@@ -110,20 +110,23 @@ protocol AuthenticatedUserService: Foundation.Sendable {
 
 ## Unsupported Members
 
-Operator requirements are intentionally rejected until the API has explicit
-support for that shape:
+Protocol operator requirements are supported. Class operator members are rejected
+because they are concrete static members and cannot be overridden or intercepted
+by the generated subclass:
 
 ```swift
 @Mocking
-protocol Repository {
-    static func == (lhs: Self, rhs: Self) -> Bool
+class ComparableService {
+    static func == (lhs: ComparableService, rhs: ComparableService) -> Bool {
+        false
+    }
 }
 ```
 
 Diagnostic:
 
 ```text
-MockSyn cannot generate operator requirements yet. Wrap the operator behind a named method.
+MockSyn cannot generate class operator members. Move the operator behind a protocol requirement.
 ```
 
 ## Support Matrix
