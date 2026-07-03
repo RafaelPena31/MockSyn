@@ -142,4 +142,5 @@ try await service.verify.refresh().wasCalled(.once, timeout: 0.5)
 
 - Verification failure reporting currently uses thrown `MockSynVerificationError`.
   XCTest and Swift Testing adapters arrive in the test integration block.
-- Static member verification is not generated yet.
+- Static member verification is available on the generated type, for example
+  `try IDFactoryMock.verify.make(id: .value("primary")).once()`.

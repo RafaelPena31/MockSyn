@@ -153,9 +153,30 @@ spy.name(id: "42")      // delegates
 spy.name(id: "offline") // returns "Cached"
 ```
 
+## Static Members
+
+Static protocol requirements are configured on the generated type, not on an
+instance:
+
+```swift
+@Mocking
+protocol IDFactory {
+    static var version: String { get set }
+    static func make(id: String) -> String
+}
+
+IDFactoryMock.given.version.get.willReturn("1.0")
+IDFactoryMock.given.make(id: .value("primary")).willReturn("generated")
+
+_ = IDFactoryMock.version
+_ = IDFactoryMock.make(id: "primary")
+```
+
+Use `resetStatic(_:)`, `confirmStaticVerified()`, and
+`checkUnnecessaryStaticStubs()` for the static runtime state.
+
 ## Current Limits
 
-- Static member stubbing is not generated yet.
 - `willRun` has typed overloads for zero, one, and two method arguments.
 - Associated-type protocols generate generic doubles, so stubbing is available
   after the test binds the associated types through the generated generic

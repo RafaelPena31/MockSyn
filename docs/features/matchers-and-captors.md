@@ -124,6 +124,7 @@ control when the captured callback is executed.
 
 - Captors capture whenever their matcher is evaluated. Avoid reusing the same
   captor across unrelated verifications unless repeated captures are intended.
-- Static member stubbing and verification are not generated yet.
+- Static member stubbing and verification use the same matchers on type-level
+  `given` and `verify` APIs.
 - Testing-framework adapters are not implemented yet; verification currently
   throws `MockSynVerificationError`.

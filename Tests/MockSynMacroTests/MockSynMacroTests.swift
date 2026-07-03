@@ -391,10 +391,74 @@ final class MockSynMacroTests: XCTestCase {
 
               #if MOCKSYN_ENABLE
               internal final class UserServiceMock: UserService {
+                internal static let __mockSynStatic = MockSynRuntime(kind: .mock, mode: .strict)
                 internal let __mockSyn: MockSynRuntime
 
                 internal init(mode: MockSynMode = .strict) {
                   self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+                internal static var given: __MockSynStaticGiven {
+                  __MockSynStaticGiven(__mockSyn: __mockSynStatic)
+                }
+
+                internal static var when: __MockSynStaticGiven {
+                  given
+                }
+
+                internal static var verify: __MockSynStaticVerify {
+                  __MockSynStaticVerify(__mockSyn: __mockSynStatic)
+                }
+
+                internal static func confirmStaticVerified() throws {
+                  try __mockSynStatic.confirmVerified()
+                }
+
+                internal static func checkUnnecessaryStaticStubs() throws {
+                  try __mockSynStatic.checkUnnecessaryStubs()
+                }
+
+                internal static func resetStatic(_ scope: MockSynResetScope = .all) {
+                  __mockSynStatic.reset(scope)
+                }
+
+                internal struct __MockSynStaticGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var version: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "version.get", setMember: "version.set")
+                  }
+
+                  internal var build: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "build.get", setMember: "build.set")
+                  }
+
+                  internal func makeDefault() -> MockSynStubBuilder<String> {
+                    MockSynStubBuilder<String>(runtime: __mockSyn, member: "makeDefault()", matchers: [])
+                  }
+
+                  internal func reset() -> MockSynStubBuilder<Void> {
+                    MockSynStubBuilder<Void>(runtime: __mockSyn, member: "reset()", matchers: [])
+                  }
+                }
+
+                internal struct __MockSynStaticVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var version: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "version.get", setMember: "version.set")
+                  }
+
+                  internal var build: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "build.get", setMember: "build.set")
+                  }
+
+                  internal func makeDefault() -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "makeDefault()", matchers: [])
+                  }
+
+                  internal func reset() -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "reset()", matchers: [])
+                  }
                 }
                 internal var given: __MockSynGiven {
                   __MockSynGiven(__mockSyn: __mockSyn)
@@ -513,23 +577,25 @@ final class MockSynMacroTests: XCTestCase {
 
                 internal static var version: String {
                   get {
-                    fatalError("MockSyn member version is not configured")
+                    __mockSynStatic.resolve(member: "version.get", arguments: [], returnType: String.self)
                   }
                 }
 
                 internal static var build: String {
                   get {
-                    fatalError("MockSyn member build is not configured")
+                    __mockSynStatic.resolve(member: "build.get", arguments: [], returnType: String.self)
                   }
                   set {
+                    __mockSynStatic.resolveVoid(member: "build.set", arguments: [newValue as Any])
                   }
                 }
 
                 internal static func makeDefault() -> String {
-                  fatalError("MockSyn member makeDefault() is not configured")
+                  return __mockSynStatic.resolve(member: "makeDefault()", arguments: [], returnType: String.self)
                 }
 
                 internal static func reset() {
+                  __mockSynStatic.resolveVoid(member: "reset()", arguments: [])
                 }
 
                 internal func load(id: String) -> String {
@@ -856,6 +922,193 @@ final class MockSynMacroTests: XCTestCase {
                         self.__mockSynWrapped[key]
                       })
                   }
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testMockingGeneratesStaticStubbingAndVerificationApiForProtocolMembers() {
+        assertExpansion(
+            """
+            @Mocking
+            protocol StaticFactory {
+                static var version: String { get set }
+                static func make(id: String) -> String
+                static func ping()
+            }
+            """,
+            expandedSource: """
+              protocol StaticFactory {
+                  static var version: String { get set }
+                  static func make(id: String) -> String
+                  static func ping()
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class StaticFactoryMock: StaticFactory {
+                internal static let __mockSynStatic = MockSynRuntime(kind: .mock, mode: .strict)
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+                internal static var given: __MockSynStaticGiven {
+                  __MockSynStaticGiven(__mockSyn: __mockSynStatic)
+                }
+
+                internal static var when: __MockSynStaticGiven {
+                  given
+                }
+
+                internal static var verify: __MockSynStaticVerify {
+                  __MockSynStaticVerify(__mockSyn: __mockSynStatic)
+                }
+
+                internal static func confirmStaticVerified() throws {
+                  try __mockSynStatic.confirmVerified()
+                }
+
+                internal static func checkUnnecessaryStaticStubs() throws {
+                  try __mockSynStatic.checkUnnecessaryStubs()
+                }
+
+                internal static func resetStatic(_ scope: MockSynResetScope = .all) {
+                  __mockSynStatic.reset(scope)
+                }
+
+                internal struct __MockSynStaticGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var version: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "version.get", setMember: "version.set")
+                  }
+
+                  internal func make(id: MockSynMatcher<String>) -> MockSynStubBuilder1<String, String> {
+                    MockSynStubBuilder1<String, String>(runtime: __mockSyn, member: "make(id:)", matchers: [id.erase()])
+                  }
+
+                  internal func ping() -> MockSynStubBuilder<Void> {
+                    MockSynStubBuilder<Void>(runtime: __mockSyn, member: "ping()", matchers: [])
+                  }
+                }
+
+                internal struct __MockSynStaticVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var version: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "version.get", setMember: "version.set")
+                  }
+
+                  internal func make(id: MockSynMatcher<String>) -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "make(id:)", matchers: [id.erase()])
+                  }
+
+                  internal func ping() -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "ping()", matchers: [])
+                  }
+                }
+
+                internal static var version: String {
+                  get {
+                    __mockSynStatic.resolve(member: "version.get", arguments: [], returnType: String.self)
+                  }
+                  set {
+                    __mockSynStatic.resolveVoid(member: "version.set", arguments: [newValue as Any])
+                  }
+                }
+
+                internal static func make(id: String) -> String {
+                  return __mockSynStatic.resolve(member: "make(id:)", arguments: [id as Any], returnType: String.self)
+                }
+
+                internal static func ping() {
+                  __mockSynStatic.resolveVoid(member: "ping()", arguments: [])
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testMockingGeneratesStaticThrowingProtocolMembers() {
+        assertExpansion(
+            """
+            @Mocking
+            protocol StaticThrowingService {
+                static func fetch() throws -> String
+                static func save() throws
+            }
+            """,
+            expandedSource: """
+              protocol StaticThrowingService {
+                  static func fetch() throws -> String
+                  static func save() throws
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class StaticThrowingServiceMock: StaticThrowingService {
+                internal static let __mockSynStatic = MockSynRuntime(kind: .mock, mode: .strict)
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+                internal static var given: __MockSynStaticGiven {
+                  __MockSynStaticGiven(__mockSyn: __mockSynStatic)
+                }
+
+                internal static var when: __MockSynStaticGiven {
+                  given
+                }
+
+                internal static var verify: __MockSynStaticVerify {
+                  __MockSynStaticVerify(__mockSyn: __mockSynStatic)
+                }
+
+                internal static func confirmStaticVerified() throws {
+                  try __mockSynStatic.confirmVerified()
+                }
+
+                internal static func checkUnnecessaryStaticStubs() throws {
+                  try __mockSynStatic.checkUnnecessaryStubs()
+                }
+
+                internal static func resetStatic(_ scope: MockSynResetScope = .all) {
+                  __mockSynStatic.reset(scope)
+                }
+
+                internal struct __MockSynStaticGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func fetch() -> MockSynStubBuilder<String> {
+                    MockSynStubBuilder<String>(runtime: __mockSyn, member: "fetch()", matchers: [])
+                  }
+
+                  internal func save() -> MockSynStubBuilder<Void> {
+                    MockSynStubBuilder<Void>(runtime: __mockSyn, member: "save()", matchers: [])
+                  }
+                }
+
+                internal struct __MockSynStaticVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func fetch() -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "fetch()", matchers: [])
+                  }
+
+                  internal func save() -> MockSynVerification {
+                    MockSynVerification(runtime: __mockSyn, member: "save()", matchers: [])
+                  }
+                }
+
+                internal static func fetch() throws -> String {
+                  return try __mockSynStatic.resolveThrowing(member: "fetch()", arguments: [], returnType: String.self)
+                }
+
+                internal static func save() throws {
+                  try __mockSynStatic.resolveVoidThrowing(member: "save()", arguments: [])
                 }
               }
               #endif

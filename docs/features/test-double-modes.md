@@ -122,6 +122,7 @@ doubles.
 
 - Generated fakes are not part of the macro surface. Use hand-written fakes plus
   `MockSynFake`.
-- Static member stubbing and verification are not generated yet.
+- Static member stubbing and verification share the generated type-level runtime
+  state and use the macro's configured default mode.
 - Testing-framework adapters are not implemented yet; verification currently
   throws `MockSynVerificationError`.

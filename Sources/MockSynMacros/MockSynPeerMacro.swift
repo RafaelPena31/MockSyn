@@ -214,11 +214,13 @@ private struct MockSynPeerMacro {
         let mode = options.mode.sourceName
         let superInitLine = target.superInitCall.map { "\n    \($0)" } ?? ""
         let associatedTypeSource = target.associatedTypeSource(access: access)
+        let staticRuntimeSource = target.staticRuntimeSource(access: access, kind: kind, mode: mode)
         let memberSource = target.members
             .map { $0.source(access: access, options: options, kind: kind, target: target) }
             .joined(separator: "\n\n")
         let generatedMembers = memberSource.isEmpty ? "" : "\n\n\(memberSource)"
         let stubbingSource = target.stubbingSource(access: access)
+        let staticStubbingSource = target.staticStubbingSource(access: access)
 
         let declarationSource: String
         if kind == .spy {
@@ -226,13 +228,14 @@ private struct MockSynPeerMacro {
             #if MOCKSYN_ENABLE
             \(target.attributes)\(access) final class \(generatedName)\(target.genericParameterClause): \(target.inheritedTypeName)\(target.genericWhereClause) {
             \(associatedTypeSource)\
+            \(staticRuntimeSource)\
               \(access) let __mockSyn: MockSynRuntime
               \(access) let __mockSynWrapped: \(target.wrappedTypeName)
 
               \(access) init(wrapping __mockSynWrapped: \(target.wrappedTypeName), mode: MockSynMode = \(mode)) {
                 self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: mode)
                 self.__mockSynWrapped = __mockSynWrapped\(superInitLine)
-              }\(stubbingSource)\(generatedMembers)
+              }\(staticStubbingSource)\(stubbingSource)\(generatedMembers)
             }
             #endif
             """
@@ -241,11 +244,12 @@ private struct MockSynPeerMacro {
             #if MOCKSYN_ENABLE
             \(target.attributes)\(access) final class \(generatedName)\(target.genericParameterClause): \(target.inheritedTypeName)\(target.genericWhereClause) {
             \(associatedTypeSource)\
+            \(staticRuntimeSource)\
               \(access) let __mockSyn: MockSynRuntime
 
               \(access) init(mode: MockSynMode = \(mode)) {
                 self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: mode)\(superInitLine)
-              }\(stubbingSource)\(generatedMembers)
+              }\(staticStubbingSource)\(stubbingSource)\(generatedMembers)
             }
             #endif
             """
@@ -294,6 +298,10 @@ private struct Target {
         }
     }
 
+    var hasStaticMembers: Bool {
+        members.contains { $0.isStatic }
+    }
+
     func associatedTypeSource(access: String) -> String {
         guard !associatedTypes.isEmpty else {
             return ""
@@ -303,6 +311,66 @@ private struct Target {
         return associatedTypes
             .map { "  \(typealiasAccess) typealias \($0.name) = \($0.name)" }
             .joined(separator: "\n") + "\n"
+    }
+
+    func staticRuntimeSource(access: String, kind: MockSynPeerMacro.Kind, mode: String) -> String {
+        guard hasStaticMembers else {
+            return ""
+        }
+
+        return "  \(access) static let __mockSynStatic = MockSynRuntime(kind: \(kind.runtimeKind), mode: \(mode))\n"
+    }
+
+    func staticStubbingSource(access: String) -> String {
+        let stubbingMemberSources = members
+            .compactMap { $0.staticStubbingSource(access: access) }
+            .joined(separator: "\n\n")
+        let verificationMemberSources = members
+            .compactMap { $0.staticVerificationSource(access: access) }
+            .joined(separator: "\n\n")
+
+        guard !stubbingMemberSources.isEmpty || !verificationMemberSources.isEmpty else {
+            return ""
+        }
+
+        return """
+
+          \(access) static var given: __MockSynStaticGiven {
+            __MockSynStaticGiven(__mockSyn: __mockSynStatic)
+          }
+
+          \(access) static var when: __MockSynStaticGiven {
+            given
+          }
+
+          \(access) static var verify: __MockSynStaticVerify {
+            __MockSynStaticVerify(__mockSyn: __mockSynStatic)
+          }
+
+          \(access) static func confirmStaticVerified() throws {
+            try __mockSynStatic.confirmVerified()
+          }
+
+          \(access) static func checkUnnecessaryStaticStubs() throws {
+            try __mockSynStatic.checkUnnecessaryStubs()
+          }
+
+          \(access) static func resetStatic(_ scope: MockSynResetScope = .all) {
+            __mockSynStatic.reset(scope)
+          }
+
+          \(access) struct __MockSynStaticGiven {
+            \(access) let __mockSyn: MockSynRuntime
+
+        \(stubbingMemberSources)
+          }
+
+          \(access) struct __MockSynStaticVerify {
+            \(access) let __mockSyn: MockSynRuntime
+
+        \(verificationMemberSources)
+          }
+        """
     }
 
     func stubbingSource(access: String) -> String {
@@ -430,6 +498,17 @@ private enum GeneratedMember {
     case property(GeneratedProperty)
     case subscriptMember(GeneratedSubscript)
 
+    var isStatic: Bool {
+        switch self {
+        case .initializer, .subscriptMember:
+            return false
+        case .function(let function):
+            return function.isStatic
+        case .property(let property):
+            return property.isStatic
+        }
+    }
+
     func source(
         access: String,
         options: MockSynMacroOptions,
@@ -461,6 +540,17 @@ private enum GeneratedMember {
         }
     }
 
+    func staticStubbingSource(access: String) -> String? {
+        switch self {
+        case .initializer, .subscriptMember:
+            return nil
+        case .function(let function):
+            return function.staticStubbingSource(access: access)
+        case .property(let property):
+            return property.staticStubbingSource(access: access)
+        }
+    }
+
     func verificationSource(access: String) -> String? {
         switch self {
         case .initializer:
@@ -471,6 +561,17 @@ private enum GeneratedMember {
             return property.verificationSource(access: access)
         case .subscriptMember(let subscriptMember):
             return subscriptMember.verificationSource(access: access)
+        }
+    }
+
+    func staticVerificationSource(access: String) -> String? {
+        switch self {
+        case .initializer, .subscriptMember:
+            return nil
+        case .function(let function):
+            return function.staticVerificationSource(access: access)
+        case .property(let property):
+            return property.staticVerificationSource(access: access)
         }
     }
 }
@@ -508,13 +609,6 @@ private struct GeneratedFunction {
         let staticPrefix = target.kind == .protocol && isStatic ? "static " : ""
         let body = bodySource(kind: kind)
 
-        guard !body.isEmpty else {
-            return """
-              \(attributes)\(access) \(declarationPrefix)\(staticPrefix)func \(name)\(genericParameterClause)\(parameterClause)\(effectSpecifiers)\(returnClause)\(genericWhereClause) {
-              }
-            """
-        }
-
         return """
           \(attributes)\(access) \(declarationPrefix)\(staticPrefix)func \(name)\(genericParameterClause)\(parameterClause)\(effectSpecifiers)\(returnClause)\(genericWhereClause) {
         \(body)
@@ -524,7 +618,21 @@ private struct GeneratedFunction {
 
     private func bodySource(kind: MockSynPeerMacro.Kind) -> String {
         if isStatic {
-            return returnsValue ? "    fatalError(\"MockSyn member \(signatureName) is not configured\")" : ""
+            let arguments = "[\(argumentValues)]"
+
+            if effectSpecifiers.range(of: "throws") != nil {
+                if returnsValue {
+                    return "    return try __mockSynStatic.resolveThrowing(member: \"\(signatureName)\", arguments: \(arguments), returnType: \(returnType).self)"
+                }
+
+                return "    try __mockSynStatic.resolveVoidThrowing(member: \"\(signatureName)\", arguments: \(arguments))"
+            }
+
+            if returnsValue {
+                return "    return __mockSynStatic.resolve(member: \"\(signatureName)\", arguments: \(arguments), returnType: \(returnType).self)"
+            }
+
+            return "    __mockSynStatic.resolveVoid(member: \"\(signatureName)\", arguments: \(arguments))"
         }
 
         if kind == .spy, !isStatic, hasInoutParameter {
@@ -580,6 +688,18 @@ private struct GeneratedFunction {
             return nil
         }
 
+        return functionStubbingSource(access: access)
+    }
+
+    func staticStubbingSource(access: String) -> String? {
+        guard isStatic else {
+            return nil
+        }
+
+        return functionStubbingSource(access: access)
+    }
+
+    private func functionStubbingSource(access: String) -> String {
         let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
         let matchers = matcherList.isEmpty ? "[]" : "[\(matcherList)]"
 
@@ -595,6 +715,18 @@ private struct GeneratedFunction {
             return nil
         }
 
+        return functionVerificationSource(access: access)
+    }
+
+    func staticVerificationSource(access: String) -> String? {
+        guard isStatic else {
+            return nil
+        }
+
+        return functionVerificationSource(access: access)
+    }
+
+    private func functionVerificationSource(access: String) -> String {
         let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
         let matchers = matcherList.isEmpty ? "[]" : "[\(matcherList)]"
 
@@ -635,8 +767,8 @@ private struct GeneratedProperty {
         let declarationPrefix = target.kind == .class && !isStatic ? "override " : ""
         let staticPrefix = target.kind == .protocol && isStatic ? "static " : ""
         if isStatic {
-            let getterBody = "fatalError(\"MockSyn member \(name) is not configured\")"
-            let setterSource = hasSetter ? "\n    set {\n    }" : ""
+            let getterBody = "__mockSynStatic.resolve(member: \"\(name).get\", arguments: [], returnType: \(type).self)"
+            let setterSource = hasSetter ? "\n    set {\n      __mockSynStatic.resolveVoid(member: \"\(name).set\", arguments: [newValue as Any])\n    }" : ""
 
             return """
               \(attributes)\(access) \(staticPrefix)var \(name): \(type) {
@@ -665,6 +797,18 @@ private struct GeneratedProperty {
             return nil
         }
 
+        return propertyStubbingSource(access: access)
+    }
+
+    func staticStubbingSource(access: String) -> String? {
+        guard isStatic else {
+            return nil
+        }
+
+        return propertyStubbingSource(access: access)
+    }
+
+    private func propertyStubbingSource(access: String) -> String {
         return """
             \(access) var \(name): MockSynPropertyStubber<\(type)> {
               MockSynPropertyStubber(runtime: __mockSyn, getMember: "\(name).get", setMember: "\(name).set")
@@ -677,6 +821,18 @@ private struct GeneratedProperty {
             return nil
         }
 
+        return propertyVerificationSource(access: access)
+    }
+
+    func staticVerificationSource(access: String) -> String? {
+        guard isStatic else {
+            return nil
+        }
+
+        return propertyVerificationSource(access: access)
+    }
+
+    private func propertyVerificationSource(access: String) -> String {
         return """
             \(access) var \(name): MockSynPropertyVerification<\(type)> {
               MockSynPropertyVerification(runtime: __mockSyn, getMember: "\(name).get", setMember: "\(name).set")

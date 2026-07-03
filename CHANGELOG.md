@@ -2,6 +2,25 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.14.0 - 2026-07-03
+
+### Added
+
+- Static protocol member stubbing and verification through type-level `given`, `when`, and `verify` APIs.
+- Generated static runtime state per double type for static properties and methods.
+- Generated `resetStatic`, `confirmStaticVerified`, and `checkUnnecessaryStaticStubs` helpers.
+- Macro expansion and integration tests covering static property get/set stubbing, static method stubbing, and static verification.
+
+### Changed
+
+- Static protocol members now resolve through MockSyn runtime instead of placeholder `fatalError` or empty bodies.
+- Documentation and support matrix now describe static member stubbing and verification as supported.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.14.0`.
+- Static APIs are configured on the generated type, for example `UserServiceMock.given.make().willReturn(value)`.
+
 ## 0.13.0 - 2026-07-03
 
 ### Added

@@ -13,7 +13,6 @@ MockSyn is inspired by MockK and Mockito, but Swift does not provide the same ru
 | Arbitrary constructors | Swift macros do not intercept constructor calls. |
 | Operator requirements | Block 3 emits a diagnostic instead of generating operators. |
 | Complex protocol inheritance | Block 11 emits a diagnostic for inherited types that are not simple protocol names. |
-| Static member stubbing | Static protocol requirements are generated for conformance, but generated `given` APIs do not configure static members yet. |
 | Runtime bytecode-style interception | Swift does not have a JVM-like bytecode agent model. |
 | Fully arbitrary generated peer names | Swift attached peer macros at global scope must declare name patterns. |
 

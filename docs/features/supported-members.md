@@ -124,9 +124,9 @@ MockSyn cannot generate operator requirements yet. Wrap the operator behind a na
   `inout`, variadics, closures, global actors, and common `Sendable` scenarios
   are handled by the Swift language feature block.
 - Protocols with associated types generate generic mocks, stubs, and spies.
-- Static members are generated for protocol conformance, but spies cannot
-  delegate static protocol requirements through an instance wrapper.
+- Static protocol members generate type-level stubbing and verification APIs.
+  Spies cannot delegate static protocol requirements through an instance wrapper.
 - Properties without explicit type annotations are ignored by the member
   generator.
-- Verification APIs are available for generated instance methods, properties,
-  and subscripts. Static member verification is not generated yet.
+- Verification APIs are available for generated instance and static methods,
+  properties, and subscripts.
