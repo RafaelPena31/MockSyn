@@ -10,7 +10,7 @@ turning MockSyn into a source generator or plugin-based framework.
 | Call store | Supported | `MockSynRuntime` records invocations for generated doubles and manual fakes. |
 | Stub registry | Supported | Stub builders register matcher/behavior rules per member. |
 | Invocation model | Supported | Runtime stores member name, boxed arguments, verification state, and global call order. |
-| Argument boxing | Supported | Arguments are stored as `[Any]` and matched through type-erased `MockSynAnyMatcher`. |
+| Argument boxing | Supported | Arguments are stored as `[Any]`, matched through type-erased `MockSynAnyMatcher`, and rendered through the diagnostic argument renderer. |
 | Thread safety | Supported | Runtime state is protected by `NSRecursiveLock`. |
 | Reset | Supported | Clear invocations, stubs, or both with `MockSynResetScope`. |
 | Failure reporter | Supported | Runtime failures are sent through `MockSynFailureReporter` before being thrown. |
@@ -79,7 +79,7 @@ deterministic without adding work to macro expansion.
 
 - Public verification APIs forward file/line metadata. Generated non-throwing
   production-style calls still report from the generated runtime path.
-- Invocation arguments are boxed as `[Any]`; detailed argument rendering is a
-  later diagnostics improvement.
+- Invocation arguments are boxed as `[Any]`; diagnostic rendering is best-effort
+  and does not change matching semantics.
 - The global call-order clock is not reset by per-double reset because order can
   span multiple doubles.

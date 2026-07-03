@@ -2,6 +2,23 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.29.0 - 2026-07-03
+
+### Added
+
+- Rich runtime argument rendering for failure messages and recorded call output.
+- Stable rendering for strings, optionals, arrays, dictionaries, sets, metatypes, closures, and `CustomDebugStringConvertible` values.
+- Runtime tests proving missing-stub failures and verification failures render arguments with quoted strings, unwrapped optionals, deterministic sets, and closure placeholders.
+
+### Changed
+
+- Recorded-call diagnostics now use the same argument renderer as missing-stub diagnostics instead of raw `String(describing:)`.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.29.0`.
+- Rendering remains diagnostic-only and does not affect matching, stubbing, or invocation storage.
+
 ## 0.28.0 - 2026-07-03
 
 ### Added

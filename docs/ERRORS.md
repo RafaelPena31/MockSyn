@@ -79,6 +79,12 @@ Member: fetchUser(id:)
 Expected: called once with id == "123"
 Actual: called 0 times
 Recorded calls:
-- fetchUser(id: "456")
+- fetchUser(id:)("456")
 Suggestion: check the argument matcher or call path under test.
 ```
+
+Argument values are rendered with stable diagnostics: strings are quoted,
+optionals are unwrapped or shown as `nil`, collections render nested values,
+sets and dictionaries are sorted by rendered text, metatypes include `.Type`,
+closures are shown as `<closure>`, and `CustomDebugStringConvertible` values use
+their `debugDescription`.

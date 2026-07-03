@@ -11,7 +11,7 @@ hard XCTest or Swift Testing dependency to the runtime target.
 | Swift Testing adapter | Supported | `MockSynFailureReporter.useSwiftTesting` accepts a Swift Testing-style issue closure. |
 | Custom reporter | Supported | `setHandler` accepts a `MockSynFailure` handler. |
 | File/line forwarding | Supported | Verification APIs forward `file` and `line` into reported failures. |
-| Detailed messages | Supported | Verification reports include recorded calls when available. |
+| Detailed messages | Supported | Verification reports include recorded calls with rich argument rendering when available. |
 
 ## XCTest
 
@@ -99,11 +99,22 @@ Verification failures include the expected condition and recorded calls:
 ```text
 Expected save(_:) to be called exactly 1 time, but it was called 0 times
 Recorded calls:
-- save(_:)(received)
+- save(_:)("received")
 ```
 
 This makes the reporter output useful even before framework-specific formatting
 is applied.
+
+Runtime diagnostics render common argument shapes without relying only on raw
+`String(describing:)`:
+
+- strings are quoted;
+- optional values are rendered as their wrapped value or `nil`;
+- arrays, dictionaries, and sets render their nested values recursively;
+- set and dictionary entries are sorted by their rendered text for stable output;
+- metatypes render as `TypeName.Type`;
+- closures render as `<closure>`;
+- values conforming to `CustomDebugStringConvertible` use `debugDescription`.
 
 ## Current Limits
 
@@ -111,4 +122,3 @@ is applied.
   from the runtime module.
 - Generated non-throwing calls that fail through `try!` still crash after the
   runtime reports the failure.
-- Rich argument rendering beyond `String(describing:)` is planned for diagnostics.
