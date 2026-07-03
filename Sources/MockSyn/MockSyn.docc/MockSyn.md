@@ -28,7 +28,9 @@ where mocks exist through Active Compilation Conditions.
 ## Runtime
 
 The runtime records invocations, stores stubs, evaluates matchers, verifies call
-counts, verifies order, reports failures, and supports reset scopes.
+counts, verifies order, reports failures, and supports reset scopes. Generated
+members include sync, throwing, async, async throwing, static, operator, and
+effectful property getter requirements.
 
 ## Diagnostics
 

@@ -2,12 +2,12 @@
 
 MockSyn is a Swift macro-first framework for generating mocks, stubs, and spies with an API inspired by MockK and Mockito.
 
-The framework is implemented incrementally by feature block. Version 0.16.0 supports protocol operator requirements with generated type-level stubbing and verification APIs.
+The framework is implemented incrementally by feature block. Version 0.17.0 supports effectful property getters such as `get async`, `get throws`, and `get async throws`.
 
 ## Installation
 
 ```swift
-.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.16.0")
+.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.17.0")
 ```
 
 ## Core Directives

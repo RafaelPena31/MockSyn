@@ -47,7 +47,7 @@ Initial platform support:
 | `throws` members | Supported | Supported |
 | `async` members | Supported | Supported |
 | `async throws` members | Supported | Supported |
-| Properties | Supported | Supported |
+| Properties | Supported, including `get async`, `get throws`, and `get async throws` | Supported, including `get async`, `get throws`, and `get async throws` |
 | Subscripts | Supported | Supported |
 | Static protocol members | Supported with type-level stubbing/verification | Supported with type-level stubbing/verification |
 | Protocol initializers | Supported for mocks/stubs | Supported for mocks/stubs |

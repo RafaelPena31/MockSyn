@@ -19,6 +19,7 @@ inside the macro-only architecture.
 | Global actors | Supported for actor attributes ending in `Actor` | Type and member actor attributes are forwarded. |
 | `Sendable` inheritance | Supported where Swift accepts the generated type | `MockSynRuntime` is `@unchecked Sendable`. |
 | Associated types | Supported | Protocol associated types become generic parameters on generated doubles. |
+| Effectful property getters | Supported | Preserves `get async`, `get throws`, and `get async throws`. |
 
 ## Generic Methods
 
@@ -104,6 +105,30 @@ Generated type:
 ```swift
 @MainActor final class MainServiceMock: MainService
 ```
+
+## Effectful Property Getters
+
+Effectful property accessor syntax is preserved on generated mocks, stubs, and
+spies:
+
+```swift
+@Mocking
+protocol ProfileService {
+    var remoteName: String { get async throws }
+}
+```
+
+Generated mocks and stubs keep the same accessor shape and use the matching
+runtime path:
+
+```swift
+var remoteName: String {
+    get async throws
+}
+```
+
+Spies record async getter access and then delegate directly to the wrapped
+implementation.
 
 ## Associated Types
 

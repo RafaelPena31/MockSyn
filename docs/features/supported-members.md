@@ -14,7 +14,7 @@ adds richer matchers and captors that plug into those generated member APIs.
 | `async` methods | Supported | Supported as overrides | Void async methods are callable and do nothing for mocks/stubs. |
 | `async throws` methods | Supported | Supported as overrides | Spy instance methods delegate to the wrapped implementation. |
 | `Void` methods | Supported | Supported as overrides | Callable immediately and recorded for verification. |
-| `get` properties | Supported | Supported as overrides | Instance getters can be configured through generated property stubs. |
+| `get` properties | Supported | Supported as overrides | Instance getters can be configured through generated property stubs. Effectful getters preserve `async`, `throws`, and `async throws`. |
 | `get set` properties | Supported | Supported as overrides | Setters are callable; getter behavior follows the getter rule. |
 | Static requirements | Supported for protocols | Not a class feature in this block | Static methods/properties are generated for protocol conformance. |
 | Subscripts | Supported | Supported as overrides | Protocol spies delegate readable subscripts. |
@@ -46,6 +46,39 @@ service.load(id: "1")
 `Void` methods and setters are callable because they do not need a return value.
 Unstubbed non-void getters, subscripts, and methods fail in strict mode with a
 clear runtime message.
+
+## Effectful Property Getters
+
+Swift property requirements can include effectful getter accessors:
+
+```swift
+@Mocking
+protocol ProfileService {
+    var remoteName: String { get async throws }
+}
+
+#if MOCKSYN_ENABLE
+let service = ProfileServiceMock()
+service.given.remoteName.get.willReturn("Rafael")
+
+let name = try await service.remoteName
+try service.verify.remoteName.get.once()
+#endif
+```
+
+Mocks and stubs preserve the getter effects and route throwing getters through
+the throwing runtime path. Static protocol properties use the generated
+type-level runtime:
+
+```swift
+IDFactoryMock.given.remoteVersion.get.willReturn("1.0")
+let version = try await IDFactoryMock.remoteVersion
+```
+
+Spies with async property getters record the getter invocation and delegate
+directly to the wrapped implementation. Because Swift async getters cannot be
+called from a synchronous fallback closure, async spy property stubs are not
+applied before delegation in this release.
 
 ## Spy Delegation
 
@@ -144,6 +177,8 @@ concrete static dispatch through subclass generation.
 - Protocols with associated types generate generic mocks, stubs, and spies.
 - Static protocol members generate type-level stubbing and verification APIs.
   Spies cannot delegate static protocol requirements through an instance wrapper.
+- Async spy property getters delegate directly after recording; targeted
+  property stubs for those async getters are not applied before delegation.
 - Properties without explicit type annotations are ignored by the member
   generator.
 - Verification APIs are available for generated instance and static methods,

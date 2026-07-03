@@ -2,6 +2,26 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.17.0 - 2026-07-03
+
+### Added
+
+- Effectful property getter generation for `get async`, `get throws`, and `get async throws` requirements.
+- Runtime-backed stubbing and verification for effectful property getters on mocks and stubs.
+- Static protocol property support for effectful getters through the generated type-level runtime.
+- Spy support for async effectful property getters by recording the getter access and delegating to the wrapped implementation.
+- Macro expansion and integration tests proving effectful getters compile, preserve accessor effects, support stubbing and verification, and delegate through spies.
+
+### Changed
+
+- Generated property accessors now preserve getter effect specifiers instead of emitting only synchronous getters.
+- Documentation and support matrix now describe effectful property getter support and the async spy delegation limit.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.17.0`.
+- Async spy property getters delegate directly after recording because Swift async getters cannot be called from the existing synchronous fallback closure.
+
 ## 0.16.0 - 2026-07-03
 
 ### Added

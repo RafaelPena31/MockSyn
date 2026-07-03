@@ -1116,6 +1116,248 @@ final class MockSynMacroTests: XCTestCase {
         )
     }
 
+    func testMockingGeneratesEffectfulPropertyAccessors() {
+        assertExpansion(
+            """
+            @Mocking
+            protocol EffectfulPropertyService {
+                var asyncName: String { get async }
+                var throwingName: String { get throws }
+                var asyncThrowingName: String { get async throws }
+                static var staticAsyncThrowingName: String { get async throws }
+            }
+            """,
+            expandedSource: """
+              protocol EffectfulPropertyService {
+                  var asyncName: String { get async }
+                  var throwingName: String { get throws }
+                  var asyncThrowingName: String { get async throws }
+                  static var staticAsyncThrowingName: String { get async throws }
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class EffectfulPropertyServiceMock: EffectfulPropertyService {
+                internal static let __mockSynStatic = MockSynRuntime(kind: .mock, mode: .strict)
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+                internal static var given: __MockSynStaticGiven {
+                  __MockSynStaticGiven(__mockSyn: __mockSynStatic)
+                }
+
+                internal static var when: __MockSynStaticGiven {
+                  given
+                }
+
+                internal static var verify: __MockSynStaticVerify {
+                  __MockSynStaticVerify(__mockSyn: __mockSynStatic)
+                }
+
+                internal static func confirmStaticVerified() throws {
+                  try __mockSynStatic.confirmVerified()
+                }
+
+                internal static func checkUnnecessaryStaticStubs() throws {
+                  try __mockSynStatic.checkUnnecessaryStubs()
+                }
+
+                internal static func resetStatic(_ scope: MockSynResetScope = .all) {
+                  __mockSynStatic.reset(scope)
+                }
+
+                internal struct __MockSynStaticGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var staticAsyncThrowingName: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "staticAsyncThrowingName.get", setMember: "staticAsyncThrowingName.set")
+                  }
+                }
+
+                internal struct __MockSynStaticVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var staticAsyncThrowingName: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "staticAsyncThrowingName.get", setMember: "staticAsyncThrowingName.set")
+                  }
+                }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var asyncName: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "asyncName.get", setMember: "asyncName.set")
+                  }
+
+                  internal var throwingName: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "throwingName.get", setMember: "throwingName.set")
+                  }
+
+                  internal var asyncThrowingName: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "asyncThrowingName.get", setMember: "asyncThrowingName.set")
+                  }
+                }
+
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var asyncName: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "asyncName.get", setMember: "asyncName.set")
+                  }
+
+                  internal var throwingName: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "throwingName.get", setMember: "throwingName.set")
+                  }
+
+                  internal var asyncThrowingName: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "asyncThrowingName.get", setMember: "asyncThrowingName.set")
+                  }
+                }
+
+                internal var asyncName: String {
+                  get async {
+                    __mockSyn.resolve(member: "asyncName.get", arguments: [], returnType: String.self)
+                  }
+                }
+
+                internal var throwingName: String {
+                  get throws {
+                    try __mockSyn.resolveThrowing(member: "throwingName.get", arguments: [], returnType: String.self)
+                  }
+                }
+
+                internal var asyncThrowingName: String {
+                  get async throws {
+                    try __mockSyn.resolveThrowing(member: "asyncThrowingName.get", arguments: [], returnType: String.self)
+                  }
+                }
+
+                internal static var staticAsyncThrowingName: String {
+                  get async throws {
+                    try __mockSynStatic.resolveThrowing(member: "staticAsyncThrowingName.get", arguments: [], returnType: String.self)
+                  }
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testSpyingGeneratesDelegatingEffectfulPropertyAccessors() {
+        assertExpansion(
+            """
+            @Spying
+            protocol EffectfulPropertyService {
+                var asyncName: String { get async }
+                var asyncThrowingName: String { get async throws }
+            }
+            """,
+            expandedSource: """
+              protocol EffectfulPropertyService {
+                  var asyncName: String { get async }
+                  var asyncThrowingName: String { get async throws }
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class EffectfulPropertyServiceSpy: EffectfulPropertyService {
+                internal let __mockSyn: MockSynRuntime
+                internal let __mockSynWrapped: any EffectfulPropertyService
+
+                internal init(wrapping __mockSynWrapped: any EffectfulPropertyService, mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .spy, mode: mode)
+                  self.__mockSynWrapped = __mockSynWrapped
+                }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var asyncName: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "asyncName.get", setMember: "asyncName.set")
+                  }
+
+                  internal var asyncThrowingName: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "asyncThrowingName.get", setMember: "asyncThrowingName.set")
+                  }
+                }
+
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var asyncName: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "asyncName.get", setMember: "asyncName.set")
+                  }
+
+                  internal var asyncThrowingName: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "asyncThrowingName.get", setMember: "asyncThrowingName.set")
+                  }
+                }
+
+                internal var asyncName: String {
+                  get async {
+                    __mockSyn.record(member: "asyncName.get", arguments: [])
+                    return await self.__mockSynWrapped.asyncName
+                  }
+                }
+
+                internal var asyncThrowingName: String {
+                  get async throws {
+                    __mockSyn.record(member: "asyncThrowingName.get", arguments: [])
+                    return try await self.__mockSynWrapped.asyncThrowingName
+                  }
+                }
+              }
+              #endif
+              """
+        )
+    }
+
     func testMockingPreservesSwiftLanguageFeatureMembers() {
         assertExpansion(
             """
@@ -1981,6 +2223,78 @@ final class MockSynMacroTests: XCTestCase {
                 internal init(mode: MockSynMode = .strict) {
                   self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
                   super.init()
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testClassComputedGetterShorthandGeneratesOverride() {
+        assertExpansion(
+            """
+            @Mocking
+            class UserService {
+                var displayName: String { "base" }
+            }
+            """,
+            expandedSource: """
+              class UserService {
+                  var displayName: String { "base" }
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class UserServiceMock: UserService {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                  super.init()
+                }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal var verify: __MockSynVerify {
+                  __MockSynVerify(__mockSyn: __mockSyn)
+                }
+
+                internal func confirmVerified() throws {
+                  try __mockSyn.confirmVerified()
+                }
+
+                internal func checkUnnecessaryStubs() throws {
+                  try __mockSyn.checkUnnecessaryStubs()
+                }
+
+                internal func reset(_ scope: MockSynResetScope = .all) {
+                  __mockSyn.reset(scope)
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var displayName: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "displayName.get", setMember: "displayName.set")
+                  }
+                }
+
+                internal struct __MockSynVerify {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var displayName: MockSynPropertyVerification<String> {
+                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "displayName.get", setMember: "displayName.set")
+                  }
+                }
+
+                internal override var displayName: String {
+                  get {
+                    __mockSyn.resolve(member: "displayName.get", arguments: [], returnType: String.self)
+                  }
                 }
               }
               #endif

@@ -92,6 +92,23 @@ profile.given.displayName.set(.any).willRun { newValue in
 Getter and setter stubs are stored separately. A getter stub does not configure
 the setter, and a setter stub does not configure the getter.
 
+Effectful getters use the same generated property stubber:
+
+```swift
+service.given.remoteName.get.willReturn("Rafael")
+
+let name = try await service.remoteName
+```
+
+For `get throws` and `get async throws`, `willThrow` configures the error raised
+by the generated getter:
+
+```swift
+service.given.remoteName.get.willThrow(NetworkError.offline)
+
+try await service.remoteName
+```
+
 ## Subscripts
 
 ```swift

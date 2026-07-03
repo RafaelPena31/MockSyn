@@ -759,34 +759,57 @@ private struct GeneratedProperty {
     let type: String
     let isStatic: Bool
     let hasSetter: Bool
+    let getterEffectSpecifiers: String
 
     func source(access: String, kind: MockSynPeerMacro.Kind, target: Target) -> String {
         let declarationPrefix = target.kind == .class && !isStatic ? "override " : ""
         let staticPrefix = target.kind == .protocol && isStatic ? "static " : ""
         if isStatic {
-            let getterBody = "__mockSynStatic.resolve(member: \"\(name).get\", arguments: [], returnType: \(type).self)"
+            let getterBody = staticGetterBody
             let setterSource = hasSetter ? "\n    set {\n      __mockSynStatic.resolveVoid(member: \"\(name).set\", arguments: [newValue as Any])\n    }" : ""
 
             return """
               \(attributes)\(access) \(staticPrefix)var \(name): \(type) {
-                get {
+                get\(getterEffectSpecifiers) {
                   \(getterBody)
                 }\(setterSource)
               }
             """
         }
 
-        let fallback = kind == .spy && !isStatic ? ", fallback: { self.__mockSynWrapped.\(name) }" : ""
-        let getterBody = "__mockSyn.resolve(member: \"\(name).get\", arguments: [], returnType: \(type).self\(fallback))"
+        let getterBody = getterBody(kind: kind)
         let setterSource = hasSetter ? "\n    set {\n      __mockSyn.resolveVoid(member: \"\(name).set\", arguments: [newValue as Any])\n    }" : ""
 
         return """
           \(attributes)\(access) \(declarationPrefix)\(staticPrefix)var \(name): \(type) {
-            get {
+            get\(getterEffectSpecifiers) {
               \(getterBody)
             }\(setterSource)
           }
         """
+    }
+
+    private var staticGetterBody: String {
+        if getterEffectSpecifiers.hasThrowingEffect {
+            return "try __mockSynStatic.resolveThrowing(member: \"\(name).get\", arguments: [], returnType: \(type).self)"
+        }
+
+        return "__mockSynStatic.resolve(member: \"\(name).get\", arguments: [], returnType: \(type).self)"
+    }
+
+    private func getterBody(kind: MockSynPeerMacro.Kind) -> String {
+        if kind == .spy, getterEffectSpecifiers.hasAsyncEffect {
+            let recording = "__mockSyn.record(member: \"\(name).get\", arguments: [])"
+            let delegation = "return \(getterEffectSpecifiers.callPrefix)self.__mockSynWrapped.\(name)"
+            return "\(recording)\n      \(delegation)"
+        }
+
+        let fallback = kind == .spy ? ", fallback: { \(getterEffectSpecifiers.callPrefix)self.__mockSynWrapped.\(name) }" : ""
+        if getterEffectSpecifiers.hasThrowingEffect {
+            return "try __mockSyn.resolveThrowing(member: \"\(name).get\", arguments: [], returnType: \(type).self\(fallback))"
+        }
+
+        return "__mockSyn.resolve(member: \"\(name).get\", arguments: [], returnType: \(type).self\(fallback))"
     }
 
     func stubbingSource(access: String) -> String? {
@@ -993,7 +1016,8 @@ private extension GeneratedProperty {
             name: pattern.identifier.text,
             type: type,
             isStatic: declaration.modifiers.containsStatic,
-            hasSetter: hasSetter
+            hasSetter: hasSetter,
+            getterEffectSpecifiers: binding.accessorBlock?.mockSynGetterEffectSpecifiers ?? ""
         )
     }
 }
@@ -1003,6 +1027,17 @@ private extension DeclModifierListSyntax {
         contains { modifier in
             modifier.name.text == "static"
         }
+    }
+}
+
+private extension AccessorBlockSyntax {
+    var mockSynGetterEffectSpecifiers: String {
+        guard case .accessors(let accessors) = self.accessors,
+              let getter = accessors.first(where: { $0.accessorSpecifier.tokenKind == .keyword(.get) }) else {
+            return ""
+        }
+
+        return getter.effectSpecifiers?.description.trimmedEffectSpecifiers ?? ""
     }
 }
 
@@ -1149,10 +1184,7 @@ private extension String {
     }
 
     var callPrefix: String {
-        let hasAsync = range(of: "async") != nil
-        let hasThrowing = range(of: "throws") != nil
-
-        switch (hasThrowing, hasAsync) {
+        switch (hasThrowingEffect, hasAsyncEffect) {
         case (true, true):
             return "try await "
         case (true, false):
@@ -1162,6 +1194,14 @@ private extension String {
         case (false, false):
             return ""
         }
+    }
+
+    var hasAsyncEffect: Bool {
+        range(of: "async") != nil
+    }
+
+    var hasThrowingEffect: Bool {
+        range(of: "throws") != nil
     }
 
     var signatureSuffix: String {
