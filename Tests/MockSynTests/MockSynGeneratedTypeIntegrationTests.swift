@@ -124,6 +124,38 @@ protocol MainActorService {
     func refresh()
 }
 
+private enum StubbedServiceError: Error, Equatable {
+    case offline
+}
+
+struct StubbedToken: Equatable {
+    let value: String
+}
+
+@Mocking
+protocol StubbedUserService {
+    var displayName: String { get set }
+
+    func name(id: String) -> String
+    func combined(_ name: String, retry: Int) -> String
+    func asyncName(id: String) async -> String
+    func nextCount() -> Int
+    func failingName() throws -> String
+    func doubled(_ value: Int) -> Int
+    func ping()
+    subscript(key: String) -> String? { get set }
+}
+
+@Stubbing
+protocol RelaxedDefaultsService {
+    var optionalName: String? { get }
+
+    func title() -> String
+    func count() -> Int
+    func enabled() -> Bool
+    func token() -> StubbedToken
+}
+
 final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
     func testGeneratedMockCarriesRuntimeMetadata() {
         #if MOCKSYN_ENABLE
@@ -337,6 +369,139 @@ final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
         mock.refresh()
 
         XCTAssertEqual(mock.__mockSyn.kind, .mock)
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedMockUsesGivenWillReturnForMatchingArguments() {
+        #if MOCKSYN_ENABLE
+        let mock = StubbedUserServiceMock()
+
+        mock.given.name(id: .value("42")).willReturn("Arthur")
+        mock.given.name(id: .any).willReturn("fallback")
+
+        XCTAssertEqual(mock.name(id: "42"), "Arthur")
+        XCTAssertEqual(mock.name(id: "7"), "fallback")
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedMockUsesWhenAliasAndSequentialReturns() {
+        #if MOCKSYN_ENABLE
+        let mock = StubbedUserServiceMock()
+
+        mock.when.nextCount().willReturn(1, 2, 3)
+
+        XCTAssertEqual(mock.nextCount(), 1)
+        XCTAssertEqual(mock.nextCount(), 2)
+        XCTAssertEqual(mock.nextCount(), 3)
+        XCTAssertEqual(mock.nextCount(), 3)
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedMockUsesWillThrowAndWillRun() throws {
+        #if MOCKSYN_ENABLE
+        let mock = StubbedUserServiceMock()
+
+        mock.given.failingName().willThrow(StubbedServiceError.offline)
+        mock.given.doubled(.any).willRun { value in
+            value * 2
+        }
+
+        XCTAssertThrowsError(try mock.failingName()) { error in
+            XCTAssertEqual(error as? StubbedServiceError, .offline)
+        }
+        XCTAssertEqual(mock.doubled(4), 8)
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedMockUsesStubsForMultipleArgumentsAndAsyncMembers() async {
+        #if MOCKSYN_ENABLE
+        let mock = StubbedUserServiceMock()
+
+        mock.given.combined(.value("Rafael"), retry: .value(2)).willReturn("matched")
+        mock.given.asyncName(id: .any).willReturn("async-value")
+
+        let asyncName = await mock.asyncName(id: "42")
+
+        XCTAssertEqual(mock.combined("Rafael", retry: 2), "matched")
+        XCTAssertEqual(asyncName, "async-value")
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedMockUsesPropertyGetterAndSetterStubs() {
+        #if MOCKSYN_ENABLE
+        let mock = StubbedUserServiceMock()
+        var assignedName: String?
+
+        mock.given.displayName.get.willReturn("Rafael")
+        mock.given.displayName.set(.any).willRun { newValue in
+            assignedName = newValue
+        }
+
+        XCTAssertEqual(mock.displayName, "Rafael")
+        mock.displayName = "MockSyn"
+        XCTAssertEqual(assignedName, "MockSyn")
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedMockUsesSubscriptGetterAndSetterStubs() {
+        #if MOCKSYN_ENABLE
+        let mock = StubbedUserServiceMock()
+        var assignedValue: String?
+
+        mock.given.subscript(key: .value("theme")).get.willReturn("dark")
+        mock.given.subscript(key: .any).set(.any).willRun { newValue in
+            assignedValue = newValue
+        }
+
+        XCTAssertEqual(mock["theme"], "dark")
+        mock["theme"] = "light"
+        XCTAssertEqual(assignedValue, "light")
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedVoidMethodCanBeStubbedWithWillRun() {
+        #if MOCKSYN_ENABLE
+        let mock = StubbedUserServiceMock()
+        var didPing = false
+
+        mock.given.ping().willRun {
+            didPing = true
+        }
+
+        mock.ping()
+
+        XCTAssertTrue(didPing)
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedStubUsesRelaxedDefaultsAndCustomDefaultRegistry() {
+        #if MOCKSYN_ENABLE
+        let stub = RelaxedDefaultsServiceStub()
+
+        MockSynDefaultValueRegistry.register(StubbedToken(value: "registered"), for: StubbedToken.self)
+        defer { MockSynDefaultValueRegistry.reset() }
+
+        XCTAssertEqual(stub.title(), "")
+        XCTAssertEqual(stub.count(), 0)
+        XCTAssertEqual(stub.enabled(), false)
+        XCTAssertNil(stub.optionalName)
+        XCTAssertEqual(stub.token(), StubbedToken(value: "registered"))
         #else
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif

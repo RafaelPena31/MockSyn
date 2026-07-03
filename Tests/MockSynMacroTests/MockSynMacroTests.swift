@@ -360,9 +360,12 @@ final class MockSynMacroTests: XCTestCase {
                 init(seed: String)
                 var currentUser: String { get }
                 var token: String? { get set }
-                static var build: String { get }
+                static var version: String { get }
+                static var build: String { get set }
                 static func makeDefault() -> String
+                static func reset()
                 func load(id: String) -> String
+                func combine(_ name: String, retry: Int) -> String
                 func save(_ user: String) throws
                 func refresh() async
                 func fetch(id: String) async throws -> Int
@@ -374,9 +377,12 @@ final class MockSynMacroTests: XCTestCase {
                   init(seed: String)
                   var currentUser: String { get }
                   var token: String? { get set }
-                  static var build: String { get }
+                  static var version: String { get }
+                  static var build: String { get set }
                   static func makeDefault() -> String
+                  static func reset()
                   func load(id: String) -> String
+                  func combine(_ name: String, retry: Int) -> String
                   func save(_ user: String) throws
                   func refresh() async
                   func fetch(id: String) async throws -> Int
@@ -390,6 +396,49 @@ final class MockSynMacroTests: XCTestCase {
                 internal init(mode: MockSynMode = .strict) {
                   self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
                 }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var currentUser: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "currentUser.get", setMember: "currentUser.set")
+                  }
+
+                  internal var token: MockSynPropertyStubber<String?> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "token.get", setMember: "token.set")
+                  }
+
+                  internal func load(id: MockSynMatcher<String>) -> MockSynStubBuilder1<String, String> {
+                    MockSynStubBuilder1<String, String>(runtime: __mockSyn, member: "load(id:)", matchers: [id.erase()])
+                  }
+
+                  internal func combine(_ name: MockSynMatcher<String>, retry: MockSynMatcher<Int>) -> MockSynStubBuilder2<String, Int, String> {
+                    MockSynStubBuilder2<String, Int, String>(runtime: __mockSyn, member: "combine(_:retry:)", matchers: [name.erase(), retry.erase()])
+                  }
+
+                  internal func save(_ user: MockSynMatcher<String>) -> MockSynStubBuilder1<String, Void> {
+                    MockSynStubBuilder1<String, Void>(runtime: __mockSyn, member: "save(_:)", matchers: [user.erase()])
+                  }
+
+                  internal func refresh() -> MockSynStubBuilder<Void> {
+                    MockSynStubBuilder<Void>(runtime: __mockSyn, member: "refresh()", matchers: [])
+                  }
+
+                  internal func fetch(id: MockSynMatcher<String>) -> MockSynStubBuilder1<String, Int> {
+                    MockSynStubBuilder1<String, Int>(runtime: __mockSyn, member: "fetch(id:)", matchers: [id.erase()])
+                  }
+
+                  internal func `subscript`(key: MockSynMatcher<String>) -> MockSynSubscriptStubber<String?> {
+                    MockSynSubscriptStubber(runtime: __mockSyn, getMember: "subscript(key:).get", setMember: "subscript(key:).set", indexMatchers: [key.erase()])
+                  }
+                }
 
                 internal init(seed: String) {
                   self.__mockSyn = MockSynRuntime(kind: .mock, mode: .strict)
@@ -397,15 +446,22 @@ final class MockSynMacroTests: XCTestCase {
 
                 internal var currentUser: String {
                   get {
-                    fatalError("MockSyn member currentUser is not configured")
+                    __mockSyn.resolve(member: "currentUser.get", arguments: [], returnType: String.self)
                   }
                 }
 
                 internal var token: String? {
                   get {
-                    fatalError("MockSyn member token is not configured")
+                    __mockSyn.resolve(member: "token.get", arguments: [], returnType: String?.self)
                   }
                   set {
+                    __mockSyn.resolveVoid(member: "token.set", arguments: [newValue as Any])
+                  }
+                }
+
+                internal static var version: String {
+                  get {
+                    fatalError("MockSyn member version is not configured")
                   }
                 }
 
@@ -413,31 +469,43 @@ final class MockSynMacroTests: XCTestCase {
                   get {
                     fatalError("MockSyn member build is not configured")
                   }
+                  set {
+                  }
                 }
 
                 internal static func makeDefault() -> String {
                   fatalError("MockSyn member makeDefault() is not configured")
                 }
 
+                internal static func reset() {
+                }
+
                 internal func load(id: String) -> String {
-                  fatalError("MockSyn member load(id:) is not configured")
+                  return __mockSyn.resolve(member: "load(id:)", arguments: [id as Any], returnType: String.self)
+                }
+
+                internal func combine(_ name: String, retry: Int) -> String {
+                  return __mockSyn.resolve(member: "combine(_:retry:)", arguments: [name as Any, retry as Any], returnType: String.self)
                 }
 
                 internal func save(_ user: String) throws {
+                  try __mockSyn.resolveVoidThrowing(member: "save(_:)", arguments: [user as Any])
                 }
 
                 internal func refresh() async {
+                  __mockSyn.resolveVoid(member: "refresh()", arguments: [])
                 }
 
                 internal func fetch(id: String) async throws -> Int {
-                  fatalError("MockSyn member fetch(id:) is not configured")
+                  return try __mockSyn.resolveThrowing(member: "fetch(id:)", arguments: [id as Any], returnType: Int.self)
                 }
 
                 internal subscript(key: String) -> String? {
                   get {
-                    fatalError("MockSyn member subscript(key:) is not configured")
+                    __mockSyn.resolve(member: "subscript(key:).get", arguments: [key as Any], returnType: String?.self)
                   }
                   set {
+                    __mockSyn.resolveVoid(member: "subscript(key:).set", arguments: [key as Any, newValue as Any])
                   }
                 }
               }
@@ -455,6 +523,8 @@ final class MockSynMacroTests: XCTestCase {
                 var token: String? { get set }
                 func load(id: String) -> String
                 func fail() throws
+                func mutate(_ value: inout Int)
+                func normalize(_ value: inout Int) -> String
                 func stream() async -> String
                 func save(_ value: String) async throws
                 subscript(key: String) -> String? { get }
@@ -467,6 +537,8 @@ final class MockSynMacroTests: XCTestCase {
                   var token: String? { get set }
                   func load(id: String) -> String
                   func fail() throws
+                  func mutate(_ value: inout Int)
+                  func normalize(_ value: inout Int) -> String
                   func stream() async -> String
                   func save(_ value: String) async throws
                   subscript(key: String) -> String? { get }
@@ -482,27 +554,95 @@ final class MockSynMacroTests: XCTestCase {
                   self.__mockSyn = MockSynRuntime(kind: .spy, mode: mode)
                   self.__mockSynWrapped = __mockSynWrapped
                 }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var count: MockSynPropertyStubber<Int> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "count.get", setMember: "count.set")
+                  }
+
+                  internal var token: MockSynPropertyStubber<String?> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "token.get", setMember: "token.set")
+                  }
+
+                  internal func load(id: MockSynMatcher<String>) -> MockSynStubBuilder1<String, String> {
+                    MockSynStubBuilder1<String, String>(runtime: __mockSyn, member: "load(id:)", matchers: [id.erase()])
+                  }
+
+                  internal func fail() -> MockSynStubBuilder<Void> {
+                    MockSynStubBuilder<Void>(runtime: __mockSyn, member: "fail()", matchers: [])
+                  }
+
+                  internal func mutate(_ value: MockSynMatcher<Int>) -> MockSynStubBuilder1<Int, Void> {
+                    MockSynStubBuilder1<Int, Void>(runtime: __mockSyn, member: "mutate(_:)", matchers: [value.erase()])
+                  }
+
+                  internal func normalize(_ value: MockSynMatcher<Int>) -> MockSynStubBuilder1<Int, String> {
+                    MockSynStubBuilder1<Int, String>(runtime: __mockSyn, member: "normalize(_:)", matchers: [value.erase()])
+                  }
+
+                  internal func stream() -> MockSynStubBuilder<String> {
+                    MockSynStubBuilder<String>(runtime: __mockSyn, member: "stream()", matchers: [])
+                  }
+
+                  internal func save(_ value: MockSynMatcher<String>) -> MockSynStubBuilder1<String, Void> {
+                    MockSynStubBuilder1<String, Void>(runtime: __mockSyn, member: "save(_:)", matchers: [value.erase()])
+                  }
+
+                  internal func `subscript`(key: MockSynMatcher<String>) -> MockSynSubscriptStubber<String?> {
+                    MockSynSubscriptStubber(runtime: __mockSyn, getMember: "subscript(key:).get", setMember: "subscript(key:).set", indexMatchers: [key.erase()])
+                  }
+
+                  internal func `subscript`(label key: MockSynMatcher<String>) -> MockSynSubscriptStubber<String?> {
+                    MockSynSubscriptStubber(runtime: __mockSyn, getMember: "subscript(label:).get", setMember: "subscript(label:).set", indexMatchers: [key.erase()])
+                  }
+                }
 
                 internal var count: Int {
                   get {
-                    __mockSynWrapped.count
+                    __mockSyn.resolve(member: "count.get", arguments: [], returnType: Int.self, fallback: {
+                        self.__mockSynWrapped.count
+                      })
                   }
                 }
 
                 internal var token: String? {
                   get {
-                    __mockSynWrapped.token
+                    __mockSyn.resolve(member: "token.get", arguments: [], returnType: String?.self, fallback: {
+                        self.__mockSynWrapped.token
+                      })
                   }
                   set {
+                    __mockSyn.resolveVoid(member: "token.set", arguments: [newValue as Any])
                   }
                 }
 
                 internal func load(id: String) -> String {
-                  __mockSynWrapped.load(id: id)
+                  return __mockSyn.resolve(member: "load(id:)", arguments: [id as Any], returnType: String.self, fallback: {
+                      self.__mockSynWrapped.load(id: id)
+                    })
                 }
 
                 internal func fail() throws {
-                  try __mockSynWrapped.fail()
+                  try __mockSyn.resolveVoidThrowing(member: "fail()", arguments: [], fallback: {
+                      try self.__mockSynWrapped.fail()
+                    })
+                }
+
+                internal func mutate(_ value: inout Int) {
+                  __mockSynWrapped.mutate(&value)
+                }
+
+                internal func normalize(_ value: inout Int) -> String {
+                  return __mockSynWrapped.normalize(&value)
                 }
 
                 internal func stream() async -> String {
@@ -515,13 +655,17 @@ final class MockSynMacroTests: XCTestCase {
 
                 internal subscript(key: String) -> String? {
                   get {
-                    __mockSynWrapped[key]
+                    __mockSyn.resolve(member: "subscript(key:).get", arguments: [key as Any], returnType: String?.self, fallback: {
+                        self.__mockSynWrapped[key]
+                      })
                   }
                 }
 
                 internal subscript(label key: String) -> String? {
                   get {
-                    __mockSynWrapped[label: key]
+                    __mockSyn.resolve(member: "subscript(label:).get", arguments: [key as Any], returnType: String?.self, fallback: {
+                        self.__mockSynWrapped[label: key]
+                      })
                   }
                 }
               }
@@ -552,10 +696,27 @@ final class MockSynMacroTests: XCTestCase {
                   self.__mockSyn = MockSynRuntime(kind: .spy, mode: mode)
                   self.__mockSynWrapped = __mockSynWrapped
                 }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func `subscript`(_ key: MockSynMatcher<String>) -> MockSynSubscriptStubber<String?> {
+                    MockSynSubscriptStubber(runtime: __mockSyn, getMember: "subscript(_:).get", setMember: "subscript(_:).set", indexMatchers: [key.erase()])
+                  }
+                }
 
                 internal subscript(_ key: String) -> String? {
                   get {
-                    __mockSynWrapped[key]
+                    __mockSyn.resolve(member: "subscript(_:).get", arguments: [key as Any], returnType: String?.self, fallback: {
+                        self.__mockSynWrapped[key]
+                      })
                   }
                 }
               }
@@ -594,29 +755,66 @@ final class MockSynMacroTests: XCTestCase {
                 internal init(mode: MockSynMode = .strict) {
                   self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
                 }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var title: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "title.get", setMember: "title.set")
+                  }
+
+                  internal func map<Value>(_ value: MockSynMatcher<Value>) -> MockSynStubBuilder1<Value, Value> where Value: Sendable {
+                    MockSynStubBuilder1<Value, Value>(runtime: __mockSyn, member: "map(_:)", matchers: [value.erase()])
+                  }
+
+                  internal func update(_ value: MockSynMatcher<Int>) -> MockSynStubBuilder1<Int, Void> {
+                    MockSynStubBuilder1<Int, Void>(runtime: __mockSyn, member: "update(_:)", matchers: [value.erase()])
+                  }
+
+                  internal func handle(_ action: MockSynMatcher<(String) -> Void>) -> MockSynStubBuilder1<(String) -> Void, Void> {
+                    MockSynStubBuilder1<(String) -> Void, Void>(runtime: __mockSyn, member: "handle(_:)", matchers: [action.erase()])
+                  }
+
+                  internal func clone() -> MockSynStubBuilder<Self> {
+                    MockSynStubBuilder<Self>(runtime: __mockSyn, member: "clone()", matchers: [])
+                  }
+
+                  internal func collect(_ values: MockSynMatcher<[Int]>) -> MockSynStubBuilder1<[Int], Int> {
+                    MockSynStubBuilder1<[Int], Int>(runtime: __mockSyn, member: "collect(_:)", matchers: [values.erase()])
+                  }
+                }
 
                 @MainActor internal var title: String {
                   get {
-                    fatalError("MockSyn member title is not configured")
+                    __mockSyn.resolve(member: "title.get", arguments: [], returnType: String.self)
                   }
                 }
 
                 internal func map<Value>(_ value: Value) -> Value where Value: Sendable {
-                  fatalError("MockSyn member map(_:) is not configured")
+                  return __mockSyn.resolve(member: "map(_:)", arguments: [value as Any], returnType: Value.self)
                 }
 
                 internal func update(_ value: inout Int) {
+                  __mockSyn.resolveVoid(member: "update(_:)", arguments: [value as Any])
                 }
 
                 internal func handle(_ action: @escaping (String) -> Void) {
+                  __mockSyn.resolveVoid(member: "handle(_:)", arguments: [action as Any])
                 }
 
                 internal func clone() -> Self {
-                  fatalError("MockSyn member clone() is not configured")
+                  return __mockSyn.resolve(member: "clone()", arguments: [], returnType: Self.self)
                 }
 
                 internal func collect(_ values: Int...) -> Int {
-                  fatalError("MockSyn member collect(_:) is not configured")
+                  return __mockSyn.resolve(member: "collect(_:)", arguments: [values as Any], returnType: Int.self)
                 }
               }
               #endif
@@ -650,17 +848,42 @@ final class MockSynMacroTests: XCTestCase {
                   self.__mockSyn = MockSynRuntime(kind: .spy, mode: mode)
                   self.__mockSynWrapped = __mockSynWrapped
                 }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func update(_ value: MockSynMatcher<Int>) -> MockSynStubBuilder1<Int, Void> {
+                    MockSynStubBuilder1<Int, Void>(runtime: __mockSyn, member: "update(_:)", matchers: [value.erase()])
+                  }
+
+                  internal func handle(_ action: MockSynMatcher<(String) -> Void>) -> MockSynStubBuilder1<(String) -> Void, Void> {
+                    MockSynStubBuilder1<(String) -> Void, Void>(runtime: __mockSyn, member: "handle(_:)", matchers: [action.erase()])
+                  }
+
+                  internal func collect(_ values: MockSynMatcher<[Int]>) -> MockSynStubBuilder1<[Int], Int> {
+                    MockSynStubBuilder1<[Int], Int>(runtime: __mockSyn, member: "collect(_:)", matchers: [values.erase()])
+                  }
+                }
 
                 internal func update(_ value: inout Int) {
                   __mockSynWrapped.update(&value)
                 }
 
                 internal func handle(_ action: @escaping (String) -> Void) {
-                  __mockSynWrapped.handle(action)
+                  __mockSyn.resolveVoid(member: "handle(_:)", arguments: [action as Any], fallback: {
+                      self.__mockSynWrapped.handle(action)
+                    })
                 }
 
                 internal func collect(_ values: Int...) -> Int {
-                  fatalError("MockSyn member collect(_:) is not configured")
+                  return __mockSyn.resolve(member: "collect(_:)", arguments: [values as Any], returnType: Int.self)
                 }
               }
               #endif
@@ -690,8 +913,24 @@ final class MockSynMacroTests: XCTestCase {
                 internal init(mode: MockSynMode = .strict) {
                   self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
                 }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func refresh() -> MockSynStubBuilder<Void> {
+                    MockSynStubBuilder<Void>(runtime: __mockSyn, member: "refresh()", matchers: [])
+                  }
+                }
 
                 internal func refresh() {
+                  __mockSyn.resolveVoid(member: "refresh()", arguments: [])
                 }
               }
               #endif
@@ -724,9 +963,24 @@ final class MockSynMacroTests: XCTestCase {
                   self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
                   super.init()
                 }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal func load(_ value: MockSynMatcher<Value>) -> MockSynStubBuilder1<Value, Value> {
+                    MockSynStubBuilder1<Value, Value>(runtime: __mockSyn, member: "load(_:)", matchers: [value.erase()])
+                  }
+                }
 
                 internal override func load(_ value: Value) -> Value {
-                  fatalError("MockSyn member load(_:) is not configured")
+                  return __mockSyn.resolve(member: "load(_:)", arguments: [value as Any], returnType: Value.self)
                 }
               }
               #endif
@@ -813,33 +1067,67 @@ final class MockSynMacroTests: XCTestCase {
                   self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
                   super.init()
                 }
+                internal var given: __MockSynGiven {
+                  __MockSynGiven(__mockSyn: __mockSyn)
+                }
+
+                internal var when: __MockSynGiven {
+                  given
+                }
+
+                internal struct __MockSynGiven {
+                  internal let __mockSyn: MockSynRuntime
+
+                  internal var storedToken: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "storedToken.get", setMember: "storedToken.set")
+                  }
+
+                  internal var token: MockSynPropertyStubber<String> {
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "token.get", setMember: "token.set")
+                  }
+
+                  internal func load(id: MockSynMatcher<String>) -> MockSynStubBuilder1<String, String> {
+                    MockSynStubBuilder1<String, String>(runtime: __mockSyn, member: "load(id:)", matchers: [id.erase()])
+                  }
+
+                  internal func save(_ user: MockSynMatcher<String>) -> MockSynStubBuilder1<String, Void> {
+                    MockSynStubBuilder1<String, Void>(runtime: __mockSyn, member: "save(_:)", matchers: [user.erase()])
+                  }
+
+                  internal func `subscript`(key: MockSynMatcher<String>) -> MockSynSubscriptStubber<String> {
+                    MockSynSubscriptStubber(runtime: __mockSyn, getMember: "subscript(key:).get", setMember: "subscript(key:).set", indexMatchers: [key.erase()])
+                  }
+                }
 
                 internal override var storedToken: String {
                   get {
-                    fatalError("MockSyn member storedToken is not configured")
+                    __mockSyn.resolve(member: "storedToken.get", arguments: [], returnType: String.self)
                   }
                   set {
+                    __mockSyn.resolveVoid(member: "storedToken.set", arguments: [newValue as Any])
                   }
                 }
 
                 internal override var token: String {
                   get {
-                    fatalError("MockSyn member token is not configured")
+                    __mockSyn.resolve(member: "token.get", arguments: [], returnType: String.self)
                   }
                   set {
+                    __mockSyn.resolveVoid(member: "token.set", arguments: [newValue as Any])
                   }
                 }
 
                 internal override func load(id: String) -> String {
-                  fatalError("MockSyn member load(id:) is not configured")
+                  return __mockSyn.resolve(member: "load(id:)", arguments: [id as Any], returnType: String.self)
                 }
 
                 internal override func save(_ user: String) throws {
+                  try __mockSyn.resolveVoidThrowing(member: "save(_:)", arguments: [user as Any])
                 }
 
                 internal override subscript(key: String) -> String {
                   get {
-                    fatalError("MockSyn member subscript(key:) is not configured")
+                    __mockSyn.resolve(member: "subscript(key:).get", arguments: [key as Any], returnType: String.self)
                   }
                 }
               }

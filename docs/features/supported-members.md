@@ -1,20 +1,19 @@
 # Supported Members
 
-Block 3 adds member generation for declarations that MockSyn already accepts.
-The goal of this block is compile-time conformance and predictable placeholder
-behavior. Stubbing, verification, invocation storage, relaxed defaults, and
-argument matching are implemented by later blocks.
+Block 3 added member generation for declarations that MockSyn already accepts.
+Block 5 connects generated instance members to the runtime stubbing registry.
+Verification, invocation assertions, and captors are implemented by later blocks.
 
 ## What It Does
 
 | Member | Protocols | Non-final classes | Notes |
 | --- | --- | --- | --- |
-| Sync methods | Supported | Supported as overrides | Non-void mocks and stubs fail until configured by future stubbing APIs. |
+| Sync methods | Supported | Supported as overrides | Instance members can be configured through `given` / `when`. |
 | `throws` methods | Supported | Supported as overrides | Void throwing methods are callable and do nothing for mocks/stubs. |
 | `async` methods | Supported | Supported as overrides | Void async methods are callable and do nothing for mocks/stubs. |
 | `async throws` methods | Supported | Supported as overrides | Spy instance methods delegate to the wrapped implementation. |
 | `Void` methods | Supported | Supported as overrides | Callable immediately; recording comes in the runtime block. |
-| `get` properties | Supported | Supported as overrides | Non-spy getters fail until stubbing exists. |
+| `get` properties | Supported | Supported as overrides | Instance getters can be configured through generated property stubs. |
 | `get set` properties | Supported | Supported as overrides | Setters are callable; getter behavior follows the getter rule. |
 | Static requirements | Supported for protocols | Not a class feature in this block | Static methods/properties are generated for protocol conformance. |
 | Subscripts | Supported | Supported as overrides | Protocol spies delegate readable subscripts. |
@@ -22,10 +21,11 @@ argument matching are implemented by later blocks.
 | Overloads | Supported when signatures are valid Swift | Supported when overridable | Overload resolution is left to Swift. |
 | Operators | Diagnostic | Diagnostic | Operators are intentionally rejected for now. |
 
-## Runtime Behavior In This Block
+## Runtime Behavior
 
-Mocks and stubs generated in Block 3 are structurally complete, but they do not
-yet have a call store or stub registry.
+Instance methods, properties, and subscripts generated for mocks, stubs, and
+spies now route through `MockSynRuntime`. Strict mocks fail on unstubbed non-void
+calls. Relaxed mocks and stubs return supported defaults when possible.
 
 ```swift
 @Mocking
@@ -37,13 +37,14 @@ protocol UserService {
 #if MOCKSYN_ENABLE
 let service = UserServiceMock()
 service.refresh()
-service.load(id: "1") // fatalError until stubbing is implemented.
+service.given.load(id: .value("1")).willReturn("Rafael")
+service.load(id: "1")
 #endif
 ```
 
 `Void` methods and setters are callable because they do not need a return value.
-Non-void getters, subscripts, and methods fail with a clear placeholder message
-until the stubbing block provides configured returns.
+Unstubbed non-void getters, subscripts, and methods fail in strict mode with a
+clear runtime message.
 
 ## Spy Delegation
 
@@ -127,4 +128,4 @@ MockSyn cannot generate operator requirements yet. Wrap the operator behind a na
   delegate static protocol requirements through an instance wrapper.
 - Properties without explicit type annotations are ignored by the member
   generator.
-- Stubbing and verification APIs are not available in this block.
+- Verification APIs are not available in this block.

@@ -2,6 +2,27 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.5.0 - 2026-07-02
+
+### Added
+
+- Runtime stub registry shared by generated mocks, stubs, and spies.
+- Generated `given` and `when` APIs for instance methods, properties, and subscripts.
+- `willReturn`, `willThrow`, and `willRun` stubbing builders.
+- Sequential return values with last-value reuse after the configured sequence is exhausted.
+- Argument-specific stubs using `.any`, `.value`, and `.matching` typed matchers.
+- Property getter and setter stubbing.
+- Subscript getter and setter stubbing, including labeled and underscored subscripts.
+- Partial spy behavior where matching stubs override wrapped implementation delegation.
+- Relaxed default value resolution for stubs and relaxed mocks.
+- `MockSynDefaultValueRegistry` for custom domain defaults.
+- Documentation for the stubbing feature block and updated support/limitations docs.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.5.0`.
+- Static member stubbing, verification, captors, and invocation order assertions remain planned for later blocks.
+
 ## 0.4.0 - 2026-07-02
 
 ### Added

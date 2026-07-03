@@ -21,6 +21,7 @@ This folder contains the required design and feature documentation for MockSyn.
 - [Supported Types](features/supported-types.md)
 - [Supported Members](features/supported-members.md)
 - [Swift Language Features](features/swift-language-features.md)
+- [Stubbing](features/stubbing.md)
 
 ## Non-Negotiable Product Decisions
 

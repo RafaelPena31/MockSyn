@@ -185,6 +185,7 @@ private struct MockSynPeerMacro {
             .map { $0.source(access: access, options: options, kind: kind, target: target) }
             .joined(separator: "\n\n")
         let generatedMembers = memberSource.isEmpty ? "" : "\n\n\(memberSource)"
+        let stubbingSource = target.stubbingSource(access: access)
 
         let declarationSource: String
         if kind == .spy {
@@ -197,7 +198,7 @@ private struct MockSynPeerMacro {
               \(access) init(wrapping __mockSynWrapped: \(target.wrappedTypeName), mode: MockSynMode = \(mode)) {
                 self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: mode)
                 self.__mockSynWrapped = __mockSynWrapped\(superInitLine)
-              }\(generatedMembers)
+              }\(stubbingSource)\(generatedMembers)
             }
             #endif
             """
@@ -209,7 +210,7 @@ private struct MockSynPeerMacro {
 
               \(access) init(mode: MockSynMode = \(mode)) {
                 self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: mode)\(superInitLine)
-              }\(generatedMembers)
+              }\(stubbingSource)\(generatedMembers)
             }
             #endif
             """
@@ -255,6 +256,33 @@ private struct Target {
             return "super.init()"
         }
     }
+
+    func stubbingSource(access: String) -> String {
+        let memberSources = members
+            .compactMap { $0.stubbingSource(access: access) }
+            .joined(separator: "\n\n")
+
+        guard !memberSources.isEmpty else {
+            return ""
+        }
+
+        return """
+
+          \(access) var given: __MockSynGiven {
+            __MockSynGiven(__mockSyn: __mockSyn)
+          }
+
+          \(access) var when: __MockSynGiven {
+            given
+          }
+
+          \(access) struct __MockSynGiven {
+            \(access) let __mockSyn: MockSynRuntime
+
+        \(memberSources)
+          }
+        """
+    }
 }
 
 private enum TargetKind {
@@ -285,6 +313,19 @@ private enum GeneratedMember {
             return subscriptMember.source(access: access, kind: kind, target: target)
         }
     }
+
+    func stubbingSource(access: String) -> String? {
+        switch self {
+        case .initializer:
+            return nil
+        case .function(let function):
+            return function.stubbingSource(access: access)
+        case .property(let property):
+            return property.stubbingSource(access: access)
+        case .subscriptMember(let subscriptMember):
+            return subscriptMember.stubbingSource(access: access)
+        }
+    }
 }
 
 private struct GeneratedInitializer {
@@ -305,10 +346,13 @@ private struct GeneratedFunction {
     let genericParameterClause: String
     let parameterClause: String
     let callArguments: String
+    let argumentValues: String
+    let stubParameters: [GeneratedParameter]
     let effectSpecifiers: String
     let returnClause: String
     let genericWhereClause: String
     let isStatic: Bool
+    let hasInoutParameter: Bool
     let hasVariadicParameter: Bool
     let returnsValue: Bool
 
@@ -332,21 +376,87 @@ private struct GeneratedFunction {
     }
 
     private func bodySource(kind: MockSynPeerMacro.Kind) -> String {
-        if kind == .spy && !isStatic && !hasVariadicParameter {
+        if isStatic {
+            return returnsValue ? "    fatalError(\"MockSyn member \(signatureName) is not configured\")" : ""
+        }
+
+        if kind == .spy, !isStatic, hasInoutParameter {
+            let callPrefix = effectSpecifiers.callPrefix
+            let call = "__mockSynWrapped.\(name)(\(callArguments))"
+            return returnsValue ? "    return \(callPrefix)\(call)" : "    \(callPrefix)\(call)"
+        }
+
+        if effectSpecifiers.range(of: "async") != nil, kind == .spy && !isStatic && !hasVariadicParameter {
             let callPrefix = effectSpecifiers.callPrefix
             let call = "__mockSynWrapped.\(name)(\(callArguments))"
             return "    \(callPrefix)\(call)"
         }
 
-        guard returnsValue else {
+        let arguments = "[\(argumentValues)]"
+        let fallback = spyFallback(kind: kind)
+
+        if effectSpecifiers.range(of: "throws") != nil {
+            if returnsValue {
+                return "    return try __mockSyn.resolveThrowing(member: \"\(signatureName)\", arguments: \(arguments), returnType: \(returnType).self\(fallback))"
+            }
+
+            return "    try __mockSyn.resolveVoidThrowing(member: \"\(signatureName)\", arguments: \(arguments)\(fallback))"
+        }
+
+        if returnsValue {
+            return "    return __mockSyn.resolve(member: \"\(signatureName)\", arguments: \(arguments), returnType: \(returnType).self\(fallback))"
+        }
+
+        return "    __mockSyn.resolveVoid(member: \"\(signatureName)\", arguments: \(arguments)\(fallback))"
+    }
+
+    private func spyFallback(kind: MockSynPeerMacro.Kind) -> String {
+        guard kind == .spy, !isStatic, !hasVariadicParameter else {
             return ""
         }
 
-        return "    fatalError(\"MockSyn member \(signatureName) is not configured\")"
+        return ", fallback: { \(effectSpecifiers.callPrefix)self.__mockSynWrapped.\(name)(\(callArguments)) }"
     }
 
     private var signatureName: String {
         "\(name)\(parameterClause.signatureSuffix)"
+    }
+
+    private var returnType: String {
+        returnClause.returnTypeName
+    }
+
+    func stubbingSource(access: String) -> String? {
+        guard !isStatic else {
+            return nil
+        }
+
+        let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
+        let matchers = matcherList.isEmpty ? "[]" : "[\(matcherList)]"
+
+        return """
+            \(access) func \(name)\(genericParameterClause)\(stubParameterClause) -> \(stubBuilderType)\(genericWhereClause) {
+              \(stubBuilderType)(runtime: __mockSyn, member: "\(signatureName)", matchers: \(matchers))
+            }
+        """
+    }
+
+    private var stubParameterClause: String {
+        "(\(stubParameters.map { $0.matcherParameterSource }.joined(separator: ", ")))"
+    }
+
+    private var stubBuilderType: String {
+        guard stubParameters.count == 1, let parameter = stubParameters.first else {
+            if stubParameters.count == 2 {
+                let firstParameter = stubParameters[0]
+                let secondParameter = stubParameters[1]
+                return "MockSynStubBuilder2<\(firstParameter.matcherType), \(secondParameter.matcherType), \(returnType)>"
+            }
+
+            return "MockSynStubBuilder<\(returnType)>"
+        }
+
+        return "MockSynStubBuilder1<\(parameter.matcherType), \(returnType)>"
     }
 }
 
@@ -360,10 +470,22 @@ private struct GeneratedProperty {
     func source(access: String, kind: MockSynPeerMacro.Kind, target: Target) -> String {
         let declarationPrefix = target.kind == .class && !isStatic ? "override " : ""
         let staticPrefix = target.kind == .protocol && isStatic ? "static " : ""
-        let getterBody = kind == .spy && !isStatic
-            ? "__mockSynWrapped.\(name)"
-            : "fatalError(\"MockSyn member \(name) is not configured\")"
-        let setterSource = hasSetter ? "\n    set {\n    }" : ""
+        if isStatic {
+            let getterBody = "fatalError(\"MockSyn member \(name) is not configured\")"
+            let setterSource = hasSetter ? "\n    set {\n    }" : ""
+
+            return """
+              \(attributes)\(access) \(staticPrefix)var \(name): \(type) {
+                get {
+                  \(getterBody)
+                }\(setterSource)
+              }
+            """
+        }
+
+        let fallback = kind == .spy && !isStatic ? ", fallback: { self.__mockSynWrapped.\(name) }" : ""
+        let getterBody = "__mockSyn.resolve(member: \"\(name).get\", arguments: [], returnType: \(type).self\(fallback))"
+        let setterSource = hasSetter ? "\n    set {\n      __mockSyn.resolveVoid(member: \"\(name).set\", arguments: [newValue as Any])\n    }" : ""
 
         return """
           \(attributes)\(access) \(declarationPrefix)\(staticPrefix)var \(name): \(type) {
@@ -373,21 +495,35 @@ private struct GeneratedProperty {
           }
         """
     }
+
+    func stubbingSource(access: String) -> String? {
+        guard !isStatic else {
+            return nil
+        }
+
+        return """
+            \(access) var \(name): MockSynPropertyStubber<\(type)> {
+              MockSynPropertyStubber(runtime: __mockSyn, getMember: "\(name).get", setMember: "\(name).set")
+            }
+        """
+    }
 }
 
 private struct GeneratedSubscript {
     let attributes: String
     let parameterClause: String
     let callArguments: String
+    let argumentValues: String
+    let stubParameters: [GeneratedParameter]
     let returnClause: String
     let hasSetter: Bool
 
     func source(access: String, kind: MockSynPeerMacro.Kind, target: Target) -> String {
         let declarationPrefix = target.kind == .class ? "override " : ""
-        let getterBody = kind == .spy && target.kind == .protocol
-            ? "__mockSynWrapped[\(callArguments)]"
-            : "fatalError(\"MockSyn member subscript\(parameterClause.signatureSuffix) is not configured\")"
-        let setterSource = hasSetter ? "\n    set {\n    }" : ""
+        let arguments = "[\(argumentValues)]"
+        let fallback = kind == .spy ? ", fallback: { self.__mockSynWrapped[\(callArguments)] }" : ""
+        let getterBody = "__mockSyn.resolve(member: \"\(signatureName).get\", arguments: \(arguments), returnType: \(returnType).self\(fallback))"
+        let setterSource = hasSetter ? "\n    set {\n      __mockSyn.resolveVoid(member: \"\(signatureName).set\", arguments: \(setArguments))\n    }" : ""
 
         return """
           \(attributes)\(access) \(declarationPrefix)subscript\(parameterClause)\(returnClause) {
@@ -396,6 +532,32 @@ private struct GeneratedSubscript {
             }\(setterSource)
           }
         """
+    }
+
+    func stubbingSource(access: String) -> String? {
+        let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
+
+        return """
+            \(access) func `subscript`\(stubParameterClause) -> MockSynSubscriptStubber<\(returnType)> {
+              MockSynSubscriptStubber(runtime: __mockSyn, getMember: "\(signatureName).get", setMember: "\(signatureName).set", indexMatchers: [\(matcherList)])
+            }
+        """
+    }
+
+    private var signatureName: String {
+        "subscript\(parameterClause.signatureSuffix)"
+    }
+
+    private var returnType: String {
+        returnClause.returnTypeName
+    }
+
+    private var setArguments: String {
+        "[\(argumentValues), newValue as Any]"
+    }
+
+    private var stubParameterClause: String {
+        "(\(stubParameters.map { $0.matcherParameterSource }.joined(separator: ", ")))"
     }
 }
 
@@ -429,10 +591,13 @@ private enum MemberGenerator {
                     genericParameterClause: function.genericParameterClause?.description.trimmedSource ?? "",
                     parameterClause: function.signature.parameterClause.description.trimmedSource,
                     callArguments: function.signature.parameterClause.callArguments,
+                    argumentValues: function.signature.parameterClause.argumentValues,
+                    stubParameters: function.signature.parameterClause.generatedParameters,
                     effectSpecifiers: function.signature.effectSpecifiers?.description.trimmedEffectSpecifiers ?? "",
                     returnClause: function.signature.returnClause?.description.trimmedReturnClause ?? "",
                     genericWhereClause: function.genericWhereClause?.description.trimmedReturnClause ?? "",
                     isStatic: function.modifiers.containsStatic,
+                    hasInoutParameter: function.signature.parameterClause.hasInoutParameter,
                     hasVariadicParameter: function.signature.parameterClause.hasVariadicParameter,
                     returnsValue: function.signature.returnClause.returnsValue
                 )))
@@ -450,6 +615,8 @@ private enum MemberGenerator {
                     attributes: subscriptDeclaration.attributes.mockSynForwardedAttributes,
                     parameterClause: subscriptDeclaration.parameterClause.description.trimmedSource,
                     callArguments: subscriptDeclaration.parameterClause.subscriptCallArguments,
+                    argumentValues: subscriptDeclaration.parameterClause.argumentValues,
+                    stubParameters: subscriptDeclaration.parameterClause.generatedParameters,
                     returnClause: subscriptDeclaration.returnClause.description.trimmedReturnClause,
                     hasSetter: subscriptDeclaration.accessorBlock?.description.range(of: "set") != nil
                 )))
@@ -527,9 +694,36 @@ private extension FunctionParameterClauseSyntax {
         }.joined(separator: ", ")
     }
 
+    var argumentValues: String {
+        parameters.map { parameter in
+            let localName = parameter.secondName?.text ?? parameter.firstName.text
+            return "\(localName) as Any"
+        }.joined(separator: ", ")
+    }
+
+    var generatedParameters: [GeneratedParameter] {
+        parameters.map { parameter in
+            let localName = parameter.secondName?.text ?? parameter.firstName.text
+            let label = parameter.firstName.text
+            let matcherType = parameter.type.description
+                .trimmedSource
+                .replacingOccurrences(of: "inout ", with: "")
+                .replacingOccurrences(of: "@escaping ", with: "")
+            let typedMatcher = parameter.ellipsis == nil ? matcherType : "[\(matcherType)]"
+
+            return GeneratedParameter(label: label, localName: localName, matcherType: typedMatcher)
+        }
+    }
+
     var hasVariadicParameter: Bool {
         parameters.contains { parameter in
             parameter.ellipsis != nil
+        }
+    }
+
+    var hasInoutParameter: Bool {
+        parameters.contains { parameter in
+            parameter.type.description.range(of: "inout") != nil
         }
     }
 
@@ -545,6 +739,28 @@ private extension FunctionParameterClauseSyntax {
 
             return "\(parameter.firstName.text): \(localName)"
         }.joined(separator: ", ")
+    }
+}
+
+private struct GeneratedParameter {
+    let label: String
+    let localName: String
+    let matcherType: String
+
+    var matcherParameterSource: String {
+        if label == "_" {
+            return "_ \(localName): MockSynMatcher<\(matcherType)>"
+        }
+
+        if label != localName {
+            return "\(label) \(localName): MockSynMatcher<\(matcherType)>"
+        }
+
+        return "\(label): MockSynMatcher<\(matcherType)>"
+    }
+
+    var matcherExpression: String {
+        "\(localName).erase()"
     }
 }
 
@@ -585,6 +801,15 @@ private extension String {
 
     var trimmedReturnClause: String {
         " \(trimmedSource)"
+    }
+
+    var returnTypeName: String {
+        let trimmed = trimmedSource
+        guard trimmed.hasPrefix("->") else {
+            return "Void"
+        }
+
+        return String(trimmed.dropFirst(2)).trimmedSource
     }
 
     var callPrefix: String {
