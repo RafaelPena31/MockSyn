@@ -111,6 +111,10 @@ private struct MockSynPeerMacro {
                     kind: .protocol,
                     name: protocolDeclaration.name.text,
                     access: protocolDeclaration.modifiers.mockSynAccess,
+                    attributes: protocolDeclaration.attributes.mockSynForwardedAttributes,
+                    genericParameterClause: "",
+                    genericArgumentClause: "",
+                    genericWhereClause: "",
                     members: members.generatedMembers
                 )
             )
@@ -139,6 +143,10 @@ private struct MockSynPeerMacro {
                     kind: .class,
                     name: classDeclaration.name.text,
                     access: classDeclaration.modifiers.mockSynAccess,
+                    attributes: classDeclaration.attributes.mockSynForwardedAttributes,
+                    genericParameterClause: classDeclaration.genericParameterClause?.description.trimmedSource ?? "",
+                    genericArgumentClause: classDeclaration.genericParameterClause?.mockSynGenericArgumentClause ?? "",
+                    genericWhereClause: classDeclaration.genericWhereClause?.description.trimmedReturnClause ?? "",
                     members: members.generatedMembers
                 )
             )
@@ -182,7 +190,7 @@ private struct MockSynPeerMacro {
         if kind == .spy {
             declarationSource = """
             #if MOCKSYN_ENABLE
-            \(access) final class \(generatedName): \(target.name) {
+            \(target.attributes)\(access) final class \(generatedName)\(target.genericParameterClause): \(target.inheritedTypeName)\(target.genericWhereClause) {
               \(access) let __mockSyn: MockSynRuntime
               \(access) let __mockSynWrapped: \(target.wrappedTypeName)
 
@@ -196,7 +204,7 @@ private struct MockSynPeerMacro {
         } else {
             declarationSource = """
             #if MOCKSYN_ENABLE
-            \(access) final class \(generatedName): \(target.name) {
+            \(target.attributes)\(access) final class \(generatedName)\(target.genericParameterClause): \(target.inheritedTypeName)\(target.genericWhereClause) {
               \(access) let __mockSyn: MockSynRuntime
 
               \(access) init(mode: MockSynMode = \(mode)) {
@@ -215,14 +223,27 @@ private struct Target {
     let kind: TargetKind
     let name: String
     let access: MockSynGeneratedAccess
+    let attributes: String
+    let genericParameterClause: String
+    let genericArgumentClause: String
+    let genericWhereClause: String
     let members: [GeneratedMember]
+
+    var inheritedTypeName: String {
+        switch kind {
+        case .protocol:
+            return name
+        case .class:
+            return "\(name)\(genericArgumentClause)"
+        }
+    }
 
     var wrappedTypeName: String {
         switch kind {
         case .protocol:
             return "any \(name)"
         case .class:
-            return name
+            return inheritedTypeName
         }
     }
 
@@ -279,12 +300,16 @@ private struct GeneratedInitializer {
 }
 
 private struct GeneratedFunction {
+    let attributes: String
     let name: String
+    let genericParameterClause: String
     let parameterClause: String
     let callArguments: String
     let effectSpecifiers: String
     let returnClause: String
+    let genericWhereClause: String
     let isStatic: Bool
+    let hasVariadicParameter: Bool
     let returnsValue: Bool
 
     func source(access: String, kind: MockSynPeerMacro.Kind, target: Target) -> String {
@@ -294,20 +319,20 @@ private struct GeneratedFunction {
 
         guard !body.isEmpty else {
             return """
-              \(access) \(declarationPrefix)\(staticPrefix)func \(name)\(parameterClause)\(effectSpecifiers)\(returnClause) {
+              \(attributes)\(access) \(declarationPrefix)\(staticPrefix)func \(name)\(genericParameterClause)\(parameterClause)\(effectSpecifiers)\(returnClause)\(genericWhereClause) {
               }
             """
         }
 
         return """
-          \(access) \(declarationPrefix)\(staticPrefix)func \(name)\(parameterClause)\(effectSpecifiers)\(returnClause) {
+          \(attributes)\(access) \(declarationPrefix)\(staticPrefix)func \(name)\(genericParameterClause)\(parameterClause)\(effectSpecifiers)\(returnClause)\(genericWhereClause) {
         \(body)
           }
         """
     }
 
     private func bodySource(kind: MockSynPeerMacro.Kind) -> String {
-        if kind == .spy && !isStatic {
+        if kind == .spy && !isStatic && !hasVariadicParameter {
             let callPrefix = effectSpecifiers.callPrefix
             let call = "__mockSynWrapped.\(name)(\(callArguments))"
             return "    \(callPrefix)\(call)"
@@ -326,6 +351,7 @@ private struct GeneratedFunction {
 }
 
 private struct GeneratedProperty {
+    let attributes: String
     let name: String
     let type: String
     let isStatic: Bool
@@ -340,7 +366,7 @@ private struct GeneratedProperty {
         let setterSource = hasSetter ? "\n    set {\n    }" : ""
 
         return """
-          \(access) \(declarationPrefix)\(staticPrefix)var \(name): \(type) {
+          \(attributes)\(access) \(declarationPrefix)\(staticPrefix)var \(name): \(type) {
             get {
               \(getterBody)
             }\(setterSource)
@@ -350,6 +376,7 @@ private struct GeneratedProperty {
 }
 
 private struct GeneratedSubscript {
+    let attributes: String
     let parameterClause: String
     let callArguments: String
     let returnClause: String
@@ -363,7 +390,7 @@ private struct GeneratedSubscript {
         let setterSource = hasSetter ? "\n    set {\n    }" : ""
 
         return """
-          \(access) \(declarationPrefix)subscript\(parameterClause)\(returnClause) {
+          \(attributes)\(access) \(declarationPrefix)subscript\(parameterClause)\(returnClause) {
             get {
               \(getterBody)
             }\(setterSource)
@@ -397,12 +424,16 @@ private enum MemberGenerator {
                 }
 
                 generatedMembers.append(.function(GeneratedFunction(
+                    attributes: function.attributes.mockSynForwardedAttributes,
                     name: function.name.text,
+                    genericParameterClause: function.genericParameterClause?.description.trimmedSource ?? "",
                     parameterClause: function.signature.parameterClause.description.trimmedSource,
                     callArguments: function.signature.parameterClause.callArguments,
                     effectSpecifiers: function.signature.effectSpecifiers?.description.trimmedEffectSpecifiers ?? "",
                     returnClause: function.signature.returnClause?.description.trimmedReturnClause ?? "",
+                    genericWhereClause: function.genericWhereClause?.description.trimmedReturnClause ?? "",
                     isStatic: function.modifiers.containsStatic,
+                    hasVariadicParameter: function.signature.parameterClause.hasVariadicParameter,
                     returnsValue: function.signature.returnClause.returnsValue
                 )))
                 continue
@@ -416,11 +447,18 @@ private enum MemberGenerator {
 
             if let subscriptDeclaration = item.decl.as(SubscriptDeclSyntax.self) {
                 generatedMembers.append(.subscriptMember(GeneratedSubscript(
+                    attributes: subscriptDeclaration.attributes.mockSynForwardedAttributes,
                     parameterClause: subscriptDeclaration.parameterClause.description.trimmedSource,
                     callArguments: subscriptDeclaration.parameterClause.subscriptCallArguments,
                     returnClause: subscriptDeclaration.returnClause.description.trimmedReturnClause,
                     hasSetter: subscriptDeclaration.accessorBlock?.description.range(of: "set") != nil
                 )))
+                continue
+            }
+
+            if item.decl.is(AssociatedTypeDeclSyntax.self) {
+                context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.unsupportedAssociatedType))
+                isValid = false
                 continue
             }
 
@@ -449,6 +487,7 @@ private extension GeneratedProperty {
             || (binding.accessorBlock == nil && targetKind == .class && declaration.bindingSpecifier.text == "var")
 
         self.init(
+            attributes: declaration.attributes.mockSynForwardedAttributes,
             name: pattern.identifier.text,
             type: type,
             isStatic: declaration.modifiers.containsStatic,
@@ -479,12 +518,19 @@ private extension FunctionParameterClauseSyntax {
     var callArguments: String {
         parameters.map { parameter in
             let localName = parameter.secondName?.text ?? parameter.firstName.text
+            let argument = parameter.type.description.range(of: "inout") != nil ? "&\(localName)" : localName
             guard parameter.firstName.text != "_" else {
-                return localName
+                return argument
             }
 
-            return "\(parameter.firstName.text): \(localName)"
+            return "\(parameter.firstName.text): \(argument)"
         }.joined(separator: ", ")
+    }
+
+    var hasVariadicParameter: Bool {
+        parameters.contains { parameter in
+            parameter.ellipsis != nil
+        }
     }
 
     var subscriptCallArguments: String {
@@ -499,6 +545,32 @@ private extension FunctionParameterClauseSyntax {
 
             return "\(parameter.firstName.text): \(localName)"
         }.joined(separator: ", ")
+    }
+}
+
+private extension AttributeListSyntax {
+    var mockSynForwardedAttributes: String {
+        let attributes = compactMap { element -> String? in
+            let attribute = element.as(AttributeSyntax.self)!
+            let attributeName = attribute.attributeName.description.trimmedSource
+            guard attributeName.hasSuffix("Actor") else {
+                return nil
+            }
+
+            return attribute.description.trimmedSource
+        }
+
+        return attributes.isEmpty ? "" : "\(attributes.joined(separator: " ")) "
+    }
+}
+
+private extension GenericParameterClauseSyntax {
+    var mockSynGenericArgumentClause: String {
+        let arguments = parameters.map { parameter in
+            parameter.name.text
+        }.joined(separator: ", ")
+
+        return "<\(arguments)>"
     }
 }
 

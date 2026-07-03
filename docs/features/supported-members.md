@@ -118,9 +118,11 @@ MockSyn cannot generate operator requirements yet. Wrap the operator behind a na
 
 ## Limitations
 
-- Generic methods, associated types, `Self` requirements, `where` clauses,
-  `inout`, variadics, closure-heavy signatures, global actors, and `Sendable`
-  strictness are deferred to the Swift language feature block.
+- Generic methods, generic classes, `Self` requirements, `where` clauses,
+  `inout`, variadics, closures, global actors, and common `Sendable` scenarios
+  are handled by the Swift language feature block.
+- Protocols with associated types are diagnosed until MockSyn has an explicit
+  type-binding API.
 - Static members are generated for protocol conformance, but spies cannot
   delegate static protocol requirements through an instance wrapper.
 - Properties without explicit type annotations are ignored by the member

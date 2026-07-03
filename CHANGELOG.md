@@ -2,6 +2,25 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.4.0 - 2026-07-02
+
+### Added
+
+- Generic method generation with preserved generic parameter and `where` clauses.
+- Generic class double generation with mirrored generic parameters and superclass arguments.
+- `inout` parameter forwarding for delegating spies.
+- Closure and `@escaping` closure signature preservation.
+- Variadic method signature generation with non-delegating placeholder behavior for spies.
+- Global actor forwarding for type and member actor attributes such as `@MainActor`.
+- `Self` return requirement preservation for generated placeholder behavior.
+- Diagnostic for protocols with `associatedtype`.
+- Documentation for Swift language feature support and limits.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.4.0`.
+- Associated types are diagnosed rather than inferred. Type binding for associated-type protocols remains a future feature.
+
 ## 0.3.0 - 2026-07-02
 
 ### Added

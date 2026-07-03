@@ -193,14 +193,13 @@ MockSyn cannot generate a public double for an internal declaration
 
 ## Current Limitations
 
-Blocks 1 through 3 implement the macro surface, option parsing, generated type
-declarations, supported declaration types, and supported member generation.
-Generated mocks, stubs, and spies can satisfy common method, property, subscript,
-static protocol, and protocol initializer requirements.
+Blocks 1 through 4 implement the macro surface, option parsing, generated type
+declarations, supported declaration types, supported member generation, and
+common Swift language features used by those members.
 
 Stubbing, verification, invocation recording, relaxed default values, generic
-language features, associated types, and complex inherited requirements are
-covered by later feature blocks in `docs/FEATURES.md`.
+associated-type binding, and complex inherited requirements are covered by later
+feature blocks in `docs/FEATURES.md`.
 
 Custom names are constrained to the declared peer macro name patterns. Fully
 arbitrary peer type names are not supported by Swift macros at global scope.

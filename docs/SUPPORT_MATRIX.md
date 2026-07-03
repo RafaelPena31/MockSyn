@@ -50,12 +50,20 @@ Initial platform support:
 | Subscripts | Supported | Supported |
 | Protocol initializers | Supported for mocks/stubs | Supported for mocks/stubs |
 | Operator requirements | Diagnostic | Diagnostic |
+| Generic methods | Supported | Supported |
+| Generic classes | Supported | Supported |
+| `where` clauses | Supported for generated methods/classes | Supported for generated methods/classes |
+| `Self` requirements | Supported for placeholder behavior | Supported for placeholder behavior |
+| `inout` parameters | Supported | Supported |
+| Variadic parameters | Signature supported | Signature supported |
+| Closures / `@escaping` | Supported | Supported |
+| Global actors | Supported where syntax is available | Supported |
+| Associated types | Diagnostic | Diagnostic |
 | Stubs | Supported | Supported |
 | Spies | Supported | Supported |
 | XCTest adapter | Supported | Supported |
 | Swift Testing adapter | Optional when available | Supported as optional adapter |
 | Sendable strictness | Best effort | First-class diagnostics |
-| Global actors | Supported where syntax is available | Supported |
 
 ## Conditional APIs
 

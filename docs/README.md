@@ -20,6 +20,7 @@ This folder contains the required design and feature documentation for MockSyn.
 - [Macros](features/macros.md)
 - [Supported Types](features/supported-types.md)
 - [Supported Members](features/supported-members.md)
+- [Swift Language Features](features/swift-language-features.md)
 
 ## Non-Negotiable Product Decisions
 

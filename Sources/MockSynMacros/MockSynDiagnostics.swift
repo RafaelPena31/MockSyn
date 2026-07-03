@@ -39,6 +39,11 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
         message: "MockSyn cannot generate operator requirements yet. Wrap the operator behind a named method."
     )
 
+    static let unsupportedAssociatedType = MockSynDiagnostic(
+        id: "unsupportedAssociatedType",
+        message: "MockSyn cannot generate protocols with associated types yet. Use a type-erased protocol or concrete wrapper."
+    )
+
     private init(id: String, message: String) {
         self.message = message
         self.diagnosticID = MessageID(domain: "MockSyn", id: id)

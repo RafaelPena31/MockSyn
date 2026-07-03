@@ -564,6 +564,202 @@ final class MockSynMacroTests: XCTestCase {
         )
     }
 
+    func testMockingPreservesSwiftLanguageFeatureMembers() {
+        assertExpansion(
+            """
+            @Mocking
+            protocol Processor: Sendable {
+                @MainActor var title: String { get }
+                func map<Value>(_ value: Value) -> Value where Value: Sendable
+                func update(_ value: inout Int)
+                func handle(_ action: @escaping (String) -> Void)
+                func clone() -> Self
+                func collect(_ values: Int...) -> Int
+            }
+            """,
+            expandedSource: """
+              protocol Processor: Sendable {
+                  @MainActor var title: String { get }
+                  func map<Value>(_ value: Value) -> Value where Value: Sendable
+                  func update(_ value: inout Int)
+                  func handle(_ action: @escaping (String) -> Void)
+                  func clone() -> Self
+                  func collect(_ values: Int...) -> Int
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class ProcessorMock: Processor {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+
+                @MainActor internal var title: String {
+                  get {
+                    fatalError("MockSyn member title is not configured")
+                  }
+                }
+
+                internal func map<Value>(_ value: Value) -> Value where Value: Sendable {
+                  fatalError("MockSyn member map(_:) is not configured")
+                }
+
+                internal func update(_ value: inout Int) {
+                }
+
+                internal func handle(_ action: @escaping (String) -> Void) {
+                }
+
+                internal func clone() -> Self {
+                  fatalError("MockSyn member clone() is not configured")
+                }
+
+                internal func collect(_ values: Int...) -> Int {
+                  fatalError("MockSyn member collect(_:) is not configured")
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testSpyingDelegatesSupportedSwiftLanguageFeatureMembers() {
+        assertExpansion(
+            """
+            @Spying
+            protocol Processor {
+                func update(_ value: inout Int)
+                func handle(_ action: @escaping (String) -> Void)
+                func collect(_ values: Int...) -> Int
+            }
+            """,
+            expandedSource: """
+              protocol Processor {
+                  func update(_ value: inout Int)
+                  func handle(_ action: @escaping (String) -> Void)
+                  func collect(_ values: Int...) -> Int
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class ProcessorSpy: Processor {
+                internal let __mockSyn: MockSynRuntime
+                internal let __mockSynWrapped: any Processor
+
+                internal init(wrapping __mockSynWrapped: any Processor, mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .spy, mode: mode)
+                  self.__mockSynWrapped = __mockSynWrapped
+                }
+
+                internal func update(_ value: inout Int) {
+                  __mockSynWrapped.update(&value)
+                }
+
+                internal func handle(_ action: @escaping (String) -> Void) {
+                  __mockSynWrapped.handle(action)
+                }
+
+                internal func collect(_ values: Int...) -> Int {
+                  fatalError("MockSyn member collect(_:) is not configured")
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testMockingPreservesGlobalActorOnType() {
+        assertExpansion(
+            """
+            @Mocking
+            @MainActor
+            protocol MainService {
+                func refresh()
+            }
+            """,
+            expandedSource: """
+              @MainActor
+              protocol MainService {
+                  func refresh()
+              }
+
+              #if MOCKSYN_ENABLE
+              @MainActor internal final class MainServiceMock: MainService {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+
+                internal func refresh() {
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testMockingGeneratesGenericClassDouble() {
+        assertExpansion(
+            """
+            @Mocking
+            class Box<Value> where Value: Sendable {
+                func load(_ value: Value) -> Value {
+                    value
+                }
+            }
+            """,
+            expandedSource: """
+              class Box<Value> where Value: Sendable {
+                  func load(_ value: Value) -> Value {
+                      value
+                  }
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class BoxMock<Value>: Box<Value> where Value: Sendable {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                  super.init()
+                }
+
+                internal override func load(_ value: Value) -> Value {
+                  fatalError("MockSyn member load(_:) is not configured")
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testAssociatedTypeProtocolEmitsDiagnostic() {
+        assertExpansion(
+            """
+            @Mocking
+            protocol Repository {
+                associatedtype Entity
+                func load() -> Entity
+            }
+            """,
+            expandedSource: """
+              protocol Repository {
+                  associatedtype Entity
+                  func load() -> Entity
+              }
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "MockSyn cannot generate protocols with associated types yet. Use a type-erased protocol or concrete wrapper.",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ]
+        )
+    }
+
     func testMockingGeneratesSupportedClassMemberOverrides() {
         assertExpansion(
             """
