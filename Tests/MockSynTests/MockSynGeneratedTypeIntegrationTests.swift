@@ -437,6 +437,49 @@ final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
         #endif
     }
 
+    func testGeneratedMockUsesCaptorMatchersForStubbingAndVerification() throws {
+        #if MOCKSYN_ENABLE
+        let mock = StubbedUserServiceMock()
+        let stubCaptor = MockSynArgumentCaptor<Int>()
+        let verifyCaptor = MockSynArgumentCaptor<String>()
+
+        mock.given.doubled(stubCaptor.capture()).willRun { value in
+            value * 2
+        }
+        mock.given.name(id: .any).willReturn("matched")
+
+        XCTAssertEqual(mock.doubled(4), 8)
+        XCTAssertEqual(mock.name(id: "user-1"), "matched")
+
+        try mock.verify.doubled(.value(4)).once()
+        try mock.verify.name(id: verifyCaptor.capture()).once()
+
+        XCTAssertEqual(stubCaptor.values, [4])
+        XCTAssertEqual(verifyCaptor.value, "user-1")
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedMockUsesClosureCaptorForVerification() throws {
+        #if MOCKSYN_ENABLE
+        let mock = LanguageFeatureServiceMock()
+        let captor = MockSynClosureCaptor<(String) -> Void>()
+        var received: String?
+
+        mock.handle { value in
+            received = value
+        }
+
+        try mock.verify.handle(captor.capture()).once()
+        captor.value?("captured")
+
+        XCTAssertEqual(received, "captured")
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
     func testGeneratedMockUsesPropertyGetterAndSetterStubs() {
         #if MOCKSYN_ENABLE
         let mock = StubbedUserServiceMock()

@@ -2,8 +2,8 @@
 
 Block 3 added member generation for declarations that MockSyn already accepts.
 Block 5 connects generated instance members to the runtime stubbing registry.
-Block 6 records invocations and exposes generated verification APIs. Captors are
-implemented by later blocks.
+Block 6 records invocations and exposes generated verification APIs. Block 7
+adds richer matchers and captors that plug into those generated member APIs.
 
 ## What It Does
 

@@ -12,7 +12,7 @@ without a source generator or generated file cache.
 | `willReturn` | Supported | Accepts one or more values. Multiple values are returned sequentially. |
 | `willThrow` | Supported | Works on generated `throws` members. A non-throwing member that receives a throwing stub fails fast. |
 | `willRun` | Supported | Supports zero, one, and two argument generated method builders, property setters, and subscript setters. |
-| Argument-specific stubs | Supported | Uses typed matchers such as `.any`, `.value`, and `.matching`. |
+| Argument-specific stubs | Supported | Uses typed matchers such as `.any`, `.value`, `.matching`, optional, collection, composed, and captor matchers. |
 | Property getter stubs | Supported | `mock.given.name.get.willReturn("value")`. |
 | Property setter stubs | Supported | `mock.given.name.set(.any).willRun { value in ... }`. |
 | Subscript getter stubs | Supported | `mock.given.subscript(key: .value("theme")).get.willReturn("dark")`. |
@@ -157,5 +157,5 @@ spy.name(id: "offline") // returns "Cached"
 - Static member stubbing is not generated yet.
 - `willRun` has typed overloads for zero, one, and two method arguments.
 - Associated-type protocols are still diagnosed before member/stubbing generation.
-- Verification and order checks are available in Block 6. Captors and richer
-  matcher composition are handled by later blocks.
+- Verification, order checks, captors, and richer matcher composition are
+  available.

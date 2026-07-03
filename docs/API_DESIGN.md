@@ -170,9 +170,9 @@ MockSyn.verifyInOrder {
 ## Captors
 
 ```swift
-let idCaptor = ArgumentCaptor<String>()
+let idCaptor = MockSynArgumentCaptor<String>()
 
-service.verify.fetchUser(id: .capture(idCaptor)).called(.once)
+try service.verify.fetchUser(id: idCaptor.capture()).once()
 
 #expect(idCaptor.value == "123")
 ```
@@ -180,9 +180,9 @@ service.verify.fetchUser(id: .capture(idCaptor)).called(.once)
 Closure captor:
 
 ```swift
-let completion = ArgumentCaptor<(Result<User, Error>) -> Void>()
+let completion = MockSynClosureCaptor<(Result<User, Error>) -> Void>()
 
-service.verify.loadUser(completion: .capture(completion)).called(.once)
+try service.verify.loadUser(completion: completion.capture()).once()
 ```
 
 ## Strict And Relaxed Modes

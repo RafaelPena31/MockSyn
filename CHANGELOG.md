@@ -2,6 +2,23 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## 0.7.0 - 2026-07-03
+
+### Added
+
+- Optional matchers with `.nil` and `.notNil`.
+- Collection matchers for empty collections, arrays, sets, and dictionaries.
+- Matcher composition with `.not`, `.all`, and `.anyOf`.
+- `MockSynArgumentCaptor` for capturing matched arguments during stubbing or verification.
+- `MockSynClosureCaptor` alias for capturing closure arguments and invoking them in tests.
+- Generated mock integration tests proving captors work through macro-generated `given` and `verify` APIs.
+- Documentation for the matchers and captors feature block.
+
+### Notes
+
+- SwiftPM package versioning is provided by the Git tag `0.7.0`.
+- Testing-framework failure adapters, static member stubbing/verification, and associated-type binding remain planned for later blocks.
+
 ## 0.6.0 - 2026-07-03
 
 ### Added
@@ -20,7 +37,7 @@ All notable changes to MockSyn are documented in this file.
 ### Notes
 
 - SwiftPM package versioning is provided by the Git tag `0.6.0`.
-- Captors, richer matchers, and testing-framework failure adapters remain planned for later blocks.
+- Testing-framework failure adapters remain planned for later blocks.
 
 ## 0.5.0 - 2026-07-02
 

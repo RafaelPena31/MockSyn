@@ -23,6 +23,7 @@ This folder contains the required design and feature documentation for MockSyn.
 - [Swift Language Features](features/swift-language-features.md)
 - [Stubbing](features/stubbing.md)
 - [Verification](features/verification.md)
+- [Matchers And Captors](features/matchers-and-captors.md)
 
 ## Non-Negotiable Product Decisions
 

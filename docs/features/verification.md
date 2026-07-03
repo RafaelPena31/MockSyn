@@ -55,6 +55,18 @@ Verification uses the same typed matchers as stubbing:
 try service.verify.load(id: .value("42")).once()
 try service.verify.load(id: .any).times(2)
 try service.verify.load(id: .matching { $0.hasPrefix("user-") }).atLeast(1)
+try service.verify.lookup(email: .notNil).once()
+```
+
+Argument captors can be used as verification matchers when the test needs to
+inspect the value after matching the call:
+
+```swift
+let captor = MockSynArgumentCaptor<String>()
+
+try service.verify.load(id: captor.capture()).once()
+
+XCTAssertEqual(captor.value, "user-42")
 ```
 
 ## Properties And Subscripts
@@ -130,6 +142,4 @@ try await service.verify.refresh().wasCalled(.once, timeout: 0.5)
 
 - Verification failure reporting currently uses thrown `MockSynVerificationError`.
   XCTest and Swift Testing adapters arrive in the test integration block.
-- Captors and richer collection/optional matchers arrive in the matchers and
-  captors block.
 - Static member verification is not generated yet.
