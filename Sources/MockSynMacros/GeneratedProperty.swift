@@ -28,7 +28,8 @@ struct GeneratedProperty {
         }
 
         let getterBody = getterBody(kind: kind)
-        let setterSource = hasSetter ? "\n    set {\n      __mockSyn.resolveVoid(member: \"\(name).set\", arguments: [newValue as Any])\n    }" : ""
+        let changeNotification = target.isObservableObject ? "      __mockSyn.notifyChange()\n" : ""
+        let setterSource = hasSetter ? "\n    set {\n\(changeNotification)      __mockSyn.resolveVoid(member: \"\(name).set\", arguments: [newValue as Any])\n    }" : ""
 
         return """
           \(attributes)\(access) \(declarationPrefix)\(staticPrefix)var \(name): \(type) {

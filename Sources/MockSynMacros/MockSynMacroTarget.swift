@@ -13,6 +13,7 @@ struct Target {
     let genericWhereClause: String
     let associatedTypes: [AssociatedTypeBinding]
     let spyWrappedTypeName: String?
+    let isObservableObject: Bool
     let members: [GeneratedMember]
 
     init(
@@ -25,6 +26,7 @@ struct Target {
         genericWhereClause: String,
         associatedTypes: [AssociatedTypeBinding],
         spyWrappedTypeName: String?,
+        isObservableObject: Bool,
         members: [GeneratedMember]
     ) {
         self.kind = kind
@@ -36,6 +38,7 @@ struct Target {
         self.genericWhereClause = genericWhereClause
         self.associatedTypes = associatedTypes
         self.spyWrappedTypeName = spyWrappedTypeName
+        self.isObservableObject = isObservableObject
         self.members = members.mockSynDisambiguatingReturnTypeOverloads()
     }
 
@@ -80,7 +83,7 @@ struct Target {
             let superInitLine = kind == .class ? "\n    super.init()" : ""
             return """
               \(access) init(wrapping __mockSynWrapped: \(wrappedTypeName), mode: MockSynMode = \(mode)) {
-                self.__mockSyn = MockSynRuntime(kind: \(doubleKind.runtimeKind), mode: mode)
+            \(runtimeInitializationSource(kind: doubleKind, mode: "mode"))
                 self.__mockSynWrapped = __mockSynWrapped\(superInitLine)
               }
             """
@@ -89,8 +92,30 @@ struct Target {
         let superInitLine = kind == .class ? "\n    super.init()" : ""
         return """
           \(access) init(mode: MockSynMode = \(mode)) {
-            self.__mockSyn = MockSynRuntime(kind: \(doubleKind.runtimeKind), mode: mode)\(superInitLine)
+        \(runtimeInitializationSource(kind: doubleKind, mode: "mode"))\(superInitLine)
           }
+        """
+    }
+
+    func observableObjectPublisherSource(access: String) -> String {
+        guard isObservableObject else {
+            return ""
+        }
+
+        return "  \(access) let objectWillChange: MockSynObservableObjectPublisher\n"
+    }
+
+    func runtimeInitializationSource(kind: MockSynPeerMacro.Kind, mode: String) -> String {
+        guard isObservableObject else {
+            return "    self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: \(mode))"
+        }
+
+        return """
+            let __mockSynObjectWillChange = MockSynObservableObjectPublisher()
+            self.objectWillChange = __mockSynObjectWillChange
+            self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: \(mode), onChange: {
+              __mockSynObjectWillChange.send()
+            })
         """
     }
 

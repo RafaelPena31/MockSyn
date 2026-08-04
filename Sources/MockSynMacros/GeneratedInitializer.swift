@@ -17,7 +17,7 @@ struct GeneratedInitializer {
 
         return """
           \(access) init\(optionalMark)\(parameterClause)\(effectSpecifiers) {
-            self.__mockSyn = MockSynRuntime(kind: \(kind.runtimeKind), mode: \(options.mode.sourceName))
+        \(target.runtimeInitializationSource(kind: kind, mode: options.mode.sourceName))
           }
         """
     }

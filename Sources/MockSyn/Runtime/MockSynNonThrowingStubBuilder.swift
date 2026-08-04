@@ -3,19 +3,36 @@ public struct MockSynNonThrowingStubBuilder<Return> {
     private let runtime: MockSynRuntime
     private let member: String
     private let matchers: [MockSynAnyMatcher]
+    private let notifyChangeOnRegistration: Bool
 
-    public init(runtime: MockSynRuntime, member: String, matchers: [MockSynAnyMatcher] = []) {
+    public init(
+        runtime: MockSynRuntime,
+        member: String,
+        matchers: [MockSynAnyMatcher] = [],
+        notifyChangeOnRegistration: Bool = false
+    ) {
         self.runtime = runtime
         self.member = member
         self.matchers = matchers
+        self.notifyChangeOnRegistration = notifyChangeOnRegistration
     }
 
     public func willReturn(_ first: Return, _ remaining: Return...) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(first: first, remaining: remaining))
+        runtime.registerStub(
+            member: member,
+            matchers: matchers,
+            behavior: .returns(first: first, remaining: remaining),
+            notifyChange: notifyChangeOnRegistration
+        )
     }
 
     public func willRun(_ body: @escaping () -> Return) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .runsNonThrowing { _ in body() })
+        runtime.registerStub(
+            member: member,
+            matchers: matchers,
+            behavior: .runsNonThrowing { _ in body() },
+            notifyChange: notifyChangeOnRegistration
+        )
     }
 }
 
@@ -218,7 +235,7 @@ public struct MockSynNonThrowingPropertyStubber<Value> {
     }
 
     public var get: MockSynNonThrowingStubBuilder<Value> {
-        MockSynNonThrowingStubBuilder(runtime: runtime, member: getMember)
+        MockSynNonThrowingStubBuilder(runtime: runtime, member: getMember, notifyChangeOnRegistration: true)
     }
 
     public func set(_ matcher: MockSynMatcher<Value>) -> MockSynNonThrowingStubBuilder1<Value, Void> {
@@ -237,7 +254,7 @@ public struct MockSynNonThrowingReadOnlyPropertyStubber<Value> {
     }
 
     public var get: MockSynNonThrowingStubBuilder<Value> {
-        MockSynNonThrowingStubBuilder(runtime: runtime, member: getMember)
+        MockSynNonThrowingStubBuilder(runtime: runtime, member: getMember, notifyChangeOnRegistration: true)
     }
 }
 

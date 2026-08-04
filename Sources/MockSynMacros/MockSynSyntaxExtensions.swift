@@ -10,6 +10,12 @@ private let mockSynMarkerOrDefaultSatisfiedProtocolTerminalIdentifiers: Set<Stri
 ]
 
 extension ProtocolDeclSyntax {
+    var mockSynDirectlyInheritsObservableObject: Bool {
+        inheritanceClause?.inheritedTypes.contains { inheritedType in
+            inheritedType.type.mockSynTerminalIdentifier == "ObservableObject"
+        } == true
+    }
+
     var mockSynInheritedTypesWithUngeneratedRequirements: [String] {
         inheritanceClause?.inheritedTypes.compactMap { inheritedType in
             let type = inheritedType.type

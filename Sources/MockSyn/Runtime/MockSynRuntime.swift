@@ -36,23 +36,41 @@ public final class MockSynRuntime: @unchecked Sendable {
     private let lock = NSRecursiveLock()
     private var stubs: [String: [MockSynStubRule]] = [:]
     private var invocations: [MockSynInvocation] = []
+    private let changeCallback: (@Sendable () -> Void)?
 
     /// Creates runtime state for a generated test double.
-    public init(kind: MockSynDoubleKind, mode: MockSynMode) {
+    public init(
+        kind: MockSynDoubleKind,
+        mode: MockSynMode,
+        onChange: (@Sendable () -> Void)? = nil
+    ) {
         self.kind = kind
         self.mode = mode
+        self.changeCallback = onChange
     }
 
     /// Registers a stub rule for a generated member.
     public func registerStub<Return>(
         member: String,
         matchers: [MockSynAnyMatcher],
-        behavior: MockSynStubBehavior<Return>
+        behavior: MockSynStubBehavior<Return>,
+        notifyChange: Bool = false
     ) {
         lock.lock()
-        defer { lock.unlock() }
-
         stubs[member, default: []].append(MockSynStubRule(matchers: matchers, behavior: behavior.erase()))
+        let callback = notifyChange ? changeCallback : nil
+        lock.unlock()
+
+        callback?()
+    }
+
+    /// Invokes the configured change callback without holding runtime state locks.
+    public func notifyChange() {
+        lock.lock()
+        let callback = changeCallback
+        lock.unlock()
+
+        callback?()
     }
 
     /// Resolves a non-throwing generated member call.

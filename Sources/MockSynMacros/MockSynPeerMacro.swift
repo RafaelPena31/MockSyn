@@ -131,6 +131,7 @@ struct MockSynPeerMacro {
                     genericWhereClause: genericConfiguration.genericWhereClause,
                     associatedTypes: associatedTypes,
                     spyWrappedTypeName: genericConfiguration.spyWrappedTypeName,
+                    isObservableObject: protocolDeclaration.mockSynDirectlyInheritsObservableObject,
                     members: members.generatedMembers
                 )
             )
@@ -179,6 +180,7 @@ struct MockSynPeerMacro {
                     genericWhereClause: classDeclaration.genericWhereClause?.description.trimmedReturnClause ?? "",
                     associatedTypes: [],
                     spyWrappedTypeName: nil,
+                    isObservableObject: false,
                     members: members.generatedMembers
                 )
             )
@@ -213,6 +215,7 @@ struct MockSynPeerMacro {
         let access = options.access.sourceName
         let mode = options.mode.sourceName
         let associatedTypeSource = target.associatedTypeSource(access: access)
+        let observableObjectPublisherSource = target.observableObjectPublisherSource(access: access)
         let staticRuntimeSource = target.staticRuntimeSource(access: access, kind: kind, mode: mode)
         let memberSource = target.members
             .map { $0.source(access: access, options: options, kind: kind, target: target, generatedName: generatedName) }
@@ -231,6 +234,7 @@ struct MockSynPeerMacro {
             \(target.attributes)\(access) final class \(generatedName)\(target.genericParameterClause): \(target.inheritedTypeName)\(target.genericWhereClause) {
             \(associatedTypeSource)\
             \(staticRuntimeSource)\
+            \(observableObjectPublisherSource)\
               \(access) let __mockSyn: MockSynRuntime
               \(access) let __mockSynWrapped: \(target.wrappedTypeName)
 
@@ -244,6 +248,7 @@ struct MockSynPeerMacro {
             \(target.attributes)\(access) final class \(generatedName)\(target.genericParameterClause): \(target.inheritedTypeName)\(target.genericWhereClause) {
             \(associatedTypeSource)\
             \(staticRuntimeSource)\
+            \(observableObjectPublisherSource)\
               \(access) let __mockSyn: MockSynRuntime
 
             \(initializerSource)\(staticStubbingSource)\(stubbingSource)\(generatedMembers)

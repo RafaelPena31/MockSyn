@@ -3,28 +3,48 @@ public struct MockSynStubBuilder<Return> {
     private let runtime: MockSynRuntime
     private let member: String
     private let matchers: [MockSynAnyMatcher]
+    private let notifyChangeOnRegistration: Bool
 
-    public init(runtime: MockSynRuntime, member: String, matchers: [MockSynAnyMatcher] = []) {
+    public init(
+        runtime: MockSynRuntime,
+        member: String,
+        matchers: [MockSynAnyMatcher] = [],
+        notifyChangeOnRegistration: Bool = false
+    ) {
         self.runtime = runtime
         self.member = member
         self.matchers = matchers
+        self.notifyChangeOnRegistration = notifyChangeOnRegistration
     }
 
     /// Configures one or more return values. Multiple values are returned sequentially.
     public func willReturn(_ first: Return, _ remaining: Return...) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(first: first, remaining: remaining))
+        runtime.registerStub(
+            member: member,
+            matchers: matchers,
+            behavior: .returns(first: first, remaining: remaining),
+            notifyChange: notifyChangeOnRegistration
+        )
     }
 
     /// Configures the member to throw an error.
     public func willThrow(_ error: Error) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: MockSynStubBehavior<Return>.throwing(error))
+        runtime.registerStub(
+            member: member,
+            matchers: matchers,
+            behavior: MockSynStubBehavior<Return>.throwing(error),
+            notifyChange: notifyChangeOnRegistration
+        )
     }
 
     /// Configures the member to run a custom closure.
     public func willRun(_ body: @escaping () throws -> Return) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .runs { _ in
-            try body()
-        })
+        runtime.registerStub(
+            member: member,
+            matchers: matchers,
+            behavior: .runs { _ in try body() },
+            notifyChange: notifyChangeOnRegistration
+        )
     }
 }
 
@@ -189,7 +209,7 @@ public struct MockSynPropertyStubber<Value> {
 
     /// Builder for property getter behavior.
     public var get: MockSynStubBuilder<Value> {
-        MockSynStubBuilder(runtime: runtime, member: getMember)
+        MockSynStubBuilder(runtime: runtime, member: getMember, notifyChangeOnRegistration: true)
     }
 }
 
