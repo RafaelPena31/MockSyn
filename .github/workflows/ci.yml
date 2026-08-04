@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  compatibility:
+    name: Swift ${{ matrix.swift }} compatibility
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - swift: "5.9"
+            language-mode: "5"
+          - swift: "6.3"
+            language-mode: "6"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: ${{ matrix.swift }}
+      - name: Test root package
+        run: swift test -Xswiftc -swift-version -Xswiftc ${{ matrix.language-mode }}
+      - name: Test external consumer
+        run: tools/test-consumer-package.sh --swift-version ${{ matrix.language-mode }}
+
+  macos-integration:
+    name: macOS Combine, coverage, and DocC
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.3"
+      - name: Test root package with coverage and Combine
+        run: swift test --enable-code-coverage -Xswiftc -swift-version -Xswiftc 6
+      - name: Test external consumer
+        run: tools/test-consumer-package.sh --swift-version 6
+      - name: Validate DocC catalog
+        run: tools/mocksyn-inspect.sh docc --validate
