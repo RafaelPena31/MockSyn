@@ -94,7 +94,10 @@ struct MockSynPeerMacro {
         context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         if let protocolDeclaration = declaration.as(ProtocolDeclSyntax.self) {
-            let lexicalExtensionAccess = lexicalExtensionAccess(context: context)
+            let lexicalExtensionAccess = lexicalExtensionAccess(
+                declaration: protocolDeclaration,
+                context: context
+            )
             let inheritedTypes = protocolDeclaration.mockSynInheritedTypesWithUngeneratedRequirements
             if !inheritedTypes.isEmpty {
                 context.diagnose(Diagnostic(
@@ -143,7 +146,10 @@ struct MockSynPeerMacro {
         }
 
         if let classDeclaration = declaration.as(ClassDeclSyntax.self) {
-            let lexicalExtensionAccess = lexicalExtensionAccess(context: context)
+            let lexicalExtensionAccess = lexicalExtensionAccess(
+                declaration: classDeclaration,
+                context: context
+            )
             if classDeclaration.modifiers.finalModifier != nil {
                 var replacement = classDeclaration
                 replacement.modifiers = classDeclaration.modifiers.removingFinal
@@ -288,19 +294,17 @@ struct MockSynPeerMacro {
     }
 
     private func lexicalExtensionAccess(
+        declaration: some DeclSyntaxProtocol,
         context: some MacroExpansionContext
     ) -> MockSynGeneratedAccess? {
-        #if compiler(>=6.0)
-        for lexicalNode in context.lexicalContext {
-            guard let extensionDeclaration = lexicalNode.as(ExtensionDeclSyntax.self),
-                  let extensionAccess = extensionDeclaration.modifiers.mockSynExplicitAccess else {
-                continue
-            }
-
-            return extensionAccess
+        if let parentAccess = MockSynLexicalAccess.extensionAccess(of: Syntax(declaration)) {
+            return parentAccess
         }
-        #endif
 
+        #if canImport(SwiftSyntax600)
+        return MockSynLexicalAccess.extensionAccess(in: context.lexicalContext)
+        #else
         return nil
+        #endif
     }
 }
