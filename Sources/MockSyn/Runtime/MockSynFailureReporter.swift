@@ -21,7 +21,11 @@ public struct MockSynFailure: Sendable {
 /// Lightweight process-wide failure reporting channel used by MockSyn runtime errors.
 public enum MockSynFailureReporter {
     private static let lock = NSRecursiveLock()
+    #if compiler(>=6.0)
+    private nonisolated(unsafe) static var handler: (@Sendable (MockSynFailure) -> Void)?
+    #else
     private static var handler: (@Sendable (MockSynFailure) -> Void)?
+    #endif
 
     /// Installs a custom failure handler. Passing `nil` disables reporting.
     public static func setHandler(_ newHandler: (@Sendable (MockSynFailure) -> Void)?) {

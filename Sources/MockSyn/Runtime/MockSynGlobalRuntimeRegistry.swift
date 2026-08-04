@@ -10,7 +10,11 @@ private final class MockSynWeakRuntimeReference {
 
 enum MockSynGlobalRuntimeRegistry {
     private static let lock = NSRecursiveLock()
+    #if compiler(>=6.0)
+    private nonisolated(unsafe) static var references: [MockSynWeakRuntimeReference] = []
+    #else
     private static var references: [MockSynWeakRuntimeReference] = []
+    #endif
 
     static func register(_ runtime: MockSynRuntime) {
         lock.lock()

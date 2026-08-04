@@ -1,7 +1,7 @@
 import Foundation
 
 /// Expected number of invocations for a verification.
-public enum MockSynVerificationCount: Equatable {
+public enum MockSynVerificationCount: Equatable, Sendable {
     case once
     case never
     case times(Int)
@@ -44,7 +44,7 @@ public enum MockSynVerificationCount: Equatable {
 }
 
 /// Errors produced by MockSyn verification APIs.
-public enum MockSynVerificationError: Error, CustomStringConvertible {
+public enum MockSynVerificationError: Error, CustomStringConvertible, Sendable {
     case expected(
         member: String,
         count: MockSynVerificationCount,

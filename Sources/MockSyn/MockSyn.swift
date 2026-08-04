@@ -4,7 +4,7 @@
 @attached(peer, names: prefixed(Mock), suffixed(Mock))
 public macro Mocking(
     name: String? = nil,
-    access: MockSynAccess = .internal,
+    access: MockSynAccess = .inherited,
     mode: MockSynMode = .strict
 ) = #externalMacro(module: "MockSynMacros", type: "MockingMacro")
 
@@ -14,7 +14,7 @@ public macro Mocking(
 @attached(peer, names: prefixed(Stub), suffixed(Stub))
 public macro Stubbing(
     name: String? = nil,
-    access: MockSynAccess = .internal,
+    access: MockSynAccess = .inherited,
     mode: MockSynMode = .relaxed
 ) = #externalMacro(module: "MockSynMacros", type: "StubbingMacro")
 
@@ -24,6 +24,6 @@ public macro Stubbing(
 @attached(peer, names: prefixed(Spy), suffixed(Spy))
 public macro Spying(
     name: String? = nil,
-    access: MockSynAccess = .internal,
+    access: MockSynAccess = .inherited,
     mode: MockSynMode = .strict
 ) = #externalMacro(module: "MockSynMacros", type: "SpyingMacro")

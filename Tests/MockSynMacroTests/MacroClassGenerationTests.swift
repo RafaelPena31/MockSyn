@@ -401,4 +401,29 @@ extension MockSynMacroTests {
               """
         )
     }
+
+    func testMockingInheritsPublicAccessFromClassByDefault() {
+        assertExpansion(
+            """
+            @Mocking
+            public class UserService {
+            }
+            """,
+            expandedSource: """
+              public class UserService {
+              }
+
+              #if MOCKSYN_ENABLE
+              public final class UserServiceMock: UserService {
+                public let __mockSyn: MockSynRuntime
+
+                public init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                  super.init()
+                }
+              }
+              #endif
+              """
+        )
+    }
 }

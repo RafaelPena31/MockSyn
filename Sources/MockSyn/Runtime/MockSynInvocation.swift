@@ -28,8 +28,13 @@ struct MockSynInvocationSequence: Comparable, Sendable {
 
 enum MockSynInvocationClock {
     private static let lock = NSRecursiveLock()
+    #if compiler(>=6.0)
+    private nonisolated(unsafe) static var epoch: UInt64 = 0
+    private nonisolated(unsafe) static var ordinal: UInt64 = 0
+    #else
     private static var epoch: UInt64 = 0
     private static var ordinal: UInt64 = 0
+    #endif
 
     static func next() -> MockSynInvocationSequence {
         lock.lock()

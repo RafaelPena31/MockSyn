@@ -40,17 +40,60 @@ enum MockSynGeneratedMode: String {
     }
 }
 
+enum MockSynAccessOption: Equatable {
+    case inherited
+    case explicit(MockSynGeneratedAccess)
+
+    init?(sourceName: String) {
+        guard let keyword = MockSynAccessKeyword(rawValue: sourceName) else {
+            return nil
+        }
+
+        switch keyword {
+        case .inherited:
+            self = .inherited
+        case .private:
+            self = .explicit(.private)
+        case .fileprivate:
+            self = .explicit(.fileprivate)
+        case .internal:
+            self = .explicit(.internal)
+        case .package:
+            self = .explicit(.package)
+        case .public:
+            self = .explicit(.public)
+        }
+    }
+
+    func resolved(for declarationAccess: MockSynGeneratedAccess) -> MockSynGeneratedAccess {
+        switch self {
+        case .inherited:
+            return declarationAccess
+        case .explicit(let access):
+            return access
+        }
+    }
+}
+
+private enum MockSynAccessKeyword: String {
+    case inherited
+    case `private`
+    case `fileprivate`
+    case `internal`
+    case `package`
+    case `public`
+}
+
 struct MockSynMacroOptions {
     var name: String?
-    var access: MockSynGeneratedAccess
+    var access: MockSynAccessOption
     var mode: MockSynGeneratedMode
 
     static func parse(
         from attribute: AttributeSyntax,
-        defaultAccess: MockSynGeneratedAccess,
         defaultMode: MockSynGeneratedMode
     ) throws -> MockSynMacroOptions {
-        var options = MockSynMacroOptions(name: nil, access: defaultAccess, mode: defaultMode)
+        var options = MockSynMacroOptions(name: nil, access: .inherited, mode: defaultMode)
 
         guard case .argumentList(let arguments) = attribute.arguments else {
             return options
@@ -61,7 +104,7 @@ struct MockSynMacroOptions {
                 options.name = argument.expression.as(StringLiteralExprSyntax.self)?.representedLiteralValue
             } else if argument.label?.text == "access" {
                 let accessName = argument.expression.memberAccessName
-                guard let accessName, let access = MockSynGeneratedAccess(rawValue: accessName) else {
+                guard let accessName, let access = MockSynAccessOption(sourceName: accessName) else {
                     throw MockSynDiagnostic.invalidAccess
                 }
                 options.access = access

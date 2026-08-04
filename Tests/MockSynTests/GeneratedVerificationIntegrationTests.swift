@@ -64,11 +64,12 @@ extension MockSynGeneratedTypeIntegrationTests {
         #endif
     }
 
+    @MainActor
     func testGeneratedVerificationCanWaitForAsyncCall() async throws {
         #if MOCKSYN_ENABLE
         let mock = StubbedUserServiceMock()
 
-        Task {
+        Task { @MainActor in
             try? await Task.sleep(nanoseconds: 20_000_000)
             mock.ping()
         }

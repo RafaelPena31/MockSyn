@@ -37,16 +37,59 @@ class EmptyCacheStoreBase {
 }
 
 enum ClassInitializerMirrorLog {
-    static var mockSeed: String?
-    static var requiredMockSeed: String?
-    static var stubSeed: String?
-    static var spySeed: String?
+    private static let storage = Storage()
+
+    static var mockSeed: String? {
+        get { storage.value(at: \.mockSeed) }
+        set { storage.set(newValue, at: \.mockSeed) }
+    }
+
+    static var requiredMockSeed: String? {
+        get { storage.value(at: \.requiredMockSeed) }
+        set { storage.set(newValue, at: \.requiredMockSeed) }
+    }
+
+    static var stubSeed: String? {
+        get { storage.value(at: \.stubSeed) }
+        set { storage.set(newValue, at: \.stubSeed) }
+    }
+
+    static var spySeed: String? {
+        get { storage.value(at: \.spySeed) }
+        set { storage.set(newValue, at: \.spySeed) }
+    }
 
     static func reset() {
-        mockSeed = nil
-        requiredMockSeed = nil
-        stubSeed = nil
-        spySeed = nil
+        storage.reset()
+    }
+
+    private final class Storage: @unchecked Sendable {
+        private let lock = NSRecursiveLock()
+        fileprivate var mockSeed: String?
+        fileprivate var requiredMockSeed: String?
+        fileprivate var stubSeed: String?
+        fileprivate var spySeed: String?
+
+        func value(at keyPath: KeyPath<Storage, String?>) -> String? {
+            lock.lock()
+            defer { lock.unlock() }
+            return self[keyPath: keyPath]
+        }
+
+        func set(_ value: String?, at keyPath: ReferenceWritableKeyPath<Storage, String?>) {
+            lock.lock()
+            defer { lock.unlock() }
+            self[keyPath: keyPath] = value
+        }
+
+        func reset() {
+            lock.lock()
+            defer { lock.unlock() }
+            mockSeed = nil
+            requiredMockSeed = nil
+            stubSeed = nil
+            spySeed = nil
+        }
     }
 }
 

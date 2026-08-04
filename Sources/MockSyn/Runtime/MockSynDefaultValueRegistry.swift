@@ -3,7 +3,11 @@ import Foundation
 /// Registry used by relaxed mocks and stubs when no explicit stub matches.
 public enum MockSynDefaultValueRegistry {
     private static let lock = NSRecursiveLock()
+    #if compiler(>=6.0)
+    private nonisolated(unsafe) static var customDefaults: [ObjectIdentifier: Any] = [:]
+    #else
     private static var customDefaults: [ObjectIdentifier: Any] = [:]
+    #endif
 
     /// Registers a custom default value for a return type.
     public static func register<Value>(_ value: Value, for type: Value.Type) {

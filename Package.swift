@@ -7,7 +7,10 @@ import CompilerPluginSupport
 var dependencies: [Package.Dependency] = []
 
 #if compiler(>=6.4)
-dependencies.append(.package(url: "https://github.com/swiftlang/swift-syntax.git", from: "604.0.0-prerelease-2026-06-05"))
+dependencies.append(.package(
+    url: "https://github.com/swiftlang/swift-syntax.git",
+    exact: "604.0.0-prerelease-2026-06-05"
+))
 #elseif compiler(>=6.0)
 dependencies.append(.package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"))
 #else
@@ -64,5 +67,6 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
         ),
-    ]
+    ],
+    swiftLanguageVersions: [.v5, .version("6")]
 )

@@ -42,10 +42,34 @@ extension MockSynMacroTests {
         )
     }
 
-    func testMockingGeneratesPackageAccessWhenDeclarationAllowsIt() {
+    func testMockingInheritsPublicAccessByDefault() {
         assertExpansion(
             """
-            @Mocking(access: .package)
+            @Mocking
+            public protocol PublicService {
+            }
+            """,
+            expandedSource: """
+              public protocol PublicService {
+              }
+
+              #if MOCKSYN_ENABLE
+              public final class PublicServiceMock: PublicService {
+                public let __mockSyn: MockSynRuntime
+
+                public init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testMockingInheritsPackageAccessByDefault() {
+        assertExpansion(
+            """
+            @Mocking
             package protocol UserService {
             }
             """,
@@ -66,10 +90,10 @@ extension MockSynMacroTests {
         )
     }
 
-    func testMockingGeneratesFileprivateAccessWhenDeclarationAllowsIt() {
+    func testMockingInheritsFileprivateAccessByDefault() {
         assertExpansion(
             """
-            @Mocking(access: .fileprivate)
+            @Mocking
             fileprivate protocol UserService {
             }
             """,
@@ -90,10 +114,10 @@ extension MockSynMacroTests {
         )
     }
 
-    func testMockingGeneratesPrivateAccessWhenDeclarationAllowsIt() {
+    func testMockingInheritsPrivateAccessByDefault() {
         assertExpansion(
             """
-            @Mocking(access: .private)
+            @Mocking
             private protocol UserService {
             }
             """,
@@ -114,22 +138,22 @@ extension MockSynMacroTests {
         )
     }
 
-    func testStubbingGeneratesInternalRelaxedStubByDefault() {
+    func testStubbingInheritsPublicAccessByDefault() {
         assertExpansion(
             """
             @Stubbing
-            protocol AnalyticsService {
+            public protocol AnalyticsService {
             }
             """,
             expandedSource: """
-              protocol AnalyticsService {
+              public protocol AnalyticsService {
               }
 
               #if MOCKSYN_ENABLE
-              internal final class AnalyticsServiceStub: AnalyticsService {
-                internal let __mockSyn: MockSynRuntime
+              public final class AnalyticsServiceStub: AnalyticsService {
+                public let __mockSyn: MockSynRuntime
 
-                internal init(mode: MockSynMode = .relaxed) {
+                public init(mode: MockSynMode = .relaxed) {
                   self.__mockSyn = MockSynRuntime(kind: .stub, mode: mode)
                 }
               }
@@ -138,25 +162,73 @@ extension MockSynMacroTests {
         )
     }
 
-    func testSpyingGeneratesInternalStrictSpyWithWrappedImplementation() {
+    func testSpyingInheritsPublicAccessByDefault() {
         assertExpansion(
             """
             @Spying
-            protocol CacheStore {
+            public protocol CacheStore {
             }
             """,
             expandedSource: """
-              protocol CacheStore {
+              public protocol CacheStore {
               }
 
               #if MOCKSYN_ENABLE
-              internal final class CacheStoreSpy: CacheStore {
-                internal let __mockSyn: MockSynRuntime
-                internal let __mockSynWrapped: any CacheStore
+              public final class CacheStoreSpy: CacheStore {
+                public let __mockSyn: MockSynRuntime
+                public let __mockSynWrapped: any CacheStore
 
-                internal init(wrapping __mockSynWrapped: any CacheStore, mode: MockSynMode = .strict) {
+                public init(wrapping __mockSynWrapped: any CacheStore, mode: MockSynMode = .strict) {
                   self.__mockSyn = MockSynRuntime(kind: .spy, mode: mode)
                   self.__mockSynWrapped = __mockSynWrapped
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testExplicitInheritedAccessUsesDeclarationAccess() {
+        assertExpansion(
+            """
+            @Mocking(access: .inherited)
+            package protocol UserService {
+            }
+            """,
+            expandedSource: """
+              package protocol UserService {
+              }
+
+              #if MOCKSYN_ENABLE
+              package final class UserServiceMock: UserService {
+                package let __mockSyn: MockSynRuntime
+
+                package init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
+                }
+              }
+              #endif
+              """
+        )
+    }
+
+    func testExplicitInternalAccessNarrowsPublicDeclaration() {
+        assertExpansion(
+            """
+            @Mocking(access: .internal)
+            public protocol UserService {
+            }
+            """,
+            expandedSource: """
+              public protocol UserService {
+              }
+
+              #if MOCKSYN_ENABLE
+              internal final class UserServiceMock: UserService {
+                internal let __mockSyn: MockSynRuntime
+
+                internal init(mode: MockSynMode = .strict) {
+                  self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
                 }
               }
               #endif

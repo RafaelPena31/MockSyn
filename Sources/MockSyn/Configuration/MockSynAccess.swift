@@ -1,5 +1,8 @@
 /// Access level used by MockSyn macros when emitting generated test doubles.
 public enum MockSynAccess: Equatable, Sendable {
+    /// Inherits the effective access level of the annotated declaration.
+    case inherited
+
     /// Emits an `internal` generated type.
     case `internal`
 
@@ -15,9 +18,14 @@ public enum MockSynAccess: Equatable, Sendable {
     /// Emits a `private` generated type.
     case `private`
 
-    /// Source spelling used by macro-generated declarations.
+    /// Source spelling used when representing this macro option.
+    ///
+    /// The macro resolves `inherited` to the annotated declaration's effective
+    /// access before emitting the generated type.
     public var generatedSourceName: String {
         switch self {
+        case .inherited:
+            return "inherited"
         case .internal:
             return "internal"
         case .public:

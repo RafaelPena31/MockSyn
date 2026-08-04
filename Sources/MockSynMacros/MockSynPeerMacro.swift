@@ -199,11 +199,11 @@ struct MockSynPeerMacro {
     ) throws -> [DeclSyntax] {
         let options = try MockSynMacroOptions.parse(
             from: attribute,
-            defaultAccess: .internal,
             defaultMode: kind.defaultMode
         )
+        let resolvedAccess = options.access.resolved(for: target.access)
 
-        guard options.access <= target.access else {
+        guard resolvedAccess <= target.access else {
             throw MockSynDiagnostic.publicAccessOnInternalDeclaration
         }
 
@@ -212,7 +212,7 @@ struct MockSynPeerMacro {
             throw MockSynDiagnostic.invalidGeneratedName(macroName: kind.macroName, affix: kind.allowedAffix)
         }
 
-        let access = options.access.sourceName
+        let access = resolvedAccess.sourceName
         let mode = options.mode.sourceName
         let associatedTypeSource = target.associatedTypeSource(access: access)
         let observableObjectPublisherSource = target.observableObjectPublisherSource(access: access)

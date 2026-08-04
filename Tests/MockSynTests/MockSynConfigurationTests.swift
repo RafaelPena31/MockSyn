@@ -9,11 +9,18 @@ extension MockSynPublicAPITests {
     }
 
     func testAccessDescriptionsMatchMacroGeneratedSource() {
+        XCTAssertEqual(MockSynAccess.inherited.generatedSourceName, "inherited")
         XCTAssertEqual(MockSynAccess.internal.generatedSourceName, "internal")
         XCTAssertEqual(MockSynAccess.public.generatedSourceName, "public")
         XCTAssertEqual(MockSynAccess.package.generatedSourceName, "package")
         XCTAssertEqual(MockSynAccess.fileprivate.generatedSourceName, "fileprivate")
         XCTAssertEqual(MockSynAccess.private.generatedSourceName, "private")
+    }
+
+    func testConcurrencyFacingPublicTypesAreSendable() {
+        requireSendable(MockSynAccess.self)
+        requireSendable(MockSynVerificationCount.self)
+        requireSendable(MockSynVerificationError.self)
     }
 
     func testRuntimeStoresDoubleKindAndMode() {
@@ -76,3 +83,5 @@ extension MockSynPublicAPITests {
         try runtime.checkUnnecessaryStubs()
     }
 }
+
+private func requireSendable<Value: Sendable>(_: Value.Type) {}
