@@ -6,7 +6,7 @@ import SwiftSyntaxMacros
 struct Target {
     let kind: TargetKind
     let name: String
-    let access: MockSynGeneratedAccess
+    let access: MockSynDeclarationAccess
     let lexicalExtensionAccess: MockSynGeneratedAccess?
     let attributes: String
     let genericParameterClause: String
@@ -20,7 +20,7 @@ struct Target {
     init(
         kind: TargetKind,
         name: String,
-        access: MockSynGeneratedAccess,
+        access: MockSynDeclarationAccess,
         lexicalExtensionAccess: MockSynGeneratedAccess?,
         attributes: String,
         genericParameterClause: String,

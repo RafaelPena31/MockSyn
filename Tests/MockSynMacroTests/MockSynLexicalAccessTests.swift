@@ -4,6 +4,21 @@ import SwiftSyntax
 import XCTest
 
 final class MockSynLexicalAccessTests: XCTestCase {
+    func testUnknownDeclarationAccessAllowsExplicitMacroAccess() {
+        let declarationAccess = MockSynDeclarationAccess.unknown
+
+        let generatedAccess = declarationAccess.resolved(.explicit(.public))
+
+        XCTAssertEqual(generatedAccess, .public)
+        XCTAssertTrue(declarationAccess.allows(generatedAccess))
+    }
+
+    func testUnknownDeclarationAccessDefaultsInheritedToInternal() {
+        let declarationAccess = MockSynDeclarationAccess.unknown
+
+        XCTAssertEqual(declarationAccess.resolved(.inherited), .internal)
+    }
+
     func testExtensionAccessIsResolvedFromDeclarationParents() throws {
         let source = Parser.parse(source: """
         public extension Services {

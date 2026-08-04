@@ -19,8 +19,21 @@ enum MemberGenerator {
         var generatedMembers: [GeneratedMember] = []
         var isValid = true
 
+        let classInitializers = targetKind == .class
+            ? memberBlock.compactMap { $0.decl.as(InitializerDeclSyntax.self) }
+            : []
+        if !classInitializers.isEmpty,
+           classInitializers.allSatisfy({ $0.modifiers.mockSynExplicitAccess == .private }) {
+            context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.privateClassInitializers))
+            return MemberGenerationResult(generatedMembers: [], isValid: false)
+        }
+
         for item in memberBlock {
             if let function = item.decl.as(FunctionDeclSyntax.self) {
+                if targetKind == .class, function.modifiers.mockSynExplicitAccess == .private {
+                    continue
+                }
+
                 let isNamedMember = function.name.text.isNamedMember
                 guard isNamedMember || targetKind == .protocol else {
                     context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.unsupportedOperatorRequirement))
@@ -87,6 +100,10 @@ enum MemberGenerator {
             }
 
             if let property = item.decl.as(VariableDeclSyntax.self) {
+                if targetKind == .class, property.modifiers.mockSynExplicitAccess == .private {
+                    continue
+                }
+
                 if targetKind == .class, property.modifiers.containsStatic {
                     context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.unsupportedConcreteStaticMember))
                     isValid = false
@@ -119,6 +136,10 @@ enum MemberGenerator {
             }
 
             if let subscriptDeclaration = item.decl.as(SubscriptDeclSyntax.self) {
+                if targetKind == .class, subscriptDeclaration.modifiers.mockSynExplicitAccess == .private {
+                    continue
+                }
+
                 generatedMembers.append(.subscriptMember(GeneratedSubscript(
                     attributes: subscriptDeclaration.attributes.mockSynForwardedAttributes,
                     access: subscriptDeclaration.modifiers.mockSynAccess,
@@ -137,6 +158,10 @@ enum MemberGenerator {
 
             if let initializer = item.decl.as(InitializerDeclSyntax.self),
                (targetKind == .class || doubleKind != .spy) {
+                if targetKind == .class, initializer.modifiers.mockSynExplicitAccess == .private {
+                    continue
+                }
+
                 if targetKind == .class, initializer.signature.parameterClause.hasVariadicParameter {
                     context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.unsupportedVariadicClassInitializer))
                     isValid = false

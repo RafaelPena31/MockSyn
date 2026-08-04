@@ -128,7 +128,7 @@ struct MockSynPeerMacro {
                 target: Target(
                     kind: .protocol,
                     name: protocolDeclaration.name.text,
-                    access: effectiveAccess(
+                    access: declarationAccess(
                         declarationModifiers: protocolDeclaration.modifiers,
                         lexicalExtensionAccess: lexicalExtensionAccess
                     ),
@@ -186,7 +186,7 @@ struct MockSynPeerMacro {
                 target: Target(
                     kind: .class,
                     name: classDeclaration.name.text,
-                    access: effectiveAccess(
+                    access: declarationAccess(
                         declarationModifiers: classDeclaration.modifiers,
                         lexicalExtensionAccess: lexicalExtensionAccess
                     ),
@@ -218,12 +218,13 @@ struct MockSynPeerMacro {
             from: attribute,
             defaultMode: kind.defaultMode
         )
-        let resolvedAccess = options.access.resolved(for: target.access)
+        let resolvedAccess = target.access.resolved(options.access)
 
-        guard resolvedAccess <= target.access else {
+        if case .known(let declarationAccess) = target.access,
+           !target.access.allows(resolvedAccess) {
             throw MockSynDiagnostic.cannotWidenAccess(
                 requested: resolvedAccess,
-                declaration: target.access
+                declaration: declarationAccess
             )
         }
 
@@ -282,15 +283,23 @@ struct MockSynPeerMacro {
         return [DeclSyntax(stringLiteral: declarationSource)]
     }
 
-    private func effectiveAccess(
+    private func declarationAccess(
         declarationModifiers: DeclModifierListSyntax,
         lexicalExtensionAccess: MockSynGeneratedAccess?
-    ) -> MockSynGeneratedAccess {
+    ) -> MockSynDeclarationAccess {
         if let explicitAccess = declarationModifiers.mockSynExplicitAccess {
-            return explicitAccess
+            return .known(explicitAccess)
         }
 
-        return lexicalExtensionAccess ?? .internal
+        if let lexicalExtensionAccess {
+            return .known(lexicalExtensionAccess)
+        }
+
+        #if MOCKSYN_LEGACY_SWIFT_SYNTAX
+        return .unknown
+        #else
+        return .known(.internal)
+        #endif
     }
 
     private func lexicalExtensionAccess(

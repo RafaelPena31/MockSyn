@@ -5,6 +5,7 @@ import PackageDescription
 import CompilerPluginSupport
 
 var dependencies: [Package.Dependency] = []
+var macroSwiftSettings: [SwiftSetting] = []
 
 #if compiler(>=6.4)
 dependencies.append(.package(
@@ -19,8 +20,12 @@ dependencies.append(.package(url: "https://github.com/swiftlang/swift-syntax.git
 dependencies.append(.package(url: "https://github.com/swiftlang/swift-syntax.git", from: "601.0.0"))
 #elseif compiler(>=6.0)
 dependencies.append(.package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"))
+#elseif compiler(>=5.10)
+dependencies.append(.package(url: "https://github.com/swiftlang/swift-syntax.git", from: "510.0.0"))
+macroSwiftSettings.append(.define("MOCKSYN_LEGACY_SWIFT_SYNTAX"))
 #else
 dependencies.append(.package(url: "https://github.com/swiftlang/swift-syntax.git", from: "509.0.0"))
+macroSwiftSettings.append(.define("MOCKSYN_LEGACY_SWIFT_SYNTAX"))
 #endif
 
 let package = Package(
@@ -40,7 +45,8 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
                 .product(name: "SwiftDiagnostics", package: "swift-syntax"),
-            ]
+            ],
+            swiftSettings: macroSwiftSettings
         ),
 
         .target(

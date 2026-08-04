@@ -1,5 +1,33 @@
 import SwiftSyntax
 
+enum MockSynDeclarationAccess: Equatable {
+    case known(MockSynGeneratedAccess)
+    case unknown
+
+    func resolved(_ option: MockSynAccessOption) -> MockSynGeneratedAccess {
+        switch option {
+        case .inherited:
+            switch self {
+            case .known(let access):
+                return access
+            case .unknown:
+                return .internal
+            }
+        case .explicit(let access):
+            return access
+        }
+    }
+
+    func allows(_ generatedAccess: MockSynGeneratedAccess) -> Bool {
+        switch self {
+        case .known(let declarationAccess):
+            return generatedAccess <= declarationAccess
+        case .unknown:
+            return true
+        }
+    }
+}
+
 enum MockSynLexicalAccess {
     static func extensionAccess(of declaration: Syntax) -> MockSynGeneratedAccess? {
         var ancestor = declaration.parent

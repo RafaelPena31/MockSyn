@@ -40,6 +40,29 @@ public class PublicMixedAccessServiceBase {
 public class PublicImplicitInitializerServiceBase {
 }
 
+@Mocking
+class PrivateClassMemberServiceBase {
+    private init(secret: String) {}
+
+    init(value: String) {}
+
+    private func helper() -> String {
+        "secret"
+    }
+
+    private var token: String {
+        "secret"
+    }
+
+    private subscript(secret: String) -> String {
+        secret
+    }
+
+    func load() -> String {
+        "base"
+    }
+}
+
 extension MockSynGeneratedTypeIntegrationTests {
     func testGeneratedPublicClassPreservesMemberAccessAndStubbing() throws {
         #if MOCKSYN_ENABLE
@@ -72,6 +95,18 @@ extension MockSynGeneratedTypeIntegrationTests {
         let mock = PublicImplicitInitializerServiceBaseMock()
 
         XCTAssertEqual(mock.__mockSyn.kind, .mock)
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedClassIgnoresPrivateMembersAndUsesAccessibleInitializer() throws {
+        #if MOCKSYN_ENABLE
+        let mock = PrivateClassMemberServiceBaseMock(value: "fixture")
+        mock.given.load().willReturn("mocked")
+
+        XCTAssertEqual(mock.load(), "mocked")
+        try mock.verify.load().once()
         #else
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif

@@ -80,6 +80,11 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
         message: "MockSyn cannot mirror variadic class initializers because Swift cannot forward captured variadic arrays to super.init."
     )
 
+    static let privateClassInitializers = MockSynDiagnostic(
+        id: "privateClassInitializers",
+        message: "MockSyn cannot subclass a class whose declared initializers are all private. Add an internal or broader initializer, or mock a protocol instead."
+    )
+
     static func typedWillRunUnavailable(
         member: String,
         parameterCount: Int,

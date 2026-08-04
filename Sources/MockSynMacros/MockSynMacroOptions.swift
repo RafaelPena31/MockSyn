@@ -69,14 +69,6 @@ enum MockSynAccessOption: Equatable {
         }
     }
 
-    func resolved(for declarationAccess: MockSynGeneratedAccess) -> MockSynGeneratedAccess {
-        switch self {
-        case .inherited:
-            return declarationAccess
-        case .explicit(let access):
-            return access
-        }
-    }
 }
 
 private enum MockSynAccessKeyword: String {
