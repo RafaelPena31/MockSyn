@@ -63,6 +63,27 @@ class PrivateClassMemberServiceBase {
     }
 }
 
+@Mocking
+class PrivateSetterCounterBase {
+    private(set) var count: Int = 0
+}
+
+@Mocking
+class DesignatedAndConvenienceServiceBase {
+    init(seed: String) {}
+
+    convenience init() {
+        self.init(seed: "default")
+    }
+}
+
+@Mocking
+class PrivateConvenienceOnlyServiceBase {
+    private convenience init(seed: String) {
+        self.init()
+    }
+}
+
 extension MockSynGeneratedTypeIntegrationTests {
     func testGeneratedPublicClassPreservesMemberAccessAndStubbing() throws {
         #if MOCKSYN_ENABLE
@@ -107,6 +128,41 @@ extension MockSynGeneratedTypeIntegrationTests {
 
         XCTAssertEqual(mock.load(), "mocked")
         try mock.verify.load().once()
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedClassPrivateSetterExposesReadOnlyMockingApis() throws {
+        #if MOCKSYN_ENABLE
+        let mock = PrivateSetterCounterBaseMock()
+        let stubber: MockSynNonThrowingReadOnlyPropertyStubber<Int> = mock.given.count
+        let verification: MockSynReadOnlyPropertyVerification<Int> = mock.verify.count
+
+        stubber.get.willReturn(42)
+
+        XCTAssertEqual(mock.count, 42)
+        try verification.get.once()
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedClassForwardsOnlyDesignatedInitializer() {
+        #if MOCKSYN_ENABLE
+        let mock = DesignatedAndConvenienceServiceBaseMock(seed: "fixture")
+
+        XCTAssertEqual(mock.__mockSyn.kind, .mock)
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
+
+    func testGeneratedClassUsesImplicitInitializerWhenOnlyConvenienceIsDeclared() {
+        #if MOCKSYN_ENABLE
+        let mock = PrivateConvenienceOnlyServiceBaseMock()
+
+        XCTAssertEqual(mock.__mockSyn.kind, .mock)
         #else
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif

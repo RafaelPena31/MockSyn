@@ -130,6 +130,10 @@ extension ExprSyntax {
 extension DeclModifierListSyntax {
     var mockSynExplicitAccess: MockSynGeneratedAccess? {
         for modifier in self {
+            if modifier.detail?.detail.text == "set" {
+                continue
+            }
+
             switch modifier.name.tokenKind {
             case .keyword(.public), .keyword(.open):
                 return .public
@@ -151,6 +155,12 @@ extension DeclModifierListSyntax {
 
     var mockSynAccess: MockSynGeneratedAccess {
         mockSynExplicitAccess ?? .internal
+    }
+
+    var hasRestrictedSetter: Bool {
+        contains { modifier in
+            modifier.detail?.detail.text == "set"
+        }
     }
 
     var finalModifier: DeclModifierSyntax? {

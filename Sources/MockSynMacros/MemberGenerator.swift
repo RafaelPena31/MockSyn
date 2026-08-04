@@ -19,11 +19,12 @@ enum MemberGenerator {
         var generatedMembers: [GeneratedMember] = []
         var isValid = true
 
-        let classInitializers = targetKind == .class
+        let designatedClassInitializers = targetKind == .class
             ? memberBlock.compactMap { $0.decl.as(InitializerDeclSyntax.self) }
+                .filter { !$0.modifiers.containsConvenience }
             : []
-        if !classInitializers.isEmpty,
-           classInitializers.allSatisfy({ $0.modifiers.mockSynExplicitAccess == .private }) {
+        if !designatedClassInitializers.isEmpty,
+           designatedClassInitializers.allSatisfy({ $0.modifiers.mockSynExplicitAccess == .private }) {
             context.diagnose(Diagnostic(node: Syntax(attribute), message: MockSynDiagnostic.privateClassInitializers))
             return MemberGenerationResult(generatedMembers: [], isValid: false)
         }
@@ -150,7 +151,8 @@ enum MemberGenerator {
                     stubParameters: subscriptDeclaration.parameterClause.generatedParameters,
                     returnClause: subscriptDeclaration.returnClause.description.trimmedReturnClause,
                     genericWhereClause: subscriptDeclaration.genericWhereClause?.description.trimmedReturnClause ?? "",
-                    hasSetter: subscriptDeclaration.accessorBlock?.mockSynHasWritableAccessor() == true,
+                    hasSetter: !subscriptDeclaration.modifiers.hasRestrictedSetter
+                        && subscriptDeclaration.accessorBlock?.mockSynHasWritableAccessor() == true,
                     getterEffectSpecifiers: subscriptDeclaration.accessorBlock?.mockSynGetterEffectSpecifiers ?? ""
                 )))
                 continue
@@ -158,6 +160,10 @@ enum MemberGenerator {
 
             if let initializer = item.decl.as(InitializerDeclSyntax.self),
                (targetKind == .class || doubleKind != .spy) {
+                if targetKind == .class, initializer.modifiers.containsConvenience {
+                    continue
+                }
+
                 if targetKind == .class, initializer.modifiers.mockSynExplicitAccess == .private {
                     continue
                 }

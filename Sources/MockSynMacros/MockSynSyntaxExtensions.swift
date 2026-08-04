@@ -54,6 +54,12 @@ extension DeclModifierListSyntax {
             modifier.name.text == "required"
         }
     }
+
+    var containsConvenience: Bool {
+        contains { modifier in
+            modifier.name.tokenKind == .keyword(.convenience)
+        }
+    }
 }
 
 extension AccessorBlockSyntax {

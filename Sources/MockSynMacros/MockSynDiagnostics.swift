@@ -82,7 +82,7 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
 
     static let privateClassInitializers = MockSynDiagnostic(
         id: "privateClassInitializers",
-        message: "MockSyn cannot subclass a class whose declared initializers are all private. Add an internal or broader initializer, or mock a protocol instead."
+        message: "MockSyn cannot subclass a class whose declared designated initializers are all private. Add an internal or broader designated initializer, or mock a protocol instead."
     )
 
     static func typedWillRunUnavailable(
