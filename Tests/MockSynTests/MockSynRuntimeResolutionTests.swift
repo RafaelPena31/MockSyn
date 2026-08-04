@@ -49,6 +49,19 @@ extension MockSynPublicAPITests {
         XCTAssertEqual(runtime.resolve(member: "multiple()", arguments: [], returnType: Int.self), 20)
     }
 
+    func testArrayReturnBehaviorRemainsSourceCompatibleAndRepeatsLast() {
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+        runtime.registerStub(
+            member: "arrayReturns()",
+            matchers: [],
+            behavior: MockSynStubBehavior<Int>.returns([10, 20])
+        )
+
+        XCTAssertEqual(runtime.resolve(member: "arrayReturns()", arguments: [], returnType: Int.self), 10)
+        XCTAssertEqual(runtime.resolve(member: "arrayReturns()", arguments: [], returnType: Int.self), 20)
+        XCTAssertEqual(runtime.resolve(member: "arrayReturns()", arguments: [], returnType: Int.self), 20)
+    }
+
     func testRuntimeUsesMatchingMatcherAndFallbacks() throws {
         let runtime = MockSynRuntime(kind: .mock, mode: .strict)
 

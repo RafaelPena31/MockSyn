@@ -40,6 +40,15 @@ public struct MockSynStubBehavior<Return> {
         returns(first: first, remaining: remaining)
     }
 
+    /// Returns values sequentially from an existing array. The array must not be empty.
+    public static func returns(_ values: [Return]) -> MockSynStubBehavior<Return> {
+        precondition(
+            !values.isEmpty,
+            "MockSynStubBehavior.returns(_:) requires at least one value."
+        )
+        return returns(first: values[0], remaining: Array(values.dropFirst()))
+    }
+
     static func returns(first: Return, remaining: [Return]) -> MockSynStubBehavior<Return> {
         let sequence = MockSynReturnSequence(first: first, remaining: remaining)
         return MockSynStubBehavior(nonThrowingResolver: { _ in

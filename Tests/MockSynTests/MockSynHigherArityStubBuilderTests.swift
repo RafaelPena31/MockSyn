@@ -1,4 +1,4 @@
-import MockSyn
+@testable import MockSyn
 import Foundation
 import XCTest
 
@@ -31,6 +31,83 @@ protocol StubBuilderCapabilityService {
 }
 
 final class MockSynHigherArityStubBuilderTests: XCTestCase {
+    func testMalformedBuilderRuntimeHarness() {
+        guard let crashCase = ProcessInfo.processInfo.environment["MOCKSYN_CRASH_CASE"] else {
+            return
+        }
+
+        switch crashCase {
+        case "empty-return-array":
+            _ = MockSynStubBehavior<Int>.returns([])
+        case "typed-builder-argument-type":
+            let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+            MockSynNonThrowingStubBuilder1<Int, Void>(
+                runtime: runtime,
+                member: "consume(_:)",
+                matchers: [MockSynAnyMatcher(matcher: { _ in true })]
+            ).willRun { _ in }
+            runtime.resolveVoid(member: "consume(_:)", arguments: ["not-an-int"])
+        case "typed-argument-missing-index":
+            let _: Int = mockSynTypedArgument(
+                [],
+                at: 0,
+                as: Int.self,
+                builder: MockSynNonThrowingStubBuilder1<Int, Void>.self
+            )
+        case "subscript-setter-missing-value":
+            let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+            MockSynNonThrowingSubscriptSetterStubBuilder<Int>(
+                runtime: runtime,
+                member: "subscript(index:).set",
+                matchers: []
+            ).willRun { _ in }
+            runtime.resolveVoid(member: "subscript(index:).set", arguments: [])
+        default:
+            return
+        }
+    }
+
+    func testEmptyReturnArrayFailsWithActionableMessage() throws {
+        try assertCrash(
+            case: "empty-return-array",
+            fragments: ["MockSynStubBehavior.returns", "at least one value"]
+        )
+    }
+
+    func testTypedBuilderRuntimeRejectsWrongArgumentTypeWithActionableMessage() throws {
+        try assertCrash(
+            case: "typed-builder-argument-type",
+            fragments: [
+                "MockSynNonThrowingStubBuilder1",
+                "expected argument at index 0 to be",
+                "Swift.Int",
+                "Swift.String",
+            ]
+        )
+    }
+
+    func testTypedArgumentRejectsMissingIndexWithActionableMessage() throws {
+        try assertCrash(
+            case: "typed-argument-missing-index",
+            fragments: [
+                "MockSynNonThrowingStubBuilder1",
+                "expected argument at index 0",
+                "received 0 argument(s)",
+            ]
+        )
+    }
+
+    func testSubscriptSetterRuntimeRejectsMissingValueWithActionableMessage() throws {
+        try assertCrash(
+            case: "subscript-setter-missing-value",
+            fragments: [
+                "MockSynNonThrowingSubscriptSetterStubBuilder",
+                "expected at least 1 argument",
+                "received 0",
+            ]
+        )
+    }
+
     func testMalformedTypedBuilderMatcherCountHarness() {
         guard ProcessInfo.processInfo.environment["MOCKSYN_CRASH_CASE"] == "typed-builder-matcher-count" else {
             return
@@ -269,5 +346,39 @@ final class MockSynHigherArityStubBuilderTests: XCTestCase {
 
     private func intMatchers(count: Int) -> [MockSynAnyMatcher] {
         (0..<count).map { _ in MockSynMatcher<Int>.any.erase() }
+    }
+
+    private func assertCrash(
+        case crashCase: String,
+        fragments: [String],
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        process.arguments = [
+            "xctest",
+            "-XCTest",
+            "MockSynTests.MockSynHigherArityStubBuilderTests/testMalformedBuilderRuntimeHarness",
+            Bundle(for: Self.self).bundlePath,
+        ]
+        process.environment = ProcessInfo.processInfo.environment.merging([
+            "MOCKSYN_CRASH_CASE": crashCase,
+        ]) { _, new in new }
+        process.standardOutput = Pipe()
+        let standardError = Pipe()
+        process.standardError = standardError
+
+        try process.run()
+        process.waitUntilExit()
+
+        let errorOutput = String(
+            decoding: standardError.fileHandleForReading.readDataToEndOfFile(),
+            as: UTF8.self
+        )
+        XCTAssertNotEqual(process.terminationStatus, 0, file: file, line: line)
+        for fragment in fragments {
+            XCTAssertTrue(errorOutput.contains(fragment), errorOutput, file: file, line: line)
+        }
     }
 }
