@@ -45,15 +45,27 @@ public enum MockSynVerificationCount: Equatable {
 
 /// Errors produced by MockSyn verification APIs.
 public enum MockSynVerificationError: Error, CustomStringConvertible {
-    case expected(member: String, count: MockSynVerificationCount, actual: Int)
+    case expected(
+        member: String,
+        count: MockSynVerificationCount,
+        actual: Int,
+        recordedCalls: [String] = []
+    )
     case unverifiedInvocations([String])
     case unnecessaryStubs([String])
     case order([String])
 
     public var description: String {
         switch self {
-        case .expected(let member, let count, let actual):
-            return "Expected \(member) to be called \(count.description), but it was called \(actual) \(Self.timeLabel(for: actual))"
+        case .expected(let member, let count, let actual, let recordedCalls):
+            let expectation = "Expected \(member) to be called \(count.description), but it was called \(actual) \(Self.timeLabel(for: actual))"
+            guard !recordedCalls.isEmpty else {
+                return expectation
+            }
+
+            return expectation + "\nRecorded calls:\n" + recordedCalls
+                .map { "- \($0)" }
+                .joined(separator: "\n")
         case .unverifiedInvocations(let members):
             return "Unverified MockSyn invocations: \(members.joined(separator: ", "))"
         case .unnecessaryStubs(let members):

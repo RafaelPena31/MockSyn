@@ -49,6 +49,28 @@ public final class MockSynRuntime: @unchecked Sendable {
         self.changeCallback = onChange
     }
 
+    /// Creates runtime state registered for process-wide static-double cleanup.
+    public static func global(kind: MockSynDoubleKind, mode: MockSynMode) -> MockSynRuntime {
+        let runtime = MockSynRuntime(kind: kind, mode: mode)
+        MockSynGlobalRuntimeRegistry.register(runtime)
+        return runtime
+    }
+
+    /// Clears static-double runtimes and the process-wide MockSyn support state.
+    ///
+    /// Call this only at sequential test-suite boundaries, not while other tests
+    /// are concurrently using MockSyn global state.
+    public static func resetAllGlobalState() {
+        let runtimes = MockSynGlobalRuntimeRegistry.runtimeSnapshot()
+        for runtime in runtimes {
+            runtime.reset()
+        }
+
+        MockSynDefaultValueRegistry.reset()
+        MockSynFailureReporter.reset()
+        MockSynInvocationClock.reset()
+    }
+
     /// Registers a stub rule for a generated member.
     public func registerStub<Return>(
         member: String,
@@ -213,10 +235,20 @@ public final class MockSynRuntime: @unchecked Sendable {
         file: StaticString = #fileID,
         line: UInt = #line
     ) throws {
-        let matchingInvocations = matchingInvocations(member: member, matchers: matchers)
+        let snapshot = invocationSnapshot()
+        let matchingInvocations = matchingInvocations(
+            in: snapshot,
+            member: member,
+            matchers: matchers
+        )
         guard count.matches(matchingInvocations.count) else {
-            let error = MockSynVerificationError.expected(member: member, count: count, actual: matchingInvocations.count)
-            report(error, file: file, line: line, details: recordedCallsDescription(member: member))
+            let error = MockSynVerificationError.expected(
+                member: member,
+                count: count,
+                actual: matchingInvocations.count,
+                recordedCalls: recordedCallDescriptions(in: snapshot, member: member)
+            )
+            report(error, file: file, line: line)
             throw error
         }
 
@@ -280,9 +312,15 @@ public final class MockSynRuntime: @unchecked Sendable {
         file: StaticString = #fileID,
         line: UInt = #line
     ) throws -> UInt64 {
-        guard let invocation = matchingInvocations(member: member, matchers: matchers).first else {
-            let error = MockSynVerificationError.expected(member: member, count: .atLeast(1), actual: 0)
-            report(error, file: file, line: line, details: recordedCallsDescription(member: member))
+        let snapshot = invocationSnapshot()
+        guard let invocation = matchingInvocations(in: snapshot, member: member, matchers: matchers).first else {
+            let error = MockSynVerificationError.expected(
+                member: member,
+                count: .atLeast(1),
+                actual: 0,
+                recordedCalls: recordedCallDescriptions(in: snapshot, member: member)
+            )
+            report(error, file: file, line: line)
             throw error
         }
 
@@ -301,10 +339,22 @@ public final class MockSynRuntime: @unchecked Sendable {
     }
 
     private func matchingInvocations(member: String, matchers: [MockSynAnyMatcher]) -> [MockSynInvocation] {
+        matchingInvocations(in: invocationSnapshot(), member: member, matchers: matchers)
+    }
+
+    private func invocationSnapshot() -> [MockSynInvocation] {
         lock.lock()
         let snapshot = invocations
         lock.unlock()
 
+        return snapshot
+    }
+
+    private func matchingInvocations(
+        in snapshot: [MockSynInvocation],
+        member: String,
+        matchers: [MockSynAnyMatcher]
+    ) -> [MockSynInvocation] {
         return snapshot.filter { invocation in
             invocation.member == member && MockSynRuntime.arguments(invocation.arguments, match: matchers)
         }
@@ -347,9 +397,9 @@ public final class MockSynRuntime: @unchecked Sendable {
         _ error: some CustomStringConvertible,
         file: StaticString,
         line: UInt,
-        details: String
+        details: String? = nil
     ) {
-        let message = "\(error)\n\(details)"
+        let message = details.map { "\(error)\n\($0)" } ?? String(describing: error)
         MockSynFailureReporter.report(MockSynFailure(message: message, file: file, line: line))
     }
 
@@ -358,21 +408,25 @@ public final class MockSynRuntime: @unchecked Sendable {
     }
 
     private func recordedCallsDescription(member: String? = nil) -> String {
-        lock.lock()
-        let snapshot = invocations
-        lock.unlock()
-
-        let matching = snapshot.filter { invocation in
-            member == nil || invocation.member == member
-        }
-
-        guard !matching.isEmpty else {
+        let descriptions = recordedCallDescriptions(in: invocationSnapshot(), member: member)
+        guard !descriptions.isEmpty else {
             return "Recorded calls: none"
         }
 
-        return "Recorded calls:\n" + matching
-            .map { "- \($0.member)(\(Self.argumentDescription($0.arguments)))" }
+        return "Recorded calls:\n" + descriptions
+            .map { "- \($0)" }
             .joined(separator: "\n")
+    }
+
+    private func recordedCallDescriptions(
+        in snapshot: [MockSynInvocation],
+        member: String? = nil
+    ) -> [String] {
+        snapshot.compactMap { invocation in
+            member == nil || invocation.member == member
+                ? "\(invocation.member)(\(Self.argumentDescription(invocation.arguments)))"
+                : nil
+        }
     }
 
     static func arguments(_ arguments: [Any], match matchers: [MockSynAnyMatcher]) -> Bool {

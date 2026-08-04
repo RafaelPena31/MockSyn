@@ -135,7 +135,7 @@ struct Target {
             return ""
         }
 
-        return "  \(access) static let __mockSynStatic = MockSynRuntime(kind: \(kind.runtimeKind), mode: \(mode))\n"
+        return "  \(access) static let __mockSynStatic = MockSynRuntime.global(kind: \(kind.runtimeKind), mode: \(mode))\n"
     }
 
     func staticStubbingSource(access: String, generatedName: String) -> String {

@@ -283,7 +283,7 @@ extension MockSynMacroTests {
 
               #if MOCKSYN_ENABLE
               internal final class ComparableServiceMock: ComparableService {
-                internal static let __mockSynStatic = MockSynRuntime(kind: .mock, mode: .strict)
+                internal static let __mockSynStatic = MockSynRuntime.global(kind: .mock, mode: .strict)
                 internal let __mockSyn: MockSynRuntime
 
                 internal init(mode: MockSynMode = .strict) {

@@ -40,7 +40,34 @@ extension MockSynPublicAPITests {
         ) { error in
             XCTAssertEqual(
                 String(describing: error),
-                "Expected refresh() to be called exactly 1 time, but it was called 2 times"
+                """
+                Expected refresh() to be called exactly 1 time, but it was called 2 times
+                Recorded calls:
+                - refresh()()
+                - refresh()()
+                """
+            )
+        }
+    }
+
+    func testVerificationThrownErrorIncludesRenderedRecordedCalls() {
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+        runtime.resolveVoid(member: "save(_:)", arguments: ["received"])
+
+        XCTAssertThrowsError(
+            try MockSynVerification(
+                runtime: runtime,
+                member: "save(_:)",
+                matchers: [MockSynMatcher<String>.value("expected").erase()]
+            ).once()
+        ) { error in
+            XCTAssertEqual(
+                String(describing: error),
+                """
+                Expected save(_:) to be called exactly 1 time, but it was called 0 times
+                Recorded calls:
+                - save(_:)("received")
+                """
             )
         }
     }
@@ -93,6 +120,40 @@ extension MockSynPublicAPITests {
                 "Expected missing() to be called at least 1 time, but it was called 0 times"
             )
         }
+    }
+
+    func testOrderedVerificationIncludesRenderedCallsWhenArgumentsDoNotMatch() {
+        let recorder = FailureRecorder()
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+        MockSynFailureReporter.setHandler { failure in
+            recorder.record(failure)
+        }
+        defer { MockSynFailureReporter.reset() }
+
+        runtime.resolveVoid(member: "save(_:)", arguments: ["received"])
+
+        var thrownDescription: String?
+        XCTAssertThrowsError(
+            try MockSynVerifier.verifyOrder(
+                MockSynVerification(
+                    runtime: runtime,
+                    member: "save(_:)",
+                    matchers: [MockSynMatcher<String>.value("expected").erase()]
+                )
+            )
+        ) { error in
+            thrownDescription = String(describing: error)
+            XCTAssertEqual(
+                thrownDescription,
+                """
+                Expected save(_:) to be called at least 1 time, but it was called 0 times
+                Recorded calls:
+                - save(_:)("received")
+                """
+            )
+        }
+
+        XCTAssertEqual(recorder.failures.last?.message, thrownDescription)
     }
 
     func testRuntimeDetectsUnnecessaryStubs() throws {

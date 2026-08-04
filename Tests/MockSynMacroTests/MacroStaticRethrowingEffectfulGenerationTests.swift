@@ -22,7 +22,7 @@ extension MockSynMacroTests {
 
               #if MOCKSYN_ENABLE
               internal final class StaticFactoryMock: StaticFactory {
-                internal static let __mockSynStatic = MockSynRuntime(kind: .mock, mode: .strict)
+                internal static let __mockSynStatic = MockSynRuntime.global(kind: .mock, mode: .strict)
                 internal let __mockSyn: MockSynRuntime
 
                 internal init(mode: MockSynMode = .strict) {
@@ -123,7 +123,7 @@ extension MockSynMacroTests {
 
               #if MOCKSYN_ENABLE
               internal final class StaticThrowingServiceMock: StaticThrowingService {
-                internal static let __mockSynStatic = MockSynRuntime(kind: .mock, mode: .strict)
+                internal static let __mockSynStatic = MockSynRuntime.global(kind: .mock, mode: .strict)
                 internal let __mockSyn: MockSynRuntime
 
                 internal init(mode: MockSynMode = .strict) {
@@ -211,7 +211,7 @@ extension MockSynMacroTests {
 
               #if MOCKSYN_ENABLE
               internal final class RethrowingServiceMock: RethrowingService {
-                internal static let __mockSynStatic = MockSynRuntime(kind: .mock, mode: .strict)
+                internal static let __mockSynStatic = MockSynRuntime.global(kind: .mock, mode: .strict)
                 internal let __mockSyn: MockSynRuntime
 
                 internal init(mode: MockSynMode = .strict) {
@@ -354,7 +354,7 @@ extension MockSynMacroTests {
 
               #if MOCKSYN_ENABLE
               internal final class EffectfulPropertyServiceMock: EffectfulPropertyService {
-                internal static let __mockSynStatic = MockSynRuntime(kind: .mock, mode: .strict)
+                internal static let __mockSynStatic = MockSynRuntime.global(kind: .mock, mode: .strict)
                 internal let __mockSyn: MockSynRuntime
 
                 internal init(mode: MockSynMode = .strict) {

@@ -151,17 +151,24 @@ extension MockSynPublicAPITests {
 
         runtime.resolveVoid(member: "save(_:)", arguments: ["received"])
 
+        var thrownDescription: String?
         XCTAssertThrowsError(
             try MockSynVerification(
                 runtime: runtime,
                 member: "save(_:)",
                 matchers: [MockSynMatcher<String>.value("expected").erase()]
             ).once(file: "ForwardedFile.swift", line: 123)
-        )
+        ) { error in
+            thrownDescription = String(describing: error)
+        }
 
         XCTAssertEqual(recorder.failures.last.map { "\($0.file)" }, "ForwardedFile.swift")
         XCTAssertEqual(recorder.failures.last?.line, 123)
-        XCTAssertTrue(recorder.failures.last?.message.contains("Recorded calls:") == true)
-        XCTAssertTrue(recorder.failures.last?.message.contains(#"save(_:)("received")"#) == true)
+        XCTAssertEqual(recorder.failures.last?.message, thrownDescription)
+        XCTAssertEqual(
+            recorder.failures.last?.message.components(separatedBy: "Recorded calls:").count,
+            2
+        )
+        XCTAssertTrue(thrownDescription?.contains(#"save(_:)("received")"#) == true)
     }
 }

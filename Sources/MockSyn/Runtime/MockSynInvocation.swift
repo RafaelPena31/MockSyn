@@ -24,4 +24,11 @@ enum MockSynInvocationClock {
         current += 1
         return current
     }
+
+    static func reset() {
+        lock.lock()
+        defer { lock.unlock() }
+
+        current = 0
+    }
 }
