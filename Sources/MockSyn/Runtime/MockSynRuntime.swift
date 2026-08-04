@@ -62,7 +62,37 @@ public final class MockSynRuntime: @unchecked Sendable {
         returnType: Return.Type,
         fallback: (() -> Return)? = nil
     ) -> Return {
-        try! resolveThrowing(member: member, arguments: arguments, returnType: returnType, fallback: fallback)
+        recordInvocation(member: member, arguments: arguments)
+
+        if case .value(let value) = resolveNonThrowingStub(member: member, arguments: arguments) {
+            return value as! Return
+        }
+
+        if let fallback {
+            return fallback()
+        }
+
+        let defaultValue = MockSynDefaultValueRegistry.value(for: Return.self)
+        let error = MockSynRuntimeError.missingStub(member: member)
+
+        if mode == .strict && Return.self != Void.self {
+            report(
+                error,
+                file: #fileID,
+                line: #line,
+                details: receivedCallDescription(member: member, arguments: arguments)
+            )
+        }
+
+        if let defaultValue {
+            return defaultValue
+        }
+
+        fatalError(
+            "MockSyn member \(member) has no configured value for \(String(reflecting: Return.self)). "
+                + "Configure it with willReturn(...) or register a default with "
+                + "MockSynDefaultValueRegistry.register(_:for:)."
+        )
     }
 
     /// Resolves a throwing generated member call.
@@ -108,7 +138,7 @@ public final class MockSynRuntime: @unchecked Sendable {
     ) rethrows -> Return {
         recordInvocation(member: member, arguments: arguments)
 
-        if let value = try! resolveStub(member: member, arguments: arguments) {
+        if case .value(let value) = resolveNonThrowingStub(member: member, arguments: arguments) {
             return value as! Return
         }
 
@@ -248,6 +278,24 @@ public final class MockSynRuntime: @unchecked Sendable {
         }
 
         return nil
+    }
+
+    private func resolveNonThrowingStub(
+        member: String,
+        arguments: [Any]
+    ) -> MockSynNonThrowingStubResolution {
+        lock.lock()
+        defer { lock.unlock() }
+
+        guard let rules = stubs[member] else {
+            return .unavailable
+        }
+
+        for rule in rules where rule.matches(arguments) {
+            return rule.resolveNonThrowing(arguments)
+        }
+
+        return .unavailable
     }
 
     private func report(

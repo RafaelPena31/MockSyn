@@ -24,6 +24,56 @@ extension MockSynPublicAPITests {
         XCTAssertTrue(recorder.failures[1].message.hasPrefix("Expected save(_:) to be called exactly 1 time"))
     }
 
+    func testStrictUnstubbedNonThrowingResolutionReportsReceivedCallOnce() {
+        let recorder = FailureRecorder()
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+
+        MockSynFailureReporter.setHandler { failure in
+            recorder.record(failure)
+        }
+        defer { MockSynFailureReporter.reset() }
+
+        let value = runtime.resolve(
+            member: "lookup(id:)",
+            arguments: ["missing-user"],
+            returnType: String.self
+        )
+
+        XCTAssertEqual(value, "")
+        XCTAssertEqual(recorder.failures.count, 1)
+        XCTAssertTrue(recorder.failures[0].message.contains("lookup(id:)"))
+        XCTAssertTrue(recorder.failures[0].message.contains(#""missing-user""#))
+    }
+
+    func testRelaxedUnstubbedNonThrowingResolutionDoesNotReport() {
+        let recorder = FailureRecorder()
+        let runtime = MockSynRuntime(kind: .mock, mode: .relaxed)
+
+        MockSynFailureReporter.setHandler { failure in
+            recorder.record(failure)
+        }
+        defer { MockSynFailureReporter.reset() }
+
+        let value = runtime.resolve(member: "lookup(id:)", arguments: ["missing"], returnType: String.self)
+
+        XCTAssertEqual(value, "")
+        XCTAssertTrue(recorder.failures.isEmpty)
+    }
+
+    func testStrictUnstubbedVoidResolutionDoesNotReport() {
+        let recorder = FailureRecorder()
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+
+        MockSynFailureReporter.setHandler { failure in
+            recorder.record(failure)
+        }
+        defer { MockSynFailureReporter.reset() }
+
+        runtime.resolveVoid(member: "refresh()", arguments: [])
+
+        XCTAssertTrue(recorder.failures.isEmpty)
+    }
+
     func testFailureReporterAdaptersForwardMessageFileAndLine() {
         let xctestRecorder = AdapterFailureRecorder()
         let swiftTestingRecorder = AdapterFailureRecorder()

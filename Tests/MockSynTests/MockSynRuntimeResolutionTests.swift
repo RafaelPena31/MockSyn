@@ -2,6 +2,10 @@ import MockSyn
 import Foundation
 import XCTest
 
+private struct RuntimeResolutionDomainValue: Equatable {
+    let value: String
+}
+
 extension MockSynPublicAPITests {
     func testRuntimeUsesMatchingMatcherAndFallbacks() throws {
         let runtime = MockSynRuntime(kind: .mock, mode: .strict)
@@ -152,33 +156,113 @@ extension MockSynPublicAPITests {
         }
     }
 
-    func testStrictUnstubbedCrashHarness() {
-        guard ProcessInfo.processInfo.environment["MOCKSYN_CRASH_CASE"] == "strict-unconfigured" else {
+    func testStrictUnstubbedStringReturnsDefaultAndReportsFailure() {
+        assertStrictUnstubbedResolution(
+            member: "name(id:)",
+            arguments: ["user-42"],
+            returnType: String.self,
+            expected: "",
+            expectedArgument: #""user-42""#
+        )
+    }
+
+    func testStrictUnstubbedIntReturnsDefaultAndReportsFailure() {
+        assertStrictUnstubbedResolution(
+            member: "attempts(for:)",
+            arguments: ["sync"],
+            returnType: Int.self,
+            expected: 0,
+            expectedArgument: #""sync""#
+        )
+    }
+
+    func testStrictUnstubbedOptionalReturnsDefaultAndReportsFailure() {
+        assertStrictUnstubbedResolution(
+            member: "cachedName(id:)",
+            arguments: [7],
+            returnType: String?.self,
+            expected: nil,
+            expectedArgument: "7"
+        )
+    }
+
+    func testStrictUnstubbedRegisteredDomainValueReturnsDefaultAndReportsFailure() {
+        let defaultValue = RuntimeResolutionDomainValue(value: "registered")
+        MockSynDefaultValueRegistry.register(defaultValue, for: RuntimeResolutionDomainValue.self)
+        defer { MockSynDefaultValueRegistry.reset() }
+
+        assertStrictUnstubbedResolution(
+            member: "profile(id:)",
+            arguments: [42],
+            returnType: RuntimeResolutionDomainValue.self,
+            expected: defaultValue,
+            expectedArgument: "42"
+        )
+    }
+
+    func testStrictUnstubbedDomainValueFatalErrorHarness() {
+        guard ProcessInfo.processInfo.environment["MOCKSYN_CRASH_CASE"] == "strict-unconfigured-domain" else {
             return
         }
 
         let runtime = MockSynRuntime(kind: .mock, mode: .strict)
-        _ = runtime.resolve(member: "missing()", arguments: [], returnType: String.self)
+        let _: RuntimeResolutionDomainValue = runtime.resolve(
+            member: "profile(id:)",
+            arguments: [42],
+            returnType: RuntimeResolutionDomainValue.self
+        )
     }
 
-    func testStrictUnstubbedNonVoidCallCrashesInSubprocess() throws {
+    func testStrictUnstubbedDomainWithoutRegisteredDefaultHasActionableFatalError() throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
         process.arguments = [
             "xctest",
             "-XCTest",
-            "MockSynTests.MockSynPublicAPITests/testStrictUnstubbedCrashHarness",
+            "MockSynTests.MockSynPublicAPITests/testStrictUnstubbedDomainValueFatalErrorHarness",
             Bundle(for: Self.self).bundlePath,
         ]
         process.environment = ProcessInfo.processInfo.environment.merging([
-            "MOCKSYN_CRASH_CASE": "strict-unconfigured",
+            "MOCKSYN_CRASH_CASE": "strict-unconfigured-domain",
         ]) { _, new in new }
         process.standardOutput = Pipe()
-        process.standardError = Pipe()
+        let standardError = Pipe()
+        process.standardError = standardError
 
         try process.run()
         process.waitUntilExit()
 
+        let errorOutput = String(
+            decoding: standardError.fileHandleForReading.readDataToEndOfFile(),
+            as: UTF8.self
+        )
         XCTAssertNotEqual(process.terminationStatus, 0)
+        XCTAssertTrue(errorOutput.contains("willReturn"), errorOutput)
+        XCTAssertTrue(errorOutput.contains("MockSynDefaultValueRegistry.register"), errorOutput)
+    }
+
+    private func assertStrictUnstubbedResolution<Return: Equatable>(
+        member: String,
+        arguments: [Any],
+        returnType: Return.Type,
+        expected: Return,
+        expectedArgument: String,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let recorder = FailureRecorder()
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+
+        MockSynFailureReporter.setHandler { failure in
+            recorder.record(failure)
+        }
+        defer { MockSynFailureReporter.reset() }
+
+        let value = runtime.resolve(member: member, arguments: arguments, returnType: returnType)
+
+        XCTAssertEqual(value, expected, file: file, line: line)
+        XCTAssertEqual(recorder.failures.count, 1, file: file, line: line)
+        XCTAssertTrue(recorder.failures[0].message.contains(member), file: file, line: line)
+        XCTAssertTrue(recorder.failures[0].message.contains(expectedArgument), file: file, line: line)
     }
 }

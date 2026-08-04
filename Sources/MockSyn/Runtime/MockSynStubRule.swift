@@ -16,4 +16,13 @@ final class MockSynStubRule: @unchecked Sendable {
         wasUsed = true
         return try behavior.resolve(arguments)
     }
+
+    func resolveNonThrowing(_ arguments: [Any]) -> MockSynNonThrowingStubResolution {
+        let resolution = behavior.resolveNonThrowing(arguments)
+        if case .value = resolution {
+            wasUsed = true
+        }
+
+        return resolution
+    }
 }
