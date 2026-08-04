@@ -94,6 +94,7 @@ struct MockSynPeerMacro {
         context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         if let protocolDeclaration = declaration.as(ProtocolDeclSyntax.self) {
+            let lexicalExtensionAccess = lexicalExtensionAccess(context: context)
             let inheritedTypes = protocolDeclaration.mockSynInheritedTypesWithUngeneratedRequirements
             if !inheritedTypes.isEmpty {
                 context.diagnose(Diagnostic(
@@ -124,7 +125,11 @@ struct MockSynPeerMacro {
                 target: Target(
                     kind: .protocol,
                     name: protocolDeclaration.name.text,
-                    access: protocolDeclaration.modifiers.mockSynAccess,
+                    access: effectiveAccess(
+                        declarationModifiers: protocolDeclaration.modifiers,
+                        lexicalExtensionAccess: lexicalExtensionAccess
+                    ),
+                    lexicalExtensionAccess: lexicalExtensionAccess,
                     attributes: protocolDeclaration.attributes.mockSynForwardedAttributes,
                     genericParameterClause: genericConfiguration.genericParameterClause,
                     genericArgumentClause: "",
@@ -138,15 +143,17 @@ struct MockSynPeerMacro {
         }
 
         if let classDeclaration = declaration.as(ClassDeclSyntax.self) {
-            if let finalModifier = classDeclaration.modifiers.finalModifier {
+            let lexicalExtensionAccess = lexicalExtensionAccess(context: context)
+            if classDeclaration.modifiers.finalModifier != nil {
+                var replacement = classDeclaration
+                replacement.modifiers = classDeclaration.modifiers.removingFinal
+                if let leadingTrivia = classDeclaration.modifiers.leadingTriviaRemovedWithFinal {
+                    replacement.classKeyword.leadingTrivia = leadingTrivia
+                }
                 let fixIt = FixIt(
                     message: MockSynFixItMessage.removeFinal,
                     changes: [
-                        .replaceText(
-                            range: finalModifier.name.position..<finalModifier.name.endPosition,
-                            with: "",
-                            in: Syntax(classDeclaration.root)
-                        )
+                        .replace(oldNode: Syntax(classDeclaration), newNode: Syntax(replacement))
                     ]
                 )
                 context.diagnose(Diagnostic(
@@ -173,7 +180,11 @@ struct MockSynPeerMacro {
                 target: Target(
                     kind: .class,
                     name: classDeclaration.name.text,
-                    access: classDeclaration.modifiers.mockSynAccess,
+                    access: effectiveAccess(
+                        declarationModifiers: classDeclaration.modifiers,
+                        lexicalExtensionAccess: lexicalExtensionAccess
+                    ),
+                    lexicalExtensionAccess: lexicalExtensionAccess,
                     attributes: classDeclaration.attributes.mockSynForwardedAttributes,
                     genericParameterClause: classDeclaration.genericParameterClause?.description.trimmedSource ?? "",
                     genericArgumentClause: classDeclaration.genericParameterClause?.mockSynGenericArgumentClause ?? "",
@@ -204,7 +215,10 @@ struct MockSynPeerMacro {
         let resolvedAccess = options.access.resolved(for: target.access)
 
         guard resolvedAccess <= target.access else {
-            throw MockSynDiagnostic.publicAccessOnInternalDeclaration
+            throw MockSynDiagnostic.cannotWidenAccess(
+                requested: resolvedAccess,
+                declaration: target.access
+            )
         }
 
         let generatedName = options.name ?? "\(target.name)\(kind.suffix)"
@@ -213,16 +227,18 @@ struct MockSynPeerMacro {
         }
 
         let access = resolvedAccess.sourceName
+        let declarationAccess = target.lexicalExtensionAccess == resolvedAccess ? "" : "\(access) "
+        let memberAccess = resolvedAccess.generatedMemberSourceName
         let mode = options.mode.sourceName
-        let associatedTypeSource = target.associatedTypeSource(access: access)
-        let observableObjectPublisherSource = target.observableObjectPublisherSource(access: access)
-        let staticRuntimeSource = target.staticRuntimeSource(access: access, kind: kind, mode: mode)
+        let associatedTypeSource = target.associatedTypeSource(access: memberAccess)
+        let observableObjectPublisherSource = target.observableObjectPublisherSource(access: memberAccess)
+        let staticRuntimeSource = target.staticRuntimeSource(access: memberAccess, kind: kind, mode: mode)
         let memberSource = target.members
-            .map { $0.source(access: access, options: options, kind: kind, target: target, generatedName: generatedName) }
+            .map { $0.source(access: memberAccess, options: options, kind: kind, target: target, generatedName: generatedName) }
             .joined(separator: "\n\n")
-        let stubbingSource = target.stubbingSource(access: access, generatedName: generatedName)
-        let staticStubbingSource = target.staticStubbingSource(access: access, generatedName: generatedName)
-        let initializerSource = target.primaryInitializerSource(access: access, kind: kind, mode: mode)
+        let stubbingSource = target.stubbingSource(access: memberAccess, generatedName: generatedName)
+        let staticStubbingSource = target.staticStubbingSource(access: memberAccess, generatedName: generatedName)
+        let initializerSource = target.primaryInitializerSource(access: memberAccess, kind: kind, mode: mode)
         let generatedMembers = memberSource.isEmpty
             ? ""
             : "\(initializerSource.isEmpty ? "" : "\n\n")\(memberSource)"
@@ -231,12 +247,12 @@ struct MockSynPeerMacro {
         if kind == .spy {
             declarationSource = """
             #if MOCKSYN_ENABLE
-            \(target.attributes)\(access) final class \(generatedName)\(target.genericParameterClause): \(target.inheritedTypeName)\(target.genericWhereClause) {
+            \(target.attributes)\(declarationAccess)final class \(generatedName)\(target.genericParameterClause): \(target.inheritedTypeName)\(target.genericWhereClause) {
             \(associatedTypeSource)\
             \(staticRuntimeSource)\
             \(observableObjectPublisherSource)\
-              \(access) let __mockSyn: MockSynRuntime
-              \(access) let __mockSynWrapped: \(target.wrappedTypeName)
+              \(memberAccess) let __mockSyn: MockSynRuntime
+              \(memberAccess) let __mockSynWrapped: \(target.wrappedTypeName)
 
             \(initializerSource)\(staticStubbingSource)\(stubbingSource)\(generatedMembers)
             }
@@ -245,11 +261,11 @@ struct MockSynPeerMacro {
         } else {
             declarationSource = """
             #if MOCKSYN_ENABLE
-            \(target.attributes)\(access) final class \(generatedName)\(target.genericParameterClause): \(target.inheritedTypeName)\(target.genericWhereClause) {
+            \(target.attributes)\(declarationAccess)final class \(generatedName)\(target.genericParameterClause): \(target.inheritedTypeName)\(target.genericWhereClause) {
             \(associatedTypeSource)\
             \(staticRuntimeSource)\
             \(observableObjectPublisherSource)\
-              \(access) let __mockSyn: MockSynRuntime
+              \(memberAccess) let __mockSyn: MockSynRuntime
 
             \(initializerSource)\(staticStubbingSource)\(stubbingSource)\(generatedMembers)
             }
@@ -258,5 +274,33 @@ struct MockSynPeerMacro {
         }
 
         return [DeclSyntax(stringLiteral: declarationSource)]
+    }
+
+    private func effectiveAccess(
+        declarationModifiers: DeclModifierListSyntax,
+        lexicalExtensionAccess: MockSynGeneratedAccess?
+    ) -> MockSynGeneratedAccess {
+        if let explicitAccess = declarationModifiers.mockSynExplicitAccess {
+            return explicitAccess
+        }
+
+        return lexicalExtensionAccess ?? .internal
+    }
+
+    private func lexicalExtensionAccess(
+        context: some MacroExpansionContext
+    ) -> MockSynGeneratedAccess? {
+        #if compiler(>=6.0)
+        for lexicalNode in context.lexicalContext {
+            guard let extensionDeclaration = lexicalNode.as(ExtensionDeclSyntax.self),
+                  let extensionAccess = extensionDeclaration.modifiers.mockSynExplicitAccess else {
+                continue
+            }
+
+            return extensionAccess
+        }
+        #endif
+
+        return nil
     }
 }

@@ -2,6 +2,7 @@
 *.profraw
 /.build
 /Packages
+/Package.resolved
 xcuserdata/
 DerivedData/
 .swiftpm/configuration/registries.json

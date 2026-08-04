@@ -4,6 +4,7 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 
 struct GeneratedInitializer {
+    let access: MockSynGeneratedAccess
     let optionalMark: String
     let parameterClause: String
     let callArguments: String
@@ -12,7 +13,7 @@ struct GeneratedInitializer {
 
     func source(access: String, options: MockSynMacroOptions, kind: MockSynPeerMacro.Kind, target: Target) -> String {
         if target.kind == .class {
-            return classSource(access: access, options: options, kind: kind, target: target)
+            return classSource(access: self.access.sourceName, options: options, kind: kind, target: target)
         }
 
         return """

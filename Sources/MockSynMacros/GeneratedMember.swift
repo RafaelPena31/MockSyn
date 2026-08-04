@@ -39,51 +39,51 @@ enum GeneratedMember {
         }
     }
 
-    func stubbingSource(access: String, generatedName: String) -> String? {
+    func stubbingSource(access: String, targetKind: TargetKind, generatedName: String) -> String? {
         switch self {
         case .initializer:
             return nil
         case .function(let function):
-            return function.stubbingSource(access: access, generatedName: generatedName)
+            return function.stubbingSource(access: access, targetKind: targetKind, generatedName: generatedName)
         case .property(let property):
-            return property.stubbingSource(access: access)
+            return property.stubbingSource(access: access, targetKind: targetKind)
         case .subscriptMember(let subscriptMember):
-            return subscriptMember.stubbingSource(access: access)
+            return subscriptMember.stubbingSource(access: access, targetKind: targetKind)
         }
     }
 
-    func staticStubbingSource(access: String, generatedName: String) -> String? {
+    func staticStubbingSource(access: String, targetKind: TargetKind, generatedName: String) -> String? {
         switch self {
         case .initializer, .subscriptMember:
             return nil
         case .function(let function):
-            return function.staticStubbingSource(access: access, generatedName: generatedName)
+            return function.staticStubbingSource(access: access, targetKind: targetKind, generatedName: generatedName)
         case .property(let property):
-            return property.staticStubbingSource(access: access)
+            return property.staticStubbingSource(access: access, targetKind: targetKind)
         }
     }
 
-    func verificationSource(access: String, generatedName: String) -> String? {
+    func verificationSource(access: String, targetKind: TargetKind, generatedName: String) -> String? {
         switch self {
         case .initializer:
             return nil
         case .function(let function):
-            return function.verificationSource(access: access, generatedName: generatedName)
+            return function.verificationSource(access: access, targetKind: targetKind, generatedName: generatedName)
         case .property(let property):
-            return property.verificationSource(access: access)
+            return property.verificationSource(access: access, targetKind: targetKind)
         case .subscriptMember(let subscriptMember):
-            return subscriptMember.verificationSource(access: access)
+            return subscriptMember.verificationSource(access: access, targetKind: targetKind)
         }
     }
 
-    func staticVerificationSource(access: String, generatedName: String) -> String? {
+    func staticVerificationSource(access: String, targetKind: TargetKind, generatedName: String) -> String? {
         switch self {
         case .initializer, .subscriptMember:
             return nil
         case .function(let function):
-            return function.staticVerificationSource(access: access, generatedName: generatedName)
+            return function.staticVerificationSource(access: access, targetKind: targetKind, generatedName: generatedName)
         case .property(let property):
-            return property.staticVerificationSource(access: access)
+            return property.staticVerificationSource(access: access, targetKind: targetKind)
         }
     }
 }

@@ -42,7 +42,7 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
 
     static let invalidAccess = MockSynDiagnostic(
         id: "invalidAccess",
-        message: "MockSyn access must be one of: internal, public, package, fileprivate, private"
+        message: "MockSyn access must be one of: inherited, internal, public, package, fileprivate, private"
     )
 
     static let invalidMode = MockSynDiagnostic(
@@ -50,10 +50,15 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
         message: "MockSyn mode must be one of: strict, relaxed"
     )
 
-    static let publicAccessOnInternalDeclaration = MockSynDiagnostic(
-        id: "publicAccessOnInternalDeclaration",
-        message: "MockSyn cannot generate a public double for an internal declaration"
-    )
+    static func cannotWidenAccess(
+        requested: MockSynGeneratedAccess,
+        declaration: MockSynGeneratedAccess
+    ) -> MockSynDiagnostic {
+        MockSynDiagnostic(
+            id: "cannotWidenAccess",
+            message: "MockSyn cannot generate \(requested.sourceName) access for a declaration with \(declaration.sourceName) access"
+        )
+    }
 
     static let unsupportedOperatorRequirement = MockSynDiagnostic(
         id: "unsupportedOperatorRequirement",

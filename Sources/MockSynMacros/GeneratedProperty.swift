@@ -5,6 +5,7 @@ import SwiftSyntaxMacros
 
 struct GeneratedProperty {
     let attributes: String
+    let access: MockSynGeneratedAccess
     let name: String
     let type: String
     let isStatic: Bool
@@ -12,6 +13,7 @@ struct GeneratedProperty {
     let getterEffectSpecifiers: String
 
     func source(access: String, kind: MockSynPeerMacro.Kind, target: Target) -> String {
+        let access = resolvedAccess(generatedAccess: access, targetKind: target.kind)
         let declarationPrefix = target.kind == .class && !isStatic ? "override " : ""
         let staticPrefix = target.kind == .protocol && isStatic ? "static " : ""
         if isStatic {
@@ -63,20 +65,20 @@ struct GeneratedProperty {
         return "__mockSyn.resolve(member: \"\(name).get\", arguments: [], returnType: \(type).self\(fallback))"
     }
 
-    func stubbingSource(access: String) -> String? {
+    func stubbingSource(access: String, targetKind: TargetKind) -> String? {
         guard !isStatic else {
             return nil
         }
 
-        return propertyStubbingSource(access: access)
+        return propertyStubbingSource(access: resolvedAccess(generatedAccess: access, targetKind: targetKind))
     }
 
-    func staticStubbingSource(access: String) -> String? {
+    func staticStubbingSource(access: String, targetKind: TargetKind) -> String? {
         guard isStatic else {
             return nil
         }
 
-        return propertyStubbingSource(access: access)
+        return propertyStubbingSource(access: resolvedAccess(generatedAccess: access, targetKind: targetKind))
     }
 
     private func propertyStubbingSource(access: String) -> String {
@@ -98,20 +100,20 @@ struct GeneratedProperty {
         """
     }
 
-    func verificationSource(access: String) -> String? {
+    func verificationSource(access: String, targetKind: TargetKind) -> String? {
         guard !isStatic else {
             return nil
         }
 
-        return propertyVerificationSource(access: access)
+        return propertyVerificationSource(access: resolvedAccess(generatedAccess: access, targetKind: targetKind))
     }
 
-    func staticVerificationSource(access: String) -> String? {
+    func staticVerificationSource(access: String, targetKind: TargetKind) -> String? {
         guard isStatic else {
             return nil
         }
 
-        return propertyVerificationSource(access: access)
+        return propertyVerificationSource(access: resolvedAccess(generatedAccess: access, targetKind: targetKind))
     }
 
     private func propertyVerificationSource(access: String) -> String {
@@ -129,6 +131,10 @@ struct GeneratedProperty {
             }
         """
     }
+
+    private func resolvedAccess(generatedAccess: String, targetKind: TargetKind) -> String {
+        targetKind == .class ? access.sourceName : generatedAccess
+    }
 }
 
 
@@ -144,6 +150,7 @@ extension GeneratedProperty {
 
         self.init(
             attributes: declaration.attributes.mockSynForwardedAttributes,
+            access: declaration.modifiers.mockSynAccess,
             name: pattern.identifier.text,
             type: type,
             isStatic: declaration.modifiers.containsStatic,

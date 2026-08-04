@@ -5,6 +5,7 @@ import SwiftSyntaxMacros
 
 struct GeneratedSubscript {
     let attributes: String
+    let access: MockSynGeneratedAccess
     let genericParameterClause: String
     let parameterClause: String
     let callArguments: String
@@ -16,6 +17,7 @@ struct GeneratedSubscript {
     let getterEffectSpecifiers: String
 
     func source(access: String, kind: MockSynPeerMacro.Kind, target: Target) -> String {
+        let access = resolvedAccess(generatedAccess: access, targetKind: target.kind)
         let declarationPrefix = target.kind == .class ? "override " : ""
         let arguments = "[\(argumentValues)]"
         let callPrefix = getterEffectSpecifiers.callPrefix
@@ -41,7 +43,8 @@ struct GeneratedSubscript {
         """
     }
 
-    func stubbingSource(access: String) -> String? {
+    func stubbingSource(access: String, targetKind: TargetKind) -> String? {
+        let access = resolvedAccess(generatedAccess: access, targetKind: targetKind)
         let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
         if hasSetter {
             return """
@@ -62,7 +65,8 @@ struct GeneratedSubscript {
         """
     }
 
-    func verificationSource(access: String) -> String? {
+    func verificationSource(access: String, targetKind: TargetKind) -> String? {
+        let access = resolvedAccess(generatedAccess: access, targetKind: targetKind)
         let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
         guard hasSetter else {
             return """
@@ -93,5 +97,9 @@ struct GeneratedSubscript {
 
     private var stubParameterClause: String {
         "(\(stubParameters.map { $0.matcherParameterSource(generatedName: "Self") }.joined(separator: ", ")))"
+    }
+
+    private func resolvedAccess(generatedAccess: String, targetKind: TargetKind) -> String {
+        targetKind == .class ? access.sourceName : generatedAccess
     }
 }

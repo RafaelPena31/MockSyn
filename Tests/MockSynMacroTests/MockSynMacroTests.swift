@@ -20,10 +20,25 @@ extension MockSynMacroTests {
         _ source: String,
         expandedSource: String,
         diagnostics: [DiagnosticSpec] = [],
+        applyFixIts: [String]? = nil,
+        fixedSource: String? = nil,
         file: StaticString = #filePath,
         line: UInt = #line
     ) {
         #if canImport(MockSynMacros)
+        #if compiler(>=6.0)
+        assertMacroExpansion(
+            source,
+            expandedSource: expandedSource,
+            diagnostics: diagnostics,
+            macros: testMacros,
+            applyFixIts: applyFixIts,
+            fixedSource: fixedSource,
+            indentationWidth: .spaces(2),
+            file: file,
+            line: line
+        )
+        #else
         assertMacroExpansion(
             source,
             expandedSource: expandedSource,
@@ -33,6 +48,7 @@ extension MockSynMacroTests {
             file: file,
             line: line
         )
+        #endif
         #else
         XCTFail("macros are only supported when running tests for the host platform", file: file, line: line)
         #endif

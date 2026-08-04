@@ -127,9 +127,9 @@ extension MockSynMacroTests {
 
               #if MOCKSYN_ENABLE
               private final class UserServiceMock: UserService {
-                private let __mockSyn: MockSynRuntime
+                fileprivate let __mockSyn: MockSynRuntime
 
-                private init(mode: MockSynMode = .strict) {
+                fileprivate init(mode: MockSynMode = .strict) {
                   self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
                 }
               }

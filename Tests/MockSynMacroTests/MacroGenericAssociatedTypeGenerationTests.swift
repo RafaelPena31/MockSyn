@@ -242,52 +242,52 @@ extension MockSynMacroTests {
               #if MOCKSYN_ENABLE
               private final class RepositoryMock<Entity>: Repository {
                 fileprivate typealias Entity = Entity
-                private let __mockSyn: MockSynRuntime
+                fileprivate let __mockSyn: MockSynRuntime
 
-                private init(mode: MockSynMode = .strict) {
+                fileprivate init(mode: MockSynMode = .strict) {
                   self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
                 }
-                private var given: __MockSynGiven {
+                fileprivate var given: __MockSynGiven {
                   __MockSynGiven(__mockSyn: __mockSyn)
                 }
 
-                private var when: __MockSynGiven {
+                fileprivate var when: __MockSynGiven {
                   given
                 }
 
-                private var verify: __MockSynVerify {
+                fileprivate var verify: __MockSynVerify {
                   __MockSynVerify(__mockSyn: __mockSyn)
                 }
 
-                private func confirmVerified() throws {
+                fileprivate func confirmVerified() throws {
                   try __mockSyn.confirmVerified()
                 }
 
-                private func checkUnnecessaryStubs() throws {
+                fileprivate func checkUnnecessaryStubs() throws {
                   try __mockSyn.checkUnnecessaryStubs()
                 }
 
-                private func reset(_ scope: MockSynResetScope = .all) {
+                fileprivate func reset(_ scope: MockSynResetScope = .all) {
                   __mockSyn.reset(scope)
                 }
 
-                private struct __MockSynGiven {
-                  private let __mockSyn: MockSynRuntime
+                fileprivate struct __MockSynGiven {
+                  fileprivate let __mockSyn: MockSynRuntime
 
-                  private func load() -> MockSynNonThrowingStubBuilder<Entity> {
+                  fileprivate func load() -> MockSynNonThrowingStubBuilder<Entity> {
                     MockSynNonThrowingStubBuilder<Entity>(runtime: __mockSyn, member: "load()", matchers: [])
                   }
                 }
 
-                private struct __MockSynVerify {
-                  private let __mockSyn: MockSynRuntime
+                fileprivate struct __MockSynVerify {
+                  fileprivate let __mockSyn: MockSynRuntime
 
-                  private func load() -> MockSynVerification {
+                  fileprivate func load() -> MockSynVerification {
                     MockSynVerification(runtime: __mockSyn, member: "load()", matchers: [])
                   }
                 }
 
-                private func load() -> Entity {
+                fileprivate func load() -> Entity {
                   return __mockSyn.resolve(member: "load()", arguments: [], returnType: Entity.self)
                 }
               }

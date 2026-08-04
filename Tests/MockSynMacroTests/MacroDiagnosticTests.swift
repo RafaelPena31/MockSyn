@@ -198,7 +198,13 @@ extension MockSynMacroTests {
                         FixItSpec(message: "Remove 'final'")
                     ]
                 )
-            ]
+            ],
+            applyFixIts: ["Remove 'final'"],
+            fixedSource: """
+              @Mocking
+              class UserService {
+              }
+              """
         )
     }
 
@@ -279,7 +285,16 @@ extension MockSynMacroTests {
                         FixItSpec(message: "Remove 'final'")
                     ]
                 )
-            ]
+            ],
+            applyFixIts: ["Remove 'final'"],
+            fixedSource: """
+              @Mocking
+              class UserService {
+                  func load() -> String {
+                      "real"
+                  }
+              }
+              """
         )
     }
 
@@ -327,7 +342,7 @@ extension MockSynMacroTests {
               """,
             diagnostics: [
                 DiagnosticSpec(
-                    message: "MockSyn cannot generate a public double for an internal declaration",
+                    message: "MockSyn cannot generate public access for a declaration with internal access",
                     line: 1,
                     column: 1,
                     severity: .error
@@ -349,7 +364,7 @@ extension MockSynMacroTests {
               """,
             diagnostics: [
                 DiagnosticSpec(
-                    message: "MockSyn cannot generate a public double for an internal declaration",
+                    message: "MockSyn cannot generate public access for a declaration with internal access",
                     line: 1,
                     column: 1,
                     severity: .error
@@ -371,7 +386,7 @@ extension MockSynMacroTests {
               """,
             diagnostics: [
                 DiagnosticSpec(
-                    message: "MockSyn access must be one of: internal, public, package, fileprivate, private",
+                    message: "MockSyn access must be one of: inherited, internal, public, package, fileprivate, private",
                     line: 1,
                     column: 1,
                     severity: .error
@@ -393,7 +408,7 @@ extension MockSynMacroTests {
               """,
             diagnostics: [
                 DiagnosticSpec(
-                    message: "MockSyn access must be one of: internal, public, package, fileprivate, private",
+                    message: "MockSyn access must be one of: inherited, internal, public, package, fileprivate, private",
                     line: 1,
                     column: 1,
                     severity: .error

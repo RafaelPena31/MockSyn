@@ -7,6 +7,7 @@ struct Target {
     let kind: TargetKind
     let name: String
     let access: MockSynGeneratedAccess
+    let lexicalExtensionAccess: MockSynGeneratedAccess?
     let attributes: String
     let genericParameterClause: String
     let genericArgumentClause: String
@@ -20,6 +21,7 @@ struct Target {
         kind: TargetKind,
         name: String,
         access: MockSynGeneratedAccess,
+        lexicalExtensionAccess: MockSynGeneratedAccess?,
         attributes: String,
         genericParameterClause: String,
         genericArgumentClause: String,
@@ -32,6 +34,7 @@ struct Target {
         self.kind = kind
         self.name = name
         self.access = access
+        self.lexicalExtensionAccess = lexicalExtensionAccess
         self.attributes = attributes
         self.genericParameterClause = genericParameterClause
         self.genericArgumentClause = genericArgumentClause
@@ -78,6 +81,8 @@ struct Target {
         if kind == .class, hasInitializerMembers {
             return ""
         }
+
+        let access = kind == .class ? MockSynGeneratedAccess.internal.sourceName : access
 
         if doubleKind == .spy {
             let superInitLine = kind == .class ? "\n    super.init()" : ""
@@ -140,10 +145,10 @@ struct Target {
 
     func staticStubbingSource(access: String, generatedName: String) -> String {
         let stubbingMemberSources = members
-            .compactMap { $0.staticStubbingSource(access: access, generatedName: generatedName) }
+            .compactMap { $0.staticStubbingSource(access: access, targetKind: kind, generatedName: generatedName) }
             .joined(separator: "\n\n")
         let verificationMemberSources = members
-            .compactMap { $0.staticVerificationSource(access: access, generatedName: generatedName) }
+            .compactMap { $0.staticVerificationSource(access: access, targetKind: kind, generatedName: generatedName) }
             .joined(separator: "\n\n")
 
         guard !stubbingMemberSources.isEmpty || !verificationMemberSources.isEmpty else {
@@ -192,10 +197,10 @@ struct Target {
 
     func stubbingSource(access: String, generatedName: String) -> String {
         let stubbingMemberSources = members
-            .compactMap { $0.stubbingSource(access: access, generatedName: generatedName) }
+            .compactMap { $0.stubbingSource(access: access, targetKind: kind, generatedName: generatedName) }
             .joined(separator: "\n\n")
         let verificationMemberSources = members
-            .compactMap { $0.verificationSource(access: access, generatedName: generatedName) }
+            .compactMap { $0.verificationSource(access: access, targetKind: kind, generatedName: generatedName) }
             .joined(separator: "\n\n")
 
         guard !stubbingMemberSources.isEmpty || !verificationMemberSources.isEmpty else {

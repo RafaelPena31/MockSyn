@@ -11,6 +11,12 @@ dependencies.append(.package(
     url: "https://github.com/swiftlang/swift-syntax.git",
     exact: "604.0.0-prerelease-2026-06-05"
 ))
+#elseif compiler(>=6.3)
+dependencies.append(.package(url: "https://github.com/swiftlang/swift-syntax.git", from: "603.0.0"))
+#elseif compiler(>=6.2)
+dependencies.append(.package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"))
+#elseif compiler(>=6.1)
+dependencies.append(.package(url: "https://github.com/swiftlang/swift-syntax.git", from: "601.0.0"))
 #elseif compiler(>=6.0)
 dependencies.append(.package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"))
 #else

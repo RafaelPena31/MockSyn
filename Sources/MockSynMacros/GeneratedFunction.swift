@@ -5,6 +5,7 @@ import SwiftSyntaxMacros
 
 struct GeneratedFunction {
     let attributes: String
+    let access: MockSynGeneratedAccess
     let name: String
     let dslName: String
     let memberKey: String?
@@ -24,6 +25,7 @@ struct GeneratedFunction {
     func disambiguatingReturnType() -> GeneratedFunction {
         GeneratedFunction(
             attributes: attributes,
+            access: access,
             name: name,
             dslName: "\(dslName)Returning\(returnType.mockSynReturnDslSuffix)",
             memberKey: "\(signatureName) -> \(returnType)",
@@ -45,6 +47,7 @@ struct GeneratedFunction {
     func renamingDsl(to dslName: String) -> GeneratedFunction {
         GeneratedFunction(
             attributes: attributes,
+            access: access,
             name: name,
             dslName: dslName,
             memberKey: memberKey,
@@ -64,6 +67,7 @@ struct GeneratedFunction {
     }
 
     func source(access: String, kind: MockSynPeerMacro.Kind, target: Target, generatedName: String) -> String {
+        let access = resolvedAccess(generatedAccess: access, targetKind: target.kind)
         let declarationPrefix = target.kind == .class && !isStatic ? "override " : ""
         let staticPrefix = target.kind == .protocol && isStatic ? "static " : ""
         let body = bodySource(kind: kind)
@@ -244,20 +248,26 @@ struct GeneratedFunction {
         memberKey ?? signatureName
     }
 
-    func stubbingSource(access: String, generatedName: String) -> String? {
+    func stubbingSource(access: String, targetKind: TargetKind, generatedName: String) -> String? {
         guard !isStatic else {
             return nil
         }
 
-        return functionStubbingSource(access: access, generatedName: generatedName)
+        return functionStubbingSource(
+            access: resolvedAccess(generatedAccess: access, targetKind: targetKind),
+            generatedName: generatedName
+        )
     }
 
-    func staticStubbingSource(access: String, generatedName: String) -> String? {
+    func staticStubbingSource(access: String, targetKind: TargetKind, generatedName: String) -> String? {
         guard isStatic else {
             return nil
         }
 
-        return functionStubbingSource(access: access, generatedName: generatedName)
+        return functionStubbingSource(
+            access: resolvedAccess(generatedAccess: access, targetKind: targetKind),
+            generatedName: generatedName
+        )
     }
 
     private func functionStubbingSource(access: String, generatedName: String) -> String {
@@ -273,20 +283,26 @@ struct GeneratedFunction {
         """
     }
 
-    func verificationSource(access: String, generatedName: String) -> String? {
+    func verificationSource(access: String, targetKind: TargetKind, generatedName: String) -> String? {
         guard !isStatic else {
             return nil
         }
 
-        return functionVerificationSource(access: access, generatedName: generatedName)
+        return functionVerificationSource(
+            access: resolvedAccess(generatedAccess: access, targetKind: targetKind),
+            generatedName: generatedName
+        )
     }
 
-    func staticVerificationSource(access: String, generatedName: String) -> String? {
+    func staticVerificationSource(access: String, targetKind: TargetKind, generatedName: String) -> String? {
         guard isStatic else {
             return nil
         }
 
-        return functionVerificationSource(access: access, generatedName: generatedName)
+        return functionVerificationSource(
+            access: resolvedAccess(generatedAccess: access, targetKind: targetKind),
+            generatedName: generatedName
+        )
     }
 
     private func functionVerificationSource(access: String, generatedName: String) -> String {
@@ -325,5 +341,9 @@ struct GeneratedFunction {
             parameter.matcherType.resolvingSelf(as: generatedName)
         } + [returnType]
         return "\(builderBase)\(suffix)<\(types.joined(separator: ", "))>"
+    }
+
+    private func resolvedAccess(generatedAccess: String, targetKind: TargetKind) -> String {
+        targetKind == .class ? access.sourceName : generatedAccess
     }
 }

@@ -35,14 +35,25 @@ enum MemberGenerator {
                 }
 
                 if targetKind == .class,
-                   let finalModifier = function.modifiers.finalModifier {
-                    diagnoseFinalMember(finalModifier, attribute: attribute, context: context)
+                   function.modifiers.finalModifier != nil {
+                    var replacement = function
+                    replacement.modifiers = function.modifiers.removingFinal
+                    if let leadingTrivia = function.modifiers.leadingTriviaRemovedWithFinal {
+                        replacement.funcKeyword.leadingTrivia = leadingTrivia
+                    }
+                    diagnoseFinalMember(
+                        oldNode: Syntax(function),
+                        newNode: Syntax(replacement),
+                        attribute: attribute,
+                        context: context
+                    )
                     isValid = false
                     continue
                 }
 
                 let generatedFunction = GeneratedFunction(
                     attributes: function.attributes.mockSynForwardedAttributes,
+                    access: function.modifiers.mockSynAccess,
                     name: function.name.text,
                     dslName: isNamedMember ? function.name.text : function.name.text.mockSynOperatorDslName,
                     memberKey: nil,
@@ -83,8 +94,18 @@ enum MemberGenerator {
                 }
 
                 if targetKind == .class,
-                   let finalModifier = property.modifiers.finalModifier {
-                    diagnoseFinalMember(finalModifier, attribute: attribute, context: context)
+                   property.modifiers.finalModifier != nil {
+                    var replacement = property
+                    replacement.modifiers = property.modifiers.removingFinal
+                    if let leadingTrivia = property.modifiers.leadingTriviaRemovedWithFinal {
+                        replacement.bindingSpecifier.leadingTrivia = leadingTrivia
+                    }
+                    diagnoseFinalMember(
+                        oldNode: Syntax(property),
+                        newNode: Syntax(replacement),
+                        attribute: attribute,
+                        context: context
+                    )
                     isValid = false
                     continue
                 }
@@ -100,6 +121,7 @@ enum MemberGenerator {
             if let subscriptDeclaration = item.decl.as(SubscriptDeclSyntax.self) {
                 generatedMembers.append(.subscriptMember(GeneratedSubscript(
                     attributes: subscriptDeclaration.attributes.mockSynForwardedAttributes,
+                    access: subscriptDeclaration.modifiers.mockSynAccess,
                     genericParameterClause: subscriptDeclaration.genericParameterClause?.description.trimmedSource ?? "",
                     parameterClause: subscriptDeclaration.parameterClause.description.trimmedSource,
                     callArguments: subscriptDeclaration.parameterClause.subscriptCallArguments,
@@ -128,6 +150,7 @@ enum MemberGenerator {
                 }
 
                 generatedMembers.append(.initializer(GeneratedInitializer(
+                    access: initializer.modifiers.mockSynAccess,
                     optionalMark: initializer.optionalMark?.text ?? "",
                     parameterClause: initializer.signature.parameterClause.description.trimmedSource,
                     callArguments: initializer.signature.parameterClause.callArguments,
@@ -142,18 +165,15 @@ enum MemberGenerator {
     }
 
     private static func diagnoseFinalMember(
-        _ finalModifier: DeclModifierSyntax,
+        oldNode: Syntax,
+        newNode: Syntax,
         attribute: AttributeSyntax,
         context: some MacroExpansionContext
     ) {
         let fixIt = FixIt(
             message: MockSynFixItMessage.removeFinal,
             changes: [
-                .replaceText(
-                    range: finalModifier.name.position..<finalModifier.name.endPosition,
-                    with: "",
-                    in: Syntax(finalModifier.root)
-                )
+                .replace(oldNode: oldNode, newNode: newNode)
             ]
         )
         context.diagnose(Diagnostic(

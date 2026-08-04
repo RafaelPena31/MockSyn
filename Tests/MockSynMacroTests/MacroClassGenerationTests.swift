@@ -392,7 +392,7 @@ extension MockSynMacroTests {
               public final class UserServiceMock: UserService {
                 public let __mockSyn: MockSynRuntime
 
-                public init(mode: MockSynMode = .strict) {
+                internal init(mode: MockSynMode = .strict) {
                   self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
                   super.init()
                 }
@@ -417,7 +417,7 @@ extension MockSynMacroTests {
               public final class UserServiceMock: UserService {
                 public let __mockSyn: MockSynRuntime
 
-                public init(mode: MockSynMode = .strict) {
+                internal init(mode: MockSynMode = .strict) {
                   self.__mockSyn = MockSynRuntime(kind: .mock, mode: mode)
                   super.init()
                 }

@@ -15,6 +15,10 @@ enum MockSynGeneratedAccess: String, Comparable {
         rawValue
     }
 
+    var generatedMemberSourceName: String {
+        self == .private ? MockSynGeneratedAccess.fileprivate.rawValue : rawValue
+    }
+
     private var rank: Int {
         switch self {
         case .private:
@@ -132,31 +136,44 @@ extension ExprSyntax {
 }
 
 extension DeclModifierListSyntax {
+    var mockSynExplicitAccess: MockSynGeneratedAccess? {
+        for modifier in self {
+            switch modifier.name.tokenKind {
+            case .keyword(.public), .keyword(.open):
+                return .public
+            case .keyword(.package):
+                return .package
+            case .keyword(.fileprivate):
+                return .fileprivate
+            case .keyword(.private):
+                return .private
+            case .keyword(.internal):
+                return .internal
+            default:
+                continue
+            }
+        }
+
+        return nil
+    }
+
     var mockSynAccess: MockSynGeneratedAccess {
-        if contains(where: { $0.name.tokenKind == .keyword(.public) }) {
-            return .public
-        }
-
-        if contains(where: { $0.name.tokenKind == .keyword(.open) }) {
-            return .public
-        }
-
-        if contains(where: { $0.name.tokenKind == .keyword(.package) }) {
-            return .package
-        }
-
-        if contains(where: { $0.name.tokenKind == .keyword(.fileprivate) }) {
-            return .fileprivate
-        }
-
-        if contains(where: { $0.name.tokenKind == .keyword(.private) }) {
-            return .private
-        }
-
-        return .internal
+        mockSynExplicitAccess ?? .internal
     }
 
     var finalModifier: DeclModifierSyntax? {
         first { $0.name.tokenKind == .keyword(.final) }
+    }
+
+    var removingFinal: DeclModifierListSyntax {
+        filter { $0.name.tokenKind != .keyword(.final) }
+    }
+
+    var leadingTriviaRemovedWithFinal: Trivia? {
+        guard first?.name.tokenKind == .keyword(.final) else {
+            return nil
+        }
+
+        return first?.name.leadingTrivia
     }
 }
