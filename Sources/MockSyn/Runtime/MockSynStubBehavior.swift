@@ -36,8 +36,12 @@ public struct MockSynStubBehavior<Return> {
     }
 
     /// Returns values sequentially. After the sequence is exhausted, the last value is reused.
-    public static func returns(_ values: [Return]) -> MockSynStubBehavior<Return> {
-        let sequence = MockSynReturnSequence(values: values)
+    public static func returns(_ first: Return, _ remaining: Return...) -> MockSynStubBehavior<Return> {
+        returns(first: first, remaining: remaining)
+    }
+
+    static func returns(first: Return, remaining: [Return]) -> MockSynStubBehavior<Return> {
+        let sequence = MockSynReturnSequence(first: first, remaining: remaining)
         return MockSynStubBehavior(nonThrowingResolver: { _ in
             sequence.next()
         })
@@ -99,8 +103,8 @@ private final class MockSynReturnSequence<Return>: @unchecked Sendable {
     private var index = 0
     private let lock = NSRecursiveLock()
 
-    init(values: [Return]) {
-        self.values = values
+    init(first: Return, remaining: [Return]) {
+        self.values = [first] + remaining
     }
 
     func next() -> Return {

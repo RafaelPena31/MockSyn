@@ -1,4 +1,5 @@
 import MockSyn
+import Foundation
 import XCTest
 
 @Mocking
@@ -12,6 +13,7 @@ protocol StubBuilderCapabilityService {
     subscript(throwing index: String) -> String { get throws }
 
     func doubled(_ value: Int) -> Int
+    func summed(_ first: Int, _ second: Int, _ third: Int) -> Int
     func loaded(_ value: Int) throws -> Int
     func transformed(_ operation: @escaping () throws -> Int) rethrows -> Int
 
@@ -29,6 +31,47 @@ protocol StubBuilderCapabilityService {
 }
 
 final class MockSynHigherArityStubBuilderTests: XCTestCase {
+    func testMalformedTypedBuilderMatcherCountHarness() {
+        guard ProcessInfo.processInfo.environment["MOCKSYN_CRASH_CASE"] == "typed-builder-matcher-count" else {
+            return
+        }
+
+        _ = MockSynNonThrowingStubBuilder3<Int, Int, Int, Int>(
+            runtime: MockSynRuntime(kind: .mock, mode: .strict),
+            member: "sum(_:_:_:)",
+            matchers: intMatchers(count: 2)
+        )
+    }
+
+    func testTypedBuilderInitializerRejectsWrongMatcherCountWithActionableMessage() throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        process.arguments = [
+            "xctest",
+            "-XCTest",
+            "MockSynTests.MockSynHigherArityStubBuilderTests/testMalformedTypedBuilderMatcherCountHarness",
+            Bundle(for: Self.self).bundlePath,
+        ]
+        process.environment = ProcessInfo.processInfo.environment.merging([
+            "MOCKSYN_CRASH_CASE": "typed-builder-matcher-count",
+        ]) { _, new in new }
+        process.standardOutput = Pipe()
+        let standardError = Pipe()
+        process.standardError = standardError
+
+        try process.run()
+        process.waitUntilExit()
+
+        let errorOutput = String(
+            decoding: standardError.fileHandleForReading.readDataToEndOfFile(),
+            as: UTF8.self
+        )
+        XCTAssertNotEqual(process.terminationStatus, 0)
+        XCTAssertTrue(errorOutput.contains("MockSynNonThrowingStubBuilder3"), errorOutput)
+        XCTAssertTrue(errorOutput.contains("expected 3 matcher(s)"), errorOutput)
+        XCTAssertTrue(errorOutput.contains("received 2"), errorOutput)
+    }
+
     func testThrowingCapableBuildersRunTypedClosuresForAritiesThreeThroughSix() throws {
         let runtime = MockSynRuntime(kind: .mock, mode: .strict)
 
@@ -77,6 +120,54 @@ final class MockSynHigherArityStubBuilderTests: XCTestCase {
         ) { error in
             XCTAssertEqual(error as? RuntimeStubError, .failed)
         }
+    }
+
+    func testNonThrowingBuildersRunTypedClosuresForAritiesThreeThroughSix() {
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+
+        MockSynNonThrowingStubBuilder3<Int, Int, Int, Int>(
+            runtime: runtime,
+            member: "three",
+            matchers: intMatchers(count: 3)
+        ).willRun { first, second, third in
+            first + second + third
+        }
+        MockSynNonThrowingStubBuilder4<Int, Int, Int, Int, Int>(
+            runtime: runtime,
+            member: "four",
+            matchers: intMatchers(count: 4)
+        ).willRun { first, second, third, fourth in
+            first + second + third + fourth
+        }
+        MockSynNonThrowingStubBuilder5<Int, Int, Int, Int, Int, Int>(
+            runtime: runtime,
+            member: "five",
+            matchers: intMatchers(count: 5)
+        ).willRun { first, second, third, fourth, fifth in
+            first + second + third + fourth + fifth
+        }
+        MockSynNonThrowingStubBuilder6<Int, Int, Int, Int, Int, Int, Int>(
+            runtime: runtime,
+            member: "six",
+            matchers: intMatchers(count: 6)
+        ).willRun { first, second, third, fourth, fifth, sixth in
+            first + second + third + fourth + fifth + sixth
+        }
+
+        XCTAssertEqual(runtime.resolve(member: "three", arguments: [1, 2, 3], returnType: Int.self), 6)
+        XCTAssertEqual(runtime.resolve(member: "four", arguments: [1, 2, 3, 4], returnType: Int.self), 10)
+        XCTAssertEqual(runtime.resolve(member: "five", arguments: [1, 2, 3, 4, 5], returnType: Int.self), 15)
+        XCTAssertEqual(runtime.resolve(member: "six", arguments: [1, 2, 3, 4, 5, 6], returnType: Int.self), 21)
+    }
+
+    func testGeneratedNonThrowingBuilderRunsTypedHigherArityClosure() {
+        let mock = StubBuilderCapabilityServiceMock()
+
+        mock.given.summed(.any, .any, .any).willRun { first, second, third in
+            first + second + third
+        }
+
+        XCTAssertEqual(mock.summed(3, 4, 5), 12)
     }
 
     func testRethrowingBuildersRunTypedNonThrowingClosuresForAritiesThreeThroughSix() {

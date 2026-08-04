@@ -11,8 +11,8 @@ public struct MockSynStubBuilder<Return> {
     }
 
     /// Configures one or more return values. Multiple values are returned sequentially.
-    public func willReturn(_ values: Return...) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    public func willReturn(_ first: Return, _ remaining: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(first: first, remaining: remaining))
     }
 
     /// Configures the member to throw an error.
@@ -35,14 +35,15 @@ public struct MockSynStubBuilder1<Argument, Return> {
     private let matchers: [MockSynAnyMatcher]
 
     public init(runtime: MockSynRuntime, member: String, matchers: [MockSynAnyMatcher]) {
+        mockSynValidateMatcherCount(builder: Self.self, expected: 1, actual: matchers.count)
         self.runtime = runtime
         self.member = member
         self.matchers = matchers
     }
 
     /// Configures one or more return values. Multiple values are returned sequentially.
-    public func willReturn(_ values: Return...) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    public func willReturn(_ first: Return, _ remaining: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(first: first, remaining: remaining))
     }
 
     /// Configures the member to throw an error.
@@ -53,7 +54,7 @@ public struct MockSynStubBuilder1<Argument, Return> {
     /// Configures the member to run a custom closure receiving the call argument.
     public func willRun(_ body: @escaping (Argument) throws -> Return) {
         runtime.registerStub(member: member, matchers: matchers, behavior: .runs { arguments in
-            try body(arguments[0] as! Argument)
+            try body(mockSynTypedArgument(arguments, at: 0, as: Argument.self, builder: Self.self))
         })
     }
 }
@@ -65,14 +66,15 @@ public struct MockSynStubBuilder2<FirstArgument, SecondArgument, Return> {
     private let matchers: [MockSynAnyMatcher]
 
     public init(runtime: MockSynRuntime, member: String, matchers: [MockSynAnyMatcher]) {
+        mockSynValidateMatcherCount(builder: Self.self, expected: 2, actual: matchers.count)
         self.runtime = runtime
         self.member = member
         self.matchers = matchers
     }
 
     /// Configures one or more return values. Multiple values are returned sequentially.
-    public func willReturn(_ values: Return...) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    public func willReturn(_ first: Return, _ remaining: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(first: first, remaining: remaining))
     }
 
     /// Configures the member to throw an error.
@@ -83,7 +85,10 @@ public struct MockSynStubBuilder2<FirstArgument, SecondArgument, Return> {
     /// Configures the member to run a custom closure receiving both call arguments.
     public func willRun(_ body: @escaping (FirstArgument, SecondArgument) throws -> Return) {
         runtime.registerStub(member: member, matchers: matchers, behavior: .runs { arguments in
-            try body(arguments[0] as! FirstArgument, arguments[1] as! SecondArgument)
+            try body(
+                mockSynTypedArgument(arguments, at: 0, as: FirstArgument.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 1, as: SecondArgument.self, builder: Self.self)
+            )
         })
     }
 }
@@ -101,8 +106,8 @@ public struct MockSynRethrowingStubBuilder<Return> {
     }
 
     /// Configures one or more return values. Multiple values are returned sequentially.
-    public func willReturn(_ values: Return...) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    public func willReturn(_ first: Return, _ remaining: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(first: first, remaining: remaining))
     }
 
     /// Configures the member to run a custom non-throwing closure.
@@ -120,20 +125,21 @@ public struct MockSynRethrowingStubBuilder1<Argument, Return> {
     private let matchers: [MockSynAnyMatcher]
 
     public init(runtime: MockSynRuntime, member: String, matchers: [MockSynAnyMatcher]) {
+        mockSynValidateMatcherCount(builder: Self.self, expected: 1, actual: matchers.count)
         self.runtime = runtime
         self.member = member
         self.matchers = matchers
     }
 
     /// Configures one or more return values. Multiple values are returned sequentially.
-    public func willReturn(_ values: Return...) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    public func willReturn(_ first: Return, _ remaining: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(first: first, remaining: remaining))
     }
 
     /// Configures the member to run a custom non-throwing closure receiving the call argument.
     public func willRun(_ body: @escaping (Argument) -> Return) {
         runtime.registerStub(member: member, matchers: matchers, behavior: .runsNonThrowing { arguments in
-            body(arguments[0] as! Argument)
+            body(mockSynTypedArgument(arguments, at: 0, as: Argument.self, builder: Self.self))
         })
     }
 }
@@ -145,20 +151,24 @@ public struct MockSynRethrowingStubBuilder2<FirstArgument, SecondArgument, Retur
     private let matchers: [MockSynAnyMatcher]
 
     public init(runtime: MockSynRuntime, member: String, matchers: [MockSynAnyMatcher]) {
+        mockSynValidateMatcherCount(builder: Self.self, expected: 2, actual: matchers.count)
         self.runtime = runtime
         self.member = member
         self.matchers = matchers
     }
 
     /// Configures one or more return values. Multiple values are returned sequentially.
-    public func willReturn(_ values: Return...) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    public func willReturn(_ first: Return, _ remaining: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(first: first, remaining: remaining))
     }
 
     /// Configures the member to run a custom non-throwing closure receiving both call arguments.
     public func willRun(_ body: @escaping (FirstArgument, SecondArgument) -> Return) {
         runtime.registerStub(member: member, matchers: matchers, behavior: .runsNonThrowing { arguments in
-            body(arguments[0] as! FirstArgument, arguments[1] as! SecondArgument)
+            body(
+                mockSynTypedArgument(arguments, at: 0, as: FirstArgument.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 1, as: SecondArgument.self, builder: Self.self)
+            )
         })
     }
 }

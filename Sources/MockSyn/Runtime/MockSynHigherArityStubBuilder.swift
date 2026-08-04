@@ -5,13 +5,14 @@ public struct MockSynStubBuilder3<First, Second, Third, Return> {
     private let matchers: [MockSynAnyMatcher]
 
     public init(runtime: MockSynRuntime, member: String, matchers: [MockSynAnyMatcher]) {
+        mockSynValidateMatcherCount(builder: Self.self, expected: 3, actual: matchers.count)
         self.runtime = runtime
         self.member = member
         self.matchers = matchers
     }
 
-    public func willReturn(_ values: Return...) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    public func willReturn(_ first: Return, _ remaining: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(first: first, remaining: remaining))
     }
 
     public func willThrow(_ error: Error) {
@@ -20,7 +21,11 @@ public struct MockSynStubBuilder3<First, Second, Third, Return> {
 
     public func willRun(_ body: @escaping (First, Second, Third) throws -> Return) {
         runtime.registerStub(member: member, matchers: matchers, behavior: .runs { arguments in
-            try body(arguments[0] as! First, arguments[1] as! Second, arguments[2] as! Third)
+            try body(
+                mockSynTypedArgument(arguments, at: 0, as: First.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 1, as: Second.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 2, as: Third.self, builder: Self.self)
+            )
         })
     }
 }
@@ -32,13 +37,14 @@ public struct MockSynStubBuilder4<First, Second, Third, Fourth, Return> {
     private let matchers: [MockSynAnyMatcher]
 
     public init(runtime: MockSynRuntime, member: String, matchers: [MockSynAnyMatcher]) {
+        mockSynValidateMatcherCount(builder: Self.self, expected: 4, actual: matchers.count)
         self.runtime = runtime
         self.member = member
         self.matchers = matchers
     }
 
-    public func willReturn(_ values: Return...) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    public func willReturn(_ first: Return, _ remaining: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(first: first, remaining: remaining))
     }
 
     public func willThrow(_ error: Error) {
@@ -48,10 +54,10 @@ public struct MockSynStubBuilder4<First, Second, Third, Fourth, Return> {
     public func willRun(_ body: @escaping (First, Second, Third, Fourth) throws -> Return) {
         runtime.registerStub(member: member, matchers: matchers, behavior: .runs { arguments in
             try body(
-                arguments[0] as! First,
-                arguments[1] as! Second,
-                arguments[2] as! Third,
-                arguments[3] as! Fourth
+                mockSynTypedArgument(arguments, at: 0, as: First.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 1, as: Second.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 2, as: Third.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 3, as: Fourth.self, builder: Self.self)
             )
         })
     }
@@ -64,13 +70,14 @@ public struct MockSynStubBuilder5<First, Second, Third, Fourth, Fifth, Return> {
     private let matchers: [MockSynAnyMatcher]
 
     public init(runtime: MockSynRuntime, member: String, matchers: [MockSynAnyMatcher]) {
+        mockSynValidateMatcherCount(builder: Self.self, expected: 5, actual: matchers.count)
         self.runtime = runtime
         self.member = member
         self.matchers = matchers
     }
 
-    public func willReturn(_ values: Return...) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    public func willReturn(_ first: Return, _ remaining: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(first: first, remaining: remaining))
     }
 
     public func willThrow(_ error: Error) {
@@ -80,11 +87,11 @@ public struct MockSynStubBuilder5<First, Second, Third, Fourth, Fifth, Return> {
     public func willRun(_ body: @escaping (First, Second, Third, Fourth, Fifth) throws -> Return) {
         runtime.registerStub(member: member, matchers: matchers, behavior: .runs { arguments in
             try body(
-                arguments[0] as! First,
-                arguments[1] as! Second,
-                arguments[2] as! Third,
-                arguments[3] as! Fourth,
-                arguments[4] as! Fifth
+                mockSynTypedArgument(arguments, at: 0, as: First.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 1, as: Second.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 2, as: Third.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 3, as: Fourth.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 4, as: Fifth.self, builder: Self.self)
             )
         })
     }
@@ -97,13 +104,14 @@ public struct MockSynStubBuilder6<First, Second, Third, Fourth, Fifth, Sixth, Re
     private let matchers: [MockSynAnyMatcher]
 
     public init(runtime: MockSynRuntime, member: String, matchers: [MockSynAnyMatcher]) {
+        mockSynValidateMatcherCount(builder: Self.self, expected: 6, actual: matchers.count)
         self.runtime = runtime
         self.member = member
         self.matchers = matchers
     }
 
-    public func willReturn(_ values: Return...) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    public func willReturn(_ first: Return, _ remaining: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(first: first, remaining: remaining))
     }
 
     public func willThrow(_ error: Error) {
@@ -113,12 +121,12 @@ public struct MockSynStubBuilder6<First, Second, Third, Fourth, Fifth, Sixth, Re
     public func willRun(_ body: @escaping (First, Second, Third, Fourth, Fifth, Sixth) throws -> Return) {
         runtime.registerStub(member: member, matchers: matchers, behavior: .runs { arguments in
             try body(
-                arguments[0] as! First,
-                arguments[1] as! Second,
-                arguments[2] as! Third,
-                arguments[3] as! Fourth,
-                arguments[4] as! Fifth,
-                arguments[5] as! Sixth
+                mockSynTypedArgument(arguments, at: 0, as: First.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 1, as: Second.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 2, as: Third.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 3, as: Fourth.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 4, as: Fifth.self, builder: Self.self),
+                mockSynTypedArgument(arguments, at: 5, as: Sixth.self, builder: Self.self)
             )
         })
     }
@@ -136,8 +144,8 @@ public struct MockSynStubBuilderReturnOnly<Return> {
         self.matchers = matchers
     }
 
-    public func willReturn(_ values: Return...) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(values))
+    public func willReturn(_ first: Return, _ remaining: Return...) {
+        runtime.registerStub(member: member, matchers: matchers, behavior: .returns(first: first, remaining: remaining))
     }
 
     public func willThrow(_ error: Error) {

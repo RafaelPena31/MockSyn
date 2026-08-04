@@ -9,6 +9,46 @@ private struct RuntimeResolutionDomainValue: Equatable {
 private let runtimeFailureMarker = "MOCKSYN_FAILURE_REPORTED"
 
 extension MockSynPublicAPITests {
+    func testBuilderWillReturnResolvesOneAndMultipleValuesThenRepeatsLast() {
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+
+        MockSynNonThrowingStubBuilder<Int>(
+            runtime: runtime,
+            member: "singleBuilder()"
+        ).willReturn(7)
+        MockSynNonThrowingStubBuilder<Int>(
+            runtime: runtime,
+            member: "multipleBuilder()"
+        ).willReturn(10, 20)
+
+        XCTAssertEqual(runtime.resolve(member: "singleBuilder()", arguments: [], returnType: Int.self), 7)
+        XCTAssertEqual(runtime.resolve(member: "singleBuilder()", arguments: [], returnType: Int.self), 7)
+        XCTAssertEqual(runtime.resolve(member: "multipleBuilder()", arguments: [], returnType: Int.self), 10)
+        XCTAssertEqual(runtime.resolve(member: "multipleBuilder()", arguments: [], returnType: Int.self), 20)
+        XCTAssertEqual(runtime.resolve(member: "multipleBuilder()", arguments: [], returnType: Int.self), 20)
+    }
+
+    func testReturnBehaviorResolvesFirstAndRemainingValuesThenRepeatsLast() {
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+
+        runtime.registerStub(
+            member: "single()",
+            matchers: [],
+            behavior: MockSynStubBehavior<Int>.returns(7)
+        )
+        runtime.registerStub(
+            member: "multiple()",
+            matchers: [],
+            behavior: MockSynStubBehavior<Int>.returns(10, 20)
+        )
+
+        XCTAssertEqual(runtime.resolve(member: "single()", arguments: [], returnType: Int.self), 7)
+        XCTAssertEqual(runtime.resolve(member: "single()", arguments: [], returnType: Int.self), 7)
+        XCTAssertEqual(runtime.resolve(member: "multiple()", arguments: [], returnType: Int.self), 10)
+        XCTAssertEqual(runtime.resolve(member: "multiple()", arguments: [], returnType: Int.self), 20)
+        XCTAssertEqual(runtime.resolve(member: "multiple()", arguments: [], returnType: Int.self), 20)
+    }
+
     func testRuntimeUsesMatchingMatcherAndFallbacks() throws {
         let runtime = MockSynRuntime(kind: .mock, mode: .strict)
 
@@ -117,6 +157,9 @@ extension MockSynPublicAPITests {
         XCTAssertEqual(try runtime.resolveRethrowing(member: "product(_:_:)", arguments: [2, 5], returnType: Int.self) {
             throw RuntimeStubError.failed
         }, 10)
+        XCTAssertEqual(try runtime.resolveRethrowing(member: "product(_:_:)", arguments: [2, 5], returnType: Int.self) {
+            throw RuntimeStubError.failed
+        }, 20)
         XCTAssertEqual(try runtime.resolveRethrowing(member: "product(_:_:)", arguments: [2, 5], returnType: Int.self) {
             throw RuntimeStubError.failed
         }, 20)
