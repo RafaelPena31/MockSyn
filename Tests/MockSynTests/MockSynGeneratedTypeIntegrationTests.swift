@@ -365,5 +365,24 @@ protocol QualifiedSendableService: Swift.Sendable {
     func refresh()
 }
 
+protocol InheritedRequirementService {
+    func inheritedValue() -> String
+}
+
+@Mocking
+protocol RedeclaredInheritedRequirementService: InheritedRequirementService {
+    func inheritedValue() -> String
+}
+
 final class MockSynGeneratedTypeIntegrationTests: XCTestCase {
+    func testRedeclaredInheritedRequirementGeneratesAndCompiles() {
+        #if MOCKSYN_ENABLE
+        let mock = RedeclaredInheritedRequirementServiceMock()
+        mock.given.inheritedValue().willReturn("generated")
+
+        XCTAssertEqual(mock.inheritedValue(), "generated")
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
 }

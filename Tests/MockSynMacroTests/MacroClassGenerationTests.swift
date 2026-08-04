@@ -28,7 +28,15 @@ extension MockSynMacroTests {
                 }
               }
               #endif
-              """
+              """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "@Mocking does not generate requirements inherited from UserService. Redeclare required members in the annotated protocol body or use a local mirror protocol.",
+                    line: 4,
+                    column: 1,
+                    severity: .warning
+                )
+            ]
         )
     }
 

@@ -19,6 +19,17 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
         )
     }
 
+    static func inheritedProtocolRequirementsNotGenerated(
+        macroName: String,
+        inheritedTypes: [String]
+    ) -> MockSynDiagnostic {
+        MockSynDiagnostic(
+            id: "inheritedProtocolRequirementsNotGenerated",
+            message: "@\(macroName) does not generate requirements inherited from \(inheritedTypes.joined(separator: ", ")). Redeclare required members in the annotated protocol body or use a local mirror protocol.",
+            severity: .warning
+        )
+    }
+
     static let finalClass = MockSynDiagnostic(
         id: "finalClass",
         message: "MockSyn cannot mock a pure Swift final class directly. Extract a protocol and apply @Mocking to the protocol."

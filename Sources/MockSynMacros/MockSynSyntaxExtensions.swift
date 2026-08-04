@@ -3,6 +3,39 @@ import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxMacros
 
+private let mockSynMarkerOrDefaultSatisfiedProtocolTerminalIdentifiers: Set<String> = [
+    "AnyObject",
+    "ObservableObject",
+    "Sendable",
+]
+
+extension ProtocolDeclSyntax {
+    var mockSynInheritedTypesWithUngeneratedRequirements: [String] {
+        inheritanceClause?.inheritedTypes.compactMap { inheritedType in
+            let type = inheritedType.type
+            guard !mockSynMarkerOrDefaultSatisfiedProtocolTerminalIdentifiers.contains(type.mockSynTerminalIdentifier) else {
+                return nil
+            }
+
+            return type.description.trimmedSource
+        } ?? []
+    }
+}
+
+private extension TypeSyntax {
+    var mockSynTerminalIdentifier: String {
+        if let identifierType = `as`(IdentifierTypeSyntax.self) {
+            return identifierType.name.text
+        }
+
+        if let memberType = `as`(MemberTypeSyntax.self) {
+            return memberType.name.text
+        }
+
+        return ""
+    }
+}
+
 extension DeclModifierListSyntax {
     var containsStatic: Bool {
         contains { modifier in

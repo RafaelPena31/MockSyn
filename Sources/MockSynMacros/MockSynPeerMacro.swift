@@ -94,6 +94,17 @@ struct MockSynPeerMacro {
         context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         if let protocolDeclaration = declaration.as(ProtocolDeclSyntax.self) {
+            let inheritedTypes = protocolDeclaration.mockSynInheritedTypesWithUngeneratedRequirements
+            if !inheritedTypes.isEmpty {
+                context.diagnose(Diagnostic(
+                    node: Syntax(attribute),
+                    message: MockSynDiagnostic.inheritedProtocolRequirementsNotGenerated(
+                        macroName: kind.macroName,
+                        inheritedTypes: inheritedTypes
+                    )
+                ))
+            }
+
             let associatedTypes = protocolDeclaration.associatedTypeBindings
             let genericConfiguration = ProtocolGenericConfiguration(
                 protocolName: protocolDeclaration.name.text,
