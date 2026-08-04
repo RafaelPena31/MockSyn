@@ -79,12 +79,20 @@ struct GeneratedProperty {
     }
 
     private func propertyStubbingSource(access: String) -> String {
+        if hasSetter {
+            return """
+                \(access) var \(name): MockSynNonThrowingPropertyStubber<\(type)> {
+                  MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "\(name).get", setMember: "\(name).set")
+                }
+            """
+        }
+
         let stubberType = getterEffectSpecifiers.hasThrowingEffect
             ? "MockSynPropertyStubber"
-            : "MockSynNonThrowingPropertyStubber"
+            : "MockSynNonThrowingReadOnlyPropertyStubber"
         return """
             \(access) var \(name): \(stubberType)<\(type)> {
-              \(stubberType)(runtime: __mockSyn, getMember: "\(name).get", setMember: "\(name).set")
+              \(stubberType)(runtime: __mockSyn, getMember: "\(name).get")
             }
         """
     }
@@ -106,6 +114,14 @@ struct GeneratedProperty {
     }
 
     private func propertyVerificationSource(access: String) -> String {
+        guard hasSetter else {
+            return """
+                \(access) var \(name): MockSynReadOnlyPropertyVerification<\(type)> {
+                  MockSynReadOnlyPropertyVerification(runtime: __mockSyn, getMember: "\(name).get")
+                }
+            """
+        }
+
         return """
             \(access) var \(name): MockSynPropertyVerification<\(type)> {
               MockSynPropertyVerification(runtime: __mockSyn, getMember: "\(name).get", setMember: "\(name).set")

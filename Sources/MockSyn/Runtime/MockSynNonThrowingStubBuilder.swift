@@ -213,6 +213,21 @@ public struct MockSynNonThrowingPropertyStubber<Value> {
     }
 }
 
+/// Generated property stubbing entrypoint for read-only non-throwing accessors.
+public struct MockSynNonThrowingReadOnlyPropertyStubber<Value> {
+    private let runtime: MockSynRuntime
+    private let getMember: String
+
+    public init(runtime: MockSynRuntime, getMember: String) {
+        self.runtime = runtime
+        self.getMember = getMember
+    }
+
+    public var get: MockSynNonThrowingStubBuilder<Value> {
+        MockSynNonThrowingStubBuilder(runtime: runtime, member: getMember)
+    }
+}
+
 /// Generated subscript stubbing entrypoint for non-throwing accessors.
 public struct MockSynNonThrowingSubscriptStubber<Value> {
     private let runtime: MockSynRuntime
@@ -237,6 +252,23 @@ public struct MockSynNonThrowingSubscriptStubber<Value> {
             member: setMember,
             matchers: indexMatchers + [matcher.erase()]
         )
+    }
+}
+
+/// Generated subscript stubbing entrypoint for read-only non-throwing accessors.
+public struct MockSynNonThrowingReadOnlySubscriptStubber<Value> {
+    private let runtime: MockSynRuntime
+    private let getMember: String
+    private let indexMatchers: [MockSynAnyMatcher]
+
+    public init(runtime: MockSynRuntime, getMember: String, indexMatchers: [MockSynAnyMatcher]) {
+        self.runtime = runtime
+        self.getMember = getMember
+        self.indexMatchers = indexMatchers
+    }
+
+    public var get: MockSynNonThrowingStubBuilder<Value> {
+        MockSynNonThrowingStubBuilder(runtime: runtime, member: getMember, matchers: indexMatchers)
     }
 }
 

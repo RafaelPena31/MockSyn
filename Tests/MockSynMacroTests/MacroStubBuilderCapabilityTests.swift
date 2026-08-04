@@ -8,8 +8,10 @@ extension MockSynMacroTests {
             @Mocking
             protocol CapabilityService {
                 var title: String { get set }
+                var readOnlyTitle: String { get }
                 var throwingTitle: String { get throws }
                 subscript(index: Int) -> String { get set }
+                subscript(readOnly index: Bool) -> String { get }
                 subscript(throwing index: String) -> String { get throws }
                 func three(_ a: Int, _ b: String, _ c: Bool) -> String
                 func four(_ a: Int, _ b: Int, _ c: Int, _ d: Int) throws -> Int
@@ -23,8 +25,10 @@ extension MockSynMacroTests {
             expandedSource: """
               protocol CapabilityService {
                   var title: String { get set }
+                  var readOnlyTitle: String { get }
                   var throwingTitle: String { get throws }
                   subscript(index: Int) -> String { get set }
+                  subscript(readOnly index: Bool) -> String { get }
                   subscript(throwing index: String) -> String { get throws }
                   func three(_ a: Int, _ b: String, _ c: Bool) -> String
                   func four(_ a: Int, _ b: Int, _ c: Int, _ d: Int) throws -> Int
@@ -73,16 +77,24 @@ extension MockSynMacroTests {
                     MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "title.get", setMember: "title.set")
                   }
 
+                  internal var readOnlyTitle: MockSynNonThrowingReadOnlyPropertyStubber<String> {
+                    MockSynNonThrowingReadOnlyPropertyStubber(runtime: __mockSyn, getMember: "readOnlyTitle.get")
+                  }
+
                   internal var throwingTitle: MockSynPropertyStubber<String> {
-                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "throwingTitle.get", setMember: "throwingTitle.set")
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "throwingTitle.get")
                   }
 
                   internal func `subscript`(index: MockSynMatcher<Int>) -> MockSynNonThrowingSubscriptStubber<String> {
                     MockSynNonThrowingSubscriptStubber(runtime: __mockSyn, getMember: "subscript(index:).get", setMember: "subscript(index:).set", indexMatchers: [index.erase()])
                   }
 
+                  internal func `subscript`(readOnly index: MockSynMatcher<Bool>) -> MockSynNonThrowingReadOnlySubscriptStubber<String> {
+                    MockSynNonThrowingReadOnlySubscriptStubber(runtime: __mockSyn, getMember: "subscript(readOnly:).get", indexMatchers: [index.erase()])
+                  }
+
                   internal func `subscript`(throwing index: MockSynMatcher<String>) -> MockSynSubscriptStubber<String> {
-                    MockSynSubscriptStubber(runtime: __mockSyn, getMember: "subscript(throwing:).get", setMember: "subscript(throwing:).set", indexMatchers: [index.erase()])
+                    MockSynSubscriptStubber(runtime: __mockSyn, getMember: "subscript(throwing:).get", indexMatchers: [index.erase()])
                   }
 
                   internal func three(_ a: MockSynMatcher<Int>, _ b: MockSynMatcher<String>, _ c: MockSynMatcher<Bool>) -> MockSynNonThrowingStubBuilder3<Int, String, Bool, String> {
@@ -121,16 +133,24 @@ extension MockSynMacroTests {
                     MockSynPropertyVerification(runtime: __mockSyn, getMember: "title.get", setMember: "title.set")
                   }
 
-                  internal var throwingTitle: MockSynPropertyVerification<String> {
-                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "throwingTitle.get", setMember: "throwingTitle.set")
+                  internal var readOnlyTitle: MockSynReadOnlyPropertyVerification<String> {
+                    MockSynReadOnlyPropertyVerification(runtime: __mockSyn, getMember: "readOnlyTitle.get")
+                  }
+
+                  internal var throwingTitle: MockSynReadOnlyPropertyVerification<String> {
+                    MockSynReadOnlyPropertyVerification(runtime: __mockSyn, getMember: "throwingTitle.get")
                   }
 
                   internal func `subscript`(index: MockSynMatcher<Int>) -> MockSynSubscriptVerification<String> {
                     MockSynSubscriptVerification(runtime: __mockSyn, getMember: "subscript(index:).get", setMember: "subscript(index:).set", indexMatchers: [index.erase()])
                   }
 
-                  internal func `subscript`(throwing index: MockSynMatcher<String>) -> MockSynSubscriptVerification<String> {
-                    MockSynSubscriptVerification(runtime: __mockSyn, getMember: "subscript(throwing:).get", setMember: "subscript(throwing:).set", indexMatchers: [index.erase()])
+                  internal func `subscript`(readOnly index: MockSynMatcher<Bool>) -> MockSynReadOnlySubscriptVerification<String> {
+                    MockSynReadOnlySubscriptVerification(runtime: __mockSyn, getMember: "subscript(readOnly:).get", indexMatchers: [index.erase()])
+                  }
+
+                  internal func `subscript`(throwing index: MockSynMatcher<String>) -> MockSynReadOnlySubscriptVerification<String> {
+                    MockSynReadOnlySubscriptVerification(runtime: __mockSyn, getMember: "subscript(throwing:).get", indexMatchers: [index.erase()])
                   }
 
                   internal func three(_ a: MockSynMatcher<Int>, _ b: MockSynMatcher<String>, _ c: MockSynMatcher<Bool>) -> MockSynVerification {
@@ -171,6 +191,12 @@ extension MockSynMacroTests {
                   }
                 }
 
+                internal var readOnlyTitle: String {
+                  get {
+                    __mockSyn.resolve(member: "readOnlyTitle.get", arguments: [], returnType: String.self)
+                  }
+                }
+
                 internal var throwingTitle: String {
                   get throws {
                     try __mockSyn.resolveThrowing(member: "throwingTitle.get", arguments: [], returnType: String.self)
@@ -183,6 +209,12 @@ extension MockSynMacroTests {
                   }
                   set {
                     __mockSyn.resolveVoid(member: "subscript(index:).set", arguments: [index as Any, newValue as Any])
+                  }
+                }
+
+                internal subscript(readOnly index: Bool) -> String {
+                  get {
+                    __mockSyn.resolve(member: "subscript(readOnly:).get", arguments: [index as Any], returnType: String.self)
                   }
                 }
 
@@ -225,19 +257,19 @@ extension MockSynMacroTests {
             diagnostics: [
                 DiagnosticSpec(
                     message: "MockSyn typed willRun supports up to 6 parameters; 'many(_:_:_:_:_:_:_:)' has 7. Configure it with willReturn instead.",
-                    line: 11,
+                    line: 13,
                     column: 5,
                     severity: .warning
                 ),
                 DiagnosticSpec(
                     message: "MockSyn typed willRun supports up to 6 parameters; 'throwingMany(_:_:_:_:_:_:_:)' has 7. Configure it with willReturn or willThrow instead.",
-                    line: 12,
+                    line: 14,
                     column: 5,
                     severity: .warning
                 ),
                 DiagnosticSpec(
                     message: "MockSyn typed willRun supports up to 6 parameters; 'rethrowingMany(_:_:_:_:_:_:_:)' has 7. Configure it with willReturn instead.",
-                    line: 13,
+                    line: 15,
                     column: 5,
                     severity: .warning
                 ),

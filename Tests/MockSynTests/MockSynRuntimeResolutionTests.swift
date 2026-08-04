@@ -142,20 +142,22 @@ extension MockSynPublicAPITests {
         }
     }
 
-    func testSubscriptSetterBuilderSupportsThrowingBehavior() {
+    func testSubscriptSetterBuilderRunsNonThrowingBehavior() {
         let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+        var assignedValue: String?
 
-        MockSynSubscriptSetterStubBuilder<String>(
+        let builder: MockSynNonThrowingSubscriptSetterStubBuilder<String> = MockSynSubscriptSetterStubBuilder<String>(
             runtime: runtime,
             member: "subscript(key:).set",
             matchers: [MockSynMatcher<String>.any.erase(), MockSynMatcher<String>.any.erase()]
-        ).willThrow(RuntimeStubError.failed)
-
-        XCTAssertThrowsError(
-            try runtime.resolveVoidThrowing(member: "subscript(key:).set", arguments: ["theme", "dark"])
-        ) { error in
-            XCTAssertEqual(error as? RuntimeStubError, .failed)
+        )
+        builder.willRun { value in
+            assignedValue = value
         }
+
+        runtime.resolveVoid(member: "subscript(key:).set", arguments: ["theme", "dark"])
+
+        XCTAssertEqual(assignedValue, "dark")
     }
 
     func testStrictUnstubbedStringReturnsDefaultAndReportsFailure() {

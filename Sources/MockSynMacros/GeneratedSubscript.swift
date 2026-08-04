@@ -43,19 +43,34 @@ struct GeneratedSubscript {
 
     func stubbingSource(access: String) -> String? {
         let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
+        if hasSetter {
+            return """
+                \(access) func `subscript`\(genericParameterClause)\(stubParameterClause) -> MockSynNonThrowingSubscriptStubber<\(returnType)>\(genericWhereClause) {
+                  MockSynNonThrowingSubscriptStubber(runtime: __mockSyn, getMember: "\(signatureName).get", setMember: "\(signatureName).set", indexMatchers: [\(matcherList)])
+                }
+            """
+        }
+
         let stubberType = getterEffectSpecifiers.hasThrowingEffect
             ? "MockSynSubscriptStubber"
-            : "MockSynNonThrowingSubscriptStubber"
+            : "MockSynNonThrowingReadOnlySubscriptStubber"
 
         return """
             \(access) func `subscript`\(genericParameterClause)\(stubParameterClause) -> \(stubberType)<\(returnType)>\(genericWhereClause) {
-              \(stubberType)(runtime: __mockSyn, getMember: "\(signatureName).get", setMember: "\(signatureName).set", indexMatchers: [\(matcherList)])
+              \(stubberType)(runtime: __mockSyn, getMember: "\(signatureName).get", indexMatchers: [\(matcherList)])
             }
         """
     }
 
     func verificationSource(access: String) -> String? {
         let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
+        guard hasSetter else {
+            return """
+                \(access) func `subscript`\(genericParameterClause)\(stubParameterClause) -> MockSynReadOnlySubscriptVerification<\(returnType)>\(genericWhereClause) {
+                  MockSynReadOnlySubscriptVerification(runtime: __mockSyn, getMember: "\(signatureName).get", indexMatchers: [\(matcherList)])
+                }
+            """
+        }
 
         return """
             \(access) func `subscript`\(genericParameterClause)\(stubParameterClause) -> MockSynSubscriptVerification<\(returnType)>\(genericWhereClause) {

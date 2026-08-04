@@ -58,8 +58,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var status: MockSynNonThrowingPropertyStubber<Bool> {
-                    MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "status.get", setMember: "status.set")
+                  internal var status: MockSynNonThrowingReadOnlyPropertyStubber<Bool> {
+                    MockSynNonThrowingReadOnlyPropertyStubber(runtime: __mockSyn, getMember: "status.get")
                   }
 
                   internal func refresh() -> MockSynNonThrowingStubBuilder<Void> {
@@ -82,8 +82,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynVerify {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var status: MockSynPropertyVerification<Bool> {
-                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "status.get", setMember: "status.set")
+                  internal var status: MockSynReadOnlyPropertyVerification<Bool> {
+                    MockSynReadOnlyPropertyVerification(runtime: __mockSyn, getMember: "status.get")
                   }
 
                   internal func refresh() -> MockSynVerification {

@@ -99,8 +99,8 @@ extension MockSynMacroTests {
                     MockSynStubBuilder1<String, Void>(runtime: __mockSyn, member: "save(_:)", matchers: [user.erase()])
                   }
 
-                  internal func `subscript`(key: MockSynMatcher<String>) -> MockSynNonThrowingSubscriptStubber<String> {
-                    MockSynNonThrowingSubscriptStubber(runtime: __mockSyn, getMember: "subscript(key:).get", setMember: "subscript(key:).set", indexMatchers: [key.erase()])
+                  internal func `subscript`(key: MockSynMatcher<String>) -> MockSynNonThrowingReadOnlySubscriptStubber<String> {
+                    MockSynNonThrowingReadOnlySubscriptStubber(runtime: __mockSyn, getMember: "subscript(key:).get", indexMatchers: [key.erase()])
                   }
                 }
 
@@ -123,8 +123,8 @@ extension MockSynMacroTests {
                     MockSynVerification(runtime: __mockSyn, member: "save(_:)", matchers: [user.erase()])
                   }
 
-                  internal func `subscript`(key: MockSynMatcher<String>) -> MockSynSubscriptVerification<String> {
-                    MockSynSubscriptVerification(runtime: __mockSyn, getMember: "subscript(key:).get", setMember: "subscript(key:).set", indexMatchers: [key.erase()])
+                  internal func `subscript`(key: MockSynMatcher<String>) -> MockSynReadOnlySubscriptVerification<String> {
+                    MockSynReadOnlySubscriptVerification(runtime: __mockSyn, getMember: "subscript(key:).get", indexMatchers: [key.erase()])
                   }
                 }
 
@@ -240,16 +240,16 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var displayName: MockSynNonThrowingPropertyStubber<String> {
-                    MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "displayName.get", setMember: "displayName.set")
+                  internal var displayName: MockSynNonThrowingReadOnlyPropertyStubber<String> {
+                    MockSynNonThrowingReadOnlyPropertyStubber(runtime: __mockSyn, getMember: "displayName.get")
                   }
                 }
 
                 internal struct __MockSynVerify {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var displayName: MockSynPropertyVerification<String> {
-                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "displayName.get", setMember: "displayName.set")
+                  internal var displayName: MockSynReadOnlyPropertyVerification<String> {
+                    MockSynReadOnlyPropertyVerification(runtime: __mockSyn, getMember: "displayName.get")
                   }
                 }
 

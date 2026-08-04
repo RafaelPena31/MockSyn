@@ -388,15 +388,15 @@ extension MockSynMacroTests {
                   internal let __mockSyn: MockSynRuntime
 
                   internal var staticAsyncThrowingName: MockSynPropertyStubber<String> {
-                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "staticAsyncThrowingName.get", setMember: "staticAsyncThrowingName.set")
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "staticAsyncThrowingName.get")
                   }
                 }
 
                 internal struct __MockSynStaticVerify {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var staticAsyncThrowingName: MockSynPropertyVerification<String> {
-                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "staticAsyncThrowingName.get", setMember: "staticAsyncThrowingName.set")
+                  internal var staticAsyncThrowingName: MockSynReadOnlyPropertyVerification<String> {
+                    MockSynReadOnlyPropertyVerification(runtime: __mockSyn, getMember: "staticAsyncThrowingName.get")
                   }
                 }
                 internal var given: __MockSynGiven {
@@ -426,32 +426,32 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var asyncName: MockSynNonThrowingPropertyStubber<String> {
-                    MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "asyncName.get", setMember: "asyncName.set")
+                  internal var asyncName: MockSynNonThrowingReadOnlyPropertyStubber<String> {
+                    MockSynNonThrowingReadOnlyPropertyStubber(runtime: __mockSyn, getMember: "asyncName.get")
                   }
 
                   internal var throwingName: MockSynPropertyStubber<String> {
-                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "throwingName.get", setMember: "throwingName.set")
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "throwingName.get")
                   }
 
                   internal var asyncThrowingName: MockSynPropertyStubber<String> {
-                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "asyncThrowingName.get", setMember: "asyncThrowingName.set")
+                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "asyncThrowingName.get")
                   }
                 }
 
                 internal struct __MockSynVerify {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var asyncName: MockSynPropertyVerification<String> {
-                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "asyncName.get", setMember: "asyncName.set")
+                  internal var asyncName: MockSynReadOnlyPropertyVerification<String> {
+                    MockSynReadOnlyPropertyVerification(runtime: __mockSyn, getMember: "asyncName.get")
                   }
 
-                  internal var throwingName: MockSynPropertyVerification<String> {
-                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "throwingName.get", setMember: "throwingName.set")
+                  internal var throwingName: MockSynReadOnlyPropertyVerification<String> {
+                    MockSynReadOnlyPropertyVerification(runtime: __mockSyn, getMember: "throwingName.get")
                   }
 
-                  internal var asyncThrowingName: MockSynPropertyVerification<String> {
-                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "asyncThrowingName.get", setMember: "asyncThrowingName.set")
+                  internal var asyncThrowingName: MockSynReadOnlyPropertyVerification<String> {
+                    MockSynReadOnlyPropertyVerification(runtime: __mockSyn, getMember: "asyncThrowingName.get")
                   }
                 }
 

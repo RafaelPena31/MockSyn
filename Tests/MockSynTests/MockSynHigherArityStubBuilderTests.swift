@@ -4,9 +4,11 @@ import XCTest
 @Mocking
 protocol StubBuilderCapabilityService {
     var title: String { get set }
+    var readOnlyTitle: String { get }
     var throwingTitle: String { get throws }
 
     subscript(index: Int) -> String { get set }
+    subscript(readOnly index: Bool) -> String { get }
     subscript(throwing index: String) -> String { get throws }
 
     func doubled(_ value: Int) -> Int
@@ -122,19 +124,33 @@ final class MockSynHigherArityStubBuilderTests: XCTestCase {
         let throwing: MockSynStubBuilder1<Int, Int> = mock.given.loaded(.any)
         let rethrowing: MockSynRethrowingStubBuilder1<() throws -> Int, Int> = mock.given.transformed(.any)
         let property: MockSynNonThrowingPropertyStubber<String> = mock.given.title
+        let readOnlyProperty: MockSynNonThrowingReadOnlyPropertyStubber<String> = mock.given.readOnlyTitle
         let throwingProperty: MockSynPropertyStubber<String> = mock.given.throwingTitle
         let subscriptBuilder: MockSynNonThrowingSubscriptStubber<String> = mock.given.subscript(index: .any)
+        let readOnlySubscript: MockSynNonThrowingReadOnlySubscriptStubber<String> = mock.given.subscript(readOnly: .any)
         let throwingSubscript: MockSynSubscriptStubber<String> = mock.given.subscript(throwing: .any)
+        let readOnlyPropertyVerification: MockSynReadOnlyPropertyVerification<String> = mock.verify.readOnlyTitle
+        let throwingPropertyVerification: MockSynReadOnlyPropertyVerification<String> = mock.verify.throwingTitle
+        let readOnlySubscriptVerification: MockSynReadOnlySubscriptVerification<String> = mock.verify.subscript(readOnly: .any)
+        let throwingSubscriptVerification: MockSynReadOnlySubscriptVerification<String> = mock.verify.subscript(throwing: .any)
+        let propertySetter: MockSynNonThrowingStubBuilder1<String, Void> = property.set(.any)
+        let subscriptSetter: MockSynNonThrowingSubscriptSetterStubBuilder<String> = subscriptBuilder.set(.any)
 
         nonThrowing.willRun { $0 * 2 }
         throwing.willThrow(RuntimeStubError.failed)
         rethrowing.willRun { operation in (try? operation()) ?? 0 }
         property.get.willReturn("stubbed")
-        property.set(.any).willRun { _ in }
+        propertySetter.willRun { _ in }
+        readOnlyProperty.get.willReturn("read-only")
         throwingProperty.get.willThrow(RuntimeStubError.failed)
         subscriptBuilder.get.willReturn("stubbed")
-        subscriptBuilder.set(.any).willRun { _ in }
+        subscriptSetter.willRun { _ in }
+        readOnlySubscript.get.willReturn("read-only")
         throwingSubscript.get.willThrow(RuntimeStubError.failed)
+        _ = readOnlyPropertyVerification.get
+        _ = throwingPropertyVerification.get
+        _ = readOnlySubscriptVerification.get
+        _ = throwingSubscriptVerification.get
 
         XCTAssertEqual(mock.doubled(4), 8)
     }

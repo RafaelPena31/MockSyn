@@ -168,6 +168,22 @@ public struct MockSynPropertyVerification<Value> {
     }
 }
 
+/// Verification entrypoint for generated read-only property APIs.
+public struct MockSynReadOnlyPropertyVerification<Value> {
+    private let runtime: MockSynRuntime
+    private let getMember: String
+
+    public init(runtime: MockSynRuntime, getMember: String) {
+        self.runtime = runtime
+        self.getMember = getMember
+    }
+
+    /// Verifies property getter calls.
+    public var get: MockSynVerification {
+        MockSynVerification(runtime: runtime, member: getMember, matchers: [])
+    }
+}
+
 /// Verification entrypoint for generated subscript APIs.
 public struct MockSynSubscriptVerification<Value> {
     private let runtime: MockSynRuntime
@@ -195,6 +211,24 @@ public struct MockSynSubscriptVerification<Value> {
     /// Verifies subscript setter calls for matching indexes and assigned value.
     public func set(_ matcher: MockSynMatcher<Value>) -> MockSynVerification {
         MockSynVerification(runtime: runtime, member: setMember, matchers: indexMatchers + [matcher.erase()])
+    }
+}
+
+/// Verification entrypoint for generated read-only subscript APIs.
+public struct MockSynReadOnlySubscriptVerification<Value> {
+    private let runtime: MockSynRuntime
+    private let getMember: String
+    private let indexMatchers: [MockSynAnyMatcher]
+
+    public init(runtime: MockSynRuntime, getMember: String, indexMatchers: [MockSynAnyMatcher]) {
+        self.runtime = runtime
+        self.getMember = getMember
+        self.indexMatchers = indexMatchers
+    }
+
+    /// Verifies subscript getter calls for matching indexes.
+    public var get: MockSynVerification {
+        MockSynVerification(runtime: runtime, member: getMember, matchers: indexMatchers)
     }
 }
 

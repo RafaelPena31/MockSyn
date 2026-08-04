@@ -154,7 +154,7 @@ extension MockSynGeneratedTypeIntegrationTests {
         mock.given.subscript(key: .value("name"), default: .value("fallback")).set(.value("assigned")).willRun { newValue in
             assignedValue = newValue
         }
-        let optionalStub: MockSynNonThrowingSubscriptStubber<Int?> = mock.given.subscript(optional: .value("score"))
+        let optionalStub: MockSynNonThrowingReadOnlySubscriptStubber<Int?> = mock.given.subscript(optional: .value("score"))
         optionalStub.get.willReturn(42)
 
         let name: String = mock["name", default: "fallback"]
@@ -167,7 +167,7 @@ extension MockSynGeneratedTypeIntegrationTests {
 
         try mock.verify.subscript(key: .value("name"), default: .value("fallback")).get.once()
         try mock.verify.subscript(key: .value("name"), default: .value("fallback")).set(.value("assigned")).once()
-        let optionalVerification: MockSynSubscriptVerification<Int?> = mock.verify.subscript(optional: .value("score"))
+        let optionalVerification: MockSynReadOnlySubscriptVerification<Int?> = mock.verify.subscript(optional: .value("score"))
         try optionalVerification.get.once()
         try mock.confirmVerified()
         #else

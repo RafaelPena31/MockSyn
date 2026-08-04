@@ -75,8 +75,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynStaticGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var version: MockSynNonThrowingPropertyStubber<String> {
-                    MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "version.get", setMember: "version.set")
+                  internal var version: MockSynNonThrowingReadOnlyPropertyStubber<String> {
+                    MockSynNonThrowingReadOnlyPropertyStubber(runtime: __mockSyn, getMember: "version.get")
                   }
 
                   internal var build: MockSynNonThrowingPropertyStubber<String> {
@@ -95,8 +95,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynStaticVerify {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var version: MockSynPropertyVerification<String> {
-                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "version.get", setMember: "version.set")
+                  internal var version: MockSynReadOnlyPropertyVerification<String> {
+                    MockSynReadOnlyPropertyVerification(runtime: __mockSyn, getMember: "version.get")
                   }
 
                   internal var build: MockSynPropertyVerification<String> {
@@ -138,8 +138,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var currentUser: MockSynNonThrowingPropertyStubber<String> {
-                    MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "currentUser.get", setMember: "currentUser.set")
+                  internal var currentUser: MockSynNonThrowingReadOnlyPropertyStubber<String> {
+                    MockSynNonThrowingReadOnlyPropertyStubber(runtime: __mockSyn, getMember: "currentUser.get")
                   }
 
                   internal var token: MockSynNonThrowingPropertyStubber<String?> {
@@ -174,8 +174,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynVerify {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var currentUser: MockSynPropertyVerification<String> {
-                    MockSynPropertyVerification(runtime: __mockSyn, getMember: "currentUser.get", setMember: "currentUser.set")
+                  internal var currentUser: MockSynReadOnlyPropertyVerification<String> {
+                    MockSynReadOnlyPropertyVerification(runtime: __mockSyn, getMember: "currentUser.get")
                   }
 
                   internal var token: MockSynPropertyVerification<String?> {
@@ -336,8 +336,8 @@ extension MockSynMacroTests {
                     MockSynNonThrowingSubscriptStubber(runtime: __mockSyn, getMember: "subscript<Value: Sendable>(key:default:).get", setMember: "subscript<Value: Sendable>(key:default:).set", indexMatchers: [key.erase(), defaultValue.erase()])
                   }
 
-                  internal func `subscript`<Value>(optional key: MockSynMatcher<String>) -> MockSynNonThrowingSubscriptStubber<Value?> where Value: Equatable {
-                    MockSynNonThrowingSubscriptStubber(runtime: __mockSyn, getMember: "subscript<Value>(optional:) where Value: Equatable.get", setMember: "subscript<Value>(optional:) where Value: Equatable.set", indexMatchers: [key.erase()])
+                  internal func `subscript`<Value>(optional key: MockSynMatcher<String>) -> MockSynNonThrowingReadOnlySubscriptStubber<Value?> where Value: Equatable {
+                    MockSynNonThrowingReadOnlySubscriptStubber(runtime: __mockSyn, getMember: "subscript<Value>(optional:) where Value: Equatable.get", indexMatchers: [key.erase()])
                   }
                 }
 
@@ -348,8 +348,8 @@ extension MockSynMacroTests {
                     MockSynSubscriptVerification(runtime: __mockSyn, getMember: "subscript<Value: Sendable>(key:default:).get", setMember: "subscript<Value: Sendable>(key:default:).set", indexMatchers: [key.erase(), defaultValue.erase()])
                   }
 
-                  internal func `subscript`<Value>(optional key: MockSynMatcher<String>) -> MockSynSubscriptVerification<Value?> where Value: Equatable {
-                    MockSynSubscriptVerification(runtime: __mockSyn, getMember: "subscript<Value>(optional:) where Value: Equatable.get", setMember: "subscript<Value>(optional:) where Value: Equatable.set", indexMatchers: [key.erase()])
+                  internal func `subscript`<Value>(optional key: MockSynMatcher<String>) -> MockSynReadOnlySubscriptVerification<Value?> where Value: Equatable {
+                    MockSynReadOnlySubscriptVerification(runtime: __mockSyn, getMember: "subscript<Value>(optional:) where Value: Equatable.get", indexMatchers: [key.erase()])
                   }
                 }
 
