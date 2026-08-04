@@ -18,14 +18,19 @@ extension DeclModifierListSyntax {
 }
 
 extension AccessorBlockSyntax {
-    var mockSynHasWritableAccessor: Bool {
+    func mockSynHasWritableAccessor(includingObservers: Bool = false) -> Bool {
         guard case .accessors(let accessors) = self.accessors else {
             return false
         }
 
         return accessors.contains { accessor in
             let specifier = accessor.accessorSpecifier.tokenKind
-            return specifier == .keyword(.set) || specifier == .keyword(._modify)
+            if specifier == .keyword(.set) || specifier == .keyword(._modify) {
+                return true
+            }
+
+            return includingObservers
+                && (specifier == .keyword(.willSet) || specifier == .keyword(.didSet))
         }
     }
 

@@ -141,4 +141,25 @@ extension MockSynGeneratedTypeIntegrationTests {
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif
     }
+
+    func testGeneratedObservedClassPropertiesExposeSetterCapabilities() throws {
+        #if MOCKSYN_ENABLE
+        let mock = ObservedPropertyServiceBaseMock()
+        let willSetStubber: MockSynNonThrowingPropertyStubber<String> = mock.given.willSetValue
+        let didSetStubber: MockSynNonThrowingPropertyStubber<String> = mock.given.didSetValue
+        let willSetVerification: MockSynPropertyVerification<String> = mock.verify.willSetValue
+        let didSetVerification: MockSynPropertyVerification<String> = mock.verify.didSetValue
+
+        willSetStubber.set(.value("will")).willRun { _ in }
+        didSetStubber.set(.value("did")).willRun { _ in }
+
+        mock.willSetValue = "will"
+        mock.didSetValue = "did"
+
+        try willSetVerification.set(.value("will")).once()
+        try didSetVerification.set(.value("did")).once()
+        #else
+        XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
+        #endif
+    }
 }

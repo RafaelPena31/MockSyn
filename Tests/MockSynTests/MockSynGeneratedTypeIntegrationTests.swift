@@ -137,6 +137,17 @@ class MemberUserServiceBase {
 }
 
 @Mocking
+class ObservedPropertyServiceBase {
+    var willSetValue: String = "initial" {
+        willSet { }
+    }
+
+    var didSetValue: String = "initial" {
+        didSet { }
+    }
+}
+
+@Mocking
 protocol LanguageFeatureService {
     func update(_ value: inout Int)
     func handle(_ action: @escaping (String) -> Void)

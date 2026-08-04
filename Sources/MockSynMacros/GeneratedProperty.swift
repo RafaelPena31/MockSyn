@@ -138,7 +138,7 @@ extension GeneratedProperty {
               let type = binding.typeAnnotation?.type.description.trimmedSource else {
             return nil
         }
-        let hasSetter = binding.accessorBlock?.mockSynHasWritableAccessor == true
+        let hasSetter = binding.accessorBlock?.mockSynHasWritableAccessor(includingObservers: targetKind == .class) == true
             || (binding.accessorBlock == nil && targetKind == .class && declaration.bindingSpecifier.text == "var")
 
         self.init(

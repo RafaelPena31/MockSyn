@@ -107,7 +107,7 @@ enum MemberGenerator {
                     stubParameters: subscriptDeclaration.parameterClause.generatedParameters,
                     returnClause: subscriptDeclaration.returnClause.description.trimmedReturnClause,
                     genericWhereClause: subscriptDeclaration.genericWhereClause?.description.trimmedReturnClause ?? "",
-                    hasSetter: subscriptDeclaration.accessorBlock?.mockSynHasWritableAccessor == true,
+                    hasSetter: subscriptDeclaration.accessorBlock?.mockSynHasWritableAccessor() == true,
                     getterEffectSpecifiers: subscriptDeclaration.accessorBlock?.mockSynGetterEffectSpecifiers ?? ""
                 )))
                 continue
