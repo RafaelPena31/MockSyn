@@ -6,6 +6,8 @@ private struct RuntimeResolutionDomainValue: Equatable {
     let value: String
 }
 
+private let runtimeFailureMarker = "MOCKSYN_FAILURE_REPORTED"
+
 extension MockSynPublicAPITests {
     func testRuntimeUsesMatchingMatcherAndFallbacks() throws {
         let runtime = MockSynRuntime(kind: .mock, mode: .strict)
@@ -205,6 +207,10 @@ extension MockSynPublicAPITests {
             return
         }
 
+        MockSynFailureReporter.setHandler { _ in
+            FileHandle.standardError.write(Data("\(runtimeFailureMarker)\n".utf8))
+        }
+
         let runtime = MockSynRuntime(kind: .mock, mode: .strict)
         let _: RuntimeResolutionDomainValue = runtime.resolve(
             member: "profile(id:)",
@@ -236,9 +242,57 @@ extension MockSynPublicAPITests {
             decoding: standardError.fileHandleForReading.readDataToEndOfFile(),
             as: UTF8.self
         )
+        let markerCount = errorOutput.components(separatedBy: runtimeFailureMarker).count - 1
         XCTAssertNotEqual(process.terminationStatus, 0)
         XCTAssertTrue(errorOutput.contains("willReturn"), errorOutput)
         XCTAssertTrue(errorOutput.contains("MockSynDefaultValueRegistry.register"), errorOutput)
+        XCTAssertEqual(markerCount, 1, errorOutput)
+    }
+
+    func testRelaxedUnstubbedDomainValueReporterHarness() {
+        guard ProcessInfo.processInfo.environment["MOCKSYN_CRASH_CASE"] == "relaxed-unconfigured-domain" else {
+            return
+        }
+
+        MockSynFailureReporter.setHandler { _ in
+            FileHandle.standardError.write(Data("\(runtimeFailureMarker)\n".utf8))
+        }
+
+        let runtime = MockSynRuntime(kind: .mock, mode: .relaxed)
+        let _: RuntimeResolutionDomainValue = runtime.resolve(
+            member: "profile(id:)",
+            arguments: [42],
+            returnType: RuntimeResolutionDomainValue.self
+        )
+    }
+
+    func testRelaxedUnstubbedDomainReportsExactlyOnceBeforeFatalError() throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        process.arguments = [
+            "xctest",
+            "-XCTest",
+            "MockSynTests.MockSynPublicAPITests/testRelaxedUnstubbedDomainValueReporterHarness",
+            Bundle(for: Self.self).bundlePath,
+        ]
+        process.environment = ProcessInfo.processInfo.environment.merging([
+            "MOCKSYN_CRASH_CASE": "relaxed-unconfigured-domain",
+        ]) { _, new in new }
+        process.standardOutput = Pipe()
+        let standardError = Pipe()
+        process.standardError = standardError
+
+        try process.run()
+        process.waitUntilExit()
+
+        let errorOutput = String(
+            decoding: standardError.fileHandleForReading.readDataToEndOfFile(),
+            as: UTF8.self
+        )
+        let markerCount = errorOutput.components(separatedBy: runtimeFailureMarker).count - 1
+
+        XCTAssertNotEqual(process.terminationStatus, 0)
+        XCTAssertEqual(markerCount, 1, errorOutput)
     }
 
     private func assertStrictUnstubbedResolution<Return: Equatable>(

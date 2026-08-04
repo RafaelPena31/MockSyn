@@ -45,6 +45,29 @@ extension MockSynPublicAPITests {
         XCTAssertTrue(recorder.failures[0].message.contains(#""missing-user""#))
     }
 
+    func testNonThrowingResolutionForwardsCallerFileAndLine() {
+        let recorder = FailureRecorder()
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+
+        MockSynFailureReporter.setHandler { failure in
+            recorder.record(failure)
+        }
+        defer { MockSynFailureReporter.reset() }
+
+        let value = runtime.resolve(
+            member: "lookup(id:)",
+            arguments: ["missing-user"],
+            returnType: String.self,
+            file: "CallerResolution.swift",
+            line: 314
+        )
+
+        XCTAssertEqual(value, "")
+        XCTAssertEqual(recorder.failures.count, 1)
+        XCTAssertEqual(recorder.failures[0].file.description, "CallerResolution.swift")
+        XCTAssertEqual(recorder.failures[0].line, 314)
+    }
+
     func testRelaxedUnstubbedNonThrowingResolutionDoesNotReport() {
         let recorder = FailureRecorder()
         let runtime = MockSynRuntime(kind: .mock, mode: .relaxed)
@@ -69,7 +92,12 @@ extension MockSynPublicAPITests {
         }
         defer { MockSynFailureReporter.reset() }
 
-        runtime.resolveVoid(member: "refresh()", arguments: [])
+        runtime.resolveVoid(
+            member: "refresh()",
+            arguments: [],
+            file: "VoidCaller.swift",
+            line: 315
+        )
 
         XCTAssertTrue(recorder.failures.isEmpty)
     }

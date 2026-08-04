@@ -60,7 +60,9 @@ public final class MockSynRuntime: @unchecked Sendable {
         member: String,
         arguments: [Any],
         returnType: Return.Type,
-        fallback: (() -> Return)? = nil
+        fallback: (() -> Return)? = nil,
+        file: StaticString = #fileID,
+        line: UInt = #line
     ) -> Return {
         recordInvocation(member: member, arguments: arguments)
 
@@ -74,12 +76,13 @@ public final class MockSynRuntime: @unchecked Sendable {
 
         let defaultValue = MockSynDefaultValueRegistry.value(for: Return.self)
         let error = MockSynRuntimeError.missingStub(member: member)
+        let reportedRecoverableFailure = mode == .strict && Return.self != Void.self
 
-        if mode == .strict && Return.self != Void.self {
+        if reportedRecoverableFailure {
             report(
                 error,
-                file: #fileID,
-                line: #line,
+                file: file,
+                line: line,
                 details: receivedCallDescription(member: member, arguments: arguments)
             )
         }
@@ -88,10 +91,21 @@ public final class MockSynRuntime: @unchecked Sendable {
             return defaultValue
         }
 
+        if !reportedRecoverableFailure {
+            report(
+                error,
+                file: file,
+                line: line,
+                details: receivedCallDescription(member: member, arguments: arguments)
+            )
+        }
+
         fatalError(
             "MockSyn member \(member) has no configured value for \(String(reflecting: Return.self)). "
                 + "Configure it with willReturn(...) or register a default with "
-                + "MockSynDefaultValueRegistry.register(_:for:)."
+                + "MockSynDefaultValueRegistry.register(_:for:).",
+            file: file,
+            line: line
         )
     }
 
@@ -125,8 +139,21 @@ public final class MockSynRuntime: @unchecked Sendable {
     }
 
     /// Resolves a non-throwing generated void member call.
-    public func resolveVoid(member: String, arguments: [Any], fallback: (() -> Void)? = nil) {
-        let _: Void = resolve(member: member, arguments: arguments, returnType: Void.self, fallback: fallback)
+    public func resolveVoid(
+        member: String,
+        arguments: [Any],
+        fallback: (() -> Void)? = nil,
+        file: StaticString = #fileID,
+        line: UInt = #line
+    ) {
+        let _: Void = resolve(
+            member: member,
+            arguments: arguments,
+            returnType: Void.self,
+            fallback: fallback,
+            file: file,
+            line: line
+        )
     }
 
     /// Resolves a generated `rethrows` member call while allowing only the fallback closure to throw.
