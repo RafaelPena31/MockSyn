@@ -64,10 +64,23 @@ struct MockSynDiagnostic: DiagnosticMessage, Error {
         message: "MockSyn cannot mirror variadic class initializers because Swift cannot forward captured variadic arrays to super.init."
     )
 
-    private init(id: String, message: String) {
+    static func typedWillRunUnavailable(
+        member: String,
+        parameterCount: Int,
+        supportsWillThrow: Bool
+    ) -> MockSynDiagnostic {
+        let alternative = supportsWillThrow ? "willReturn or willThrow" : "willReturn"
+        return MockSynDiagnostic(
+            id: "typedWillRunUnavailable",
+            message: "MockSyn typed willRun supports up to 6 parameters; '\(member)' has \(parameterCount). Configure it with \(alternative) instead.",
+            severity: .warning
+        )
+    }
+
+    private init(id: String, message: String, severity: DiagnosticSeverity = .error) {
         self.message = message
         self.diagnosticID = MessageID(domain: "MockSyn", id: id)
-        self.severity = .error
+        self.severity = severity
     }
 }
 

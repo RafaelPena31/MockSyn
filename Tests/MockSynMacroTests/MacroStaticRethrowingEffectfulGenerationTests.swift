@@ -55,16 +55,16 @@ extension MockSynMacroTests {
                 internal struct __MockSynStaticGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var version: MockSynPropertyStubber<String> {
-                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "version.get", setMember: "version.set")
+                  internal var version: MockSynNonThrowingPropertyStubber<String> {
+                    MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "version.get", setMember: "version.set")
                   }
 
-                  internal func make(id: MockSynMatcher<String>) -> MockSynStubBuilder1<String, String> {
-                    MockSynStubBuilder1<String, String>(runtime: __mockSyn, member: "make(id:)", matchers: [id.erase()])
+                  internal func make(id: MockSynMatcher<String>) -> MockSynNonThrowingStubBuilder1<String, String> {
+                    MockSynNonThrowingStubBuilder1<String, String>(runtime: __mockSyn, member: "make(id:)", matchers: [id.erase()])
                   }
 
-                  internal func ping() -> MockSynStubBuilder<Void> {
-                    MockSynStubBuilder<Void>(runtime: __mockSyn, member: "ping()", matchers: [])
+                  internal func ping() -> MockSynNonThrowingStubBuilder<Void> {
+                    MockSynNonThrowingStubBuilder<Void>(runtime: __mockSyn, member: "ping()", matchers: [])
                   }
                 }
 
@@ -426,8 +426,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var asyncName: MockSynPropertyStubber<String> {
-                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "asyncName.get", setMember: "asyncName.set")
+                  internal var asyncName: MockSynNonThrowingPropertyStubber<String> {
+                    MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "asyncName.get", setMember: "asyncName.set")
                   }
 
                   internal var throwingName: MockSynPropertyStubber<String> {

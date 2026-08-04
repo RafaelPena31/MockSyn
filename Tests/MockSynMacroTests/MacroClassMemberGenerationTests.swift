@@ -83,24 +83,24 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var storedToken: MockSynPropertyStubber<String> {
-                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "storedToken.get", setMember: "storedToken.set")
+                  internal var storedToken: MockSynNonThrowingPropertyStubber<String> {
+                    MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "storedToken.get", setMember: "storedToken.set")
                   }
 
-                  internal var token: MockSynPropertyStubber<String> {
-                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "token.get", setMember: "token.set")
+                  internal var token: MockSynNonThrowingPropertyStubber<String> {
+                    MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "token.get", setMember: "token.set")
                   }
 
-                  internal func load(id: MockSynMatcher<String>) -> MockSynStubBuilder1<String, String> {
-                    MockSynStubBuilder1<String, String>(runtime: __mockSyn, member: "load(id:)", matchers: [id.erase()])
+                  internal func load(id: MockSynMatcher<String>) -> MockSynNonThrowingStubBuilder1<String, String> {
+                    MockSynNonThrowingStubBuilder1<String, String>(runtime: __mockSyn, member: "load(id:)", matchers: [id.erase()])
                   }
 
                   internal func save(_ user: MockSynMatcher<String>) -> MockSynStubBuilder1<String, Void> {
                     MockSynStubBuilder1<String, Void>(runtime: __mockSyn, member: "save(_:)", matchers: [user.erase()])
                   }
 
-                  internal func `subscript`(key: MockSynMatcher<String>) -> MockSynSubscriptStubber<String> {
-                    MockSynSubscriptStubber(runtime: __mockSyn, getMember: "subscript(key:).get", setMember: "subscript(key:).set", indexMatchers: [key.erase()])
+                  internal func `subscript`(key: MockSynMatcher<String>) -> MockSynNonThrowingSubscriptStubber<String> {
+                    MockSynNonThrowingSubscriptStubber(runtime: __mockSyn, getMember: "subscript(key:).get", setMember: "subscript(key:).set", indexMatchers: [key.erase()])
                   }
                 }
 
@@ -240,8 +240,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var displayName: MockSynPropertyStubber<String> {
-                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "displayName.get", setMember: "displayName.set")
+                  internal var displayName: MockSynNonThrowingPropertyStubber<String> {
+                    MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "displayName.get", setMember: "displayName.set")
                   }
                 }
 
@@ -316,16 +316,16 @@ extension MockSynMacroTests {
                 internal struct __MockSynStaticGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal func equalTo(lhs: MockSynMatcher<ComparableServiceMock>, rhs: MockSynMatcher<ComparableServiceMock>) -> MockSynStubBuilder2<ComparableServiceMock, ComparableServiceMock, Bool> {
-                    MockSynStubBuilder2<ComparableServiceMock, ComparableServiceMock, Bool>(runtime: __mockSyn, member: "==(lhs:rhs:)", matchers: [lhs.erase(), rhs.erase()])
+                  internal func equalTo(lhs: MockSynMatcher<ComparableServiceMock>, rhs: MockSynMatcher<ComparableServiceMock>) -> MockSynNonThrowingStubBuilder2<ComparableServiceMock, ComparableServiceMock, Bool> {
+                    MockSynNonThrowingStubBuilder2<ComparableServiceMock, ComparableServiceMock, Bool>(runtime: __mockSyn, member: "==(lhs:rhs:)", matchers: [lhs.erase(), rhs.erase()])
                   }
 
-                  internal func plus(lhs: MockSynMatcher<ComparableServiceMock>, rhs: MockSynMatcher<ComparableServiceMock>) -> MockSynStubBuilder2<ComparableServiceMock, ComparableServiceMock, ComparableServiceMock> {
-                    MockSynStubBuilder2<ComparableServiceMock, ComparableServiceMock, ComparableServiceMock>(runtime: __mockSyn, member: "+(lhs:rhs:)", matchers: [lhs.erase(), rhs.erase()])
+                  internal func plus(lhs: MockSynMatcher<ComparableServiceMock>, rhs: MockSynMatcher<ComparableServiceMock>) -> MockSynNonThrowingStubBuilder2<ComparableServiceMock, ComparableServiceMock, ComparableServiceMock> {
+                    MockSynNonThrowingStubBuilder2<ComparableServiceMock, ComparableServiceMock, ComparableServiceMock>(runtime: __mockSyn, member: "+(lhs:rhs:)", matchers: [lhs.erase(), rhs.erase()])
                   }
 
-                  internal func operator_u3c_u7e_u3e(lhs: MockSynMatcher<ComparableServiceMock>, rhs: MockSynMatcher<ComparableServiceMock>) -> MockSynStubBuilder2<ComparableServiceMock, ComparableServiceMock, Bool> {
-                    MockSynStubBuilder2<ComparableServiceMock, ComparableServiceMock, Bool>(runtime: __mockSyn, member: "<~>(lhs:rhs:)", matchers: [lhs.erase(), rhs.erase()])
+                  internal func operator_u3c_u7e_u3e(lhs: MockSynMatcher<ComparableServiceMock>, rhs: MockSynMatcher<ComparableServiceMock>) -> MockSynNonThrowingStubBuilder2<ComparableServiceMock, ComparableServiceMock, Bool> {
+                    MockSynNonThrowingStubBuilder2<ComparableServiceMock, ComparableServiceMock, Bool>(runtime: __mockSyn, member: "<~>(lhs:rhs:)", matchers: [lhs.erase(), rhs.erase()])
                   }
                 }
 

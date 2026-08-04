@@ -52,6 +52,11 @@ public struct MockSynStubBehavior<Return> {
 
     /// Executes a custom non-throwing closure.
     public static func runs(_ body: @escaping ([Any]) -> Return) -> MockSynStubBehavior<Return> {
+        runsNonThrowing(body)
+    }
+
+    /// Executes a custom closure through non-throwing runtime resolution.
+    public static func runsNonThrowing(_ body: @escaping ([Any]) -> Return) -> MockSynStubBehavior<Return> {
         MockSynStubBehavior(nonThrowingResolver: body)
     }
 

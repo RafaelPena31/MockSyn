@@ -154,7 +154,7 @@ extension MockSynGeneratedTypeIntegrationTests {
         mock.given.subscript(key: .value("name"), default: .value("fallback")).set(.value("assigned")).willRun { newValue in
             assignedValue = newValue
         }
-        let optionalStub: MockSynSubscriptStubber<Int?> = mock.given.subscript(optional: .value("score"))
+        let optionalStub: MockSynNonThrowingSubscriptStubber<Int?> = mock.given.subscript(optional: .value("score"))
         optionalStub.get.willReturn(42)
 
         let name: String = mock["name", default: "fallback"]

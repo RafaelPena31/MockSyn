@@ -55,8 +55,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal func load(_ value: MockSynMatcher<Value>) -> MockSynStubBuilder1<Value, Value> {
-                    MockSynStubBuilder1<Value, Value>(runtime: __mockSyn, member: "load(_:)", matchers: [value.erase()])
+                  internal func load(_ value: MockSynMatcher<Value>) -> MockSynNonThrowingStubBuilder1<Value, Value> {
+                    MockSynNonThrowingStubBuilder1<Value, Value>(runtime: __mockSyn, member: "load(_:)", matchers: [value.erase()])
                   }
                 }
 
@@ -127,8 +127,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal func load() -> MockSynStubBuilder<Entity> {
-                    MockSynStubBuilder<Entity>(runtime: __mockSyn, member: "load()", matchers: [])
+                  internal func load() -> MockSynNonThrowingStubBuilder<Entity> {
+                    MockSynNonThrowingStubBuilder<Entity>(runtime: __mockSyn, member: "load()", matchers: [])
                   }
                 }
 
@@ -202,8 +202,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal func load(id: MockSynMatcher<ID>) -> MockSynStubBuilder1<ID, Entity> {
-                    MockSynStubBuilder1<ID, Entity>(runtime: __mockSyn, member: "load(id:)", matchers: [id.erase()])
+                  internal func load(id: MockSynMatcher<ID>) -> MockSynNonThrowingStubBuilder1<ID, Entity> {
+                    MockSynNonThrowingStubBuilder1<ID, Entity>(runtime: __mockSyn, member: "load(id:)", matchers: [id.erase()])
                   }
                 }
 
@@ -274,8 +274,8 @@ extension MockSynMacroTests {
                 private struct __MockSynGiven {
                   private let __mockSyn: MockSynRuntime
 
-                  private func load() -> MockSynStubBuilder<Entity> {
-                    MockSynStubBuilder<Entity>(runtime: __mockSyn, member: "load()", matchers: [])
+                  private func load() -> MockSynNonThrowingStubBuilder<Entity> {
+                    MockSynNonThrowingStubBuilder<Entity>(runtime: __mockSyn, member: "load()", matchers: [])
                   }
                 }
 
@@ -348,8 +348,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal func load() -> MockSynStubBuilder<Entity> {
-                    MockSynStubBuilder<Entity>(runtime: __mockSyn, member: "load()", matchers: [])
+                  internal func load() -> MockSynNonThrowingStubBuilder<Entity> {
+                    MockSynNonThrowingStubBuilder<Entity>(runtime: __mockSyn, member: "load()", matchers: [])
                   }
                 }
 

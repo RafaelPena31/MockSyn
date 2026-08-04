@@ -107,7 +107,7 @@ public struct MockSynRethrowingStubBuilder<Return> {
 
     /// Configures the member to run a custom non-throwing closure.
     public func willRun(_ body: @escaping () -> Return) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .runs { _ in
+        runtime.registerStub(member: member, matchers: matchers, behavior: .runsNonThrowing { _ in
             body()
         })
     }
@@ -132,7 +132,7 @@ public struct MockSynRethrowingStubBuilder1<Argument, Return> {
 
     /// Configures the member to run a custom non-throwing closure receiving the call argument.
     public func willRun(_ body: @escaping (Argument) -> Return) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .runs { arguments in
+        runtime.registerStub(member: member, matchers: matchers, behavior: .runsNonThrowing { arguments in
             body(arguments[0] as! Argument)
         })
     }
@@ -157,7 +157,7 @@ public struct MockSynRethrowingStubBuilder2<FirstArgument, SecondArgument, Retur
 
     /// Configures the member to run a custom non-throwing closure receiving both call arguments.
     public func willRun(_ body: @escaping (FirstArgument, SecondArgument) -> Return) {
-        runtime.registerStub(member: member, matchers: matchers, behavior: .runs { arguments in
+        runtime.registerStub(member: member, matchers: matchers, behavior: .runsNonThrowing { arguments in
             body(arguments[0] as! FirstArgument, arguments[1] as! SecondArgument)
         })
     }

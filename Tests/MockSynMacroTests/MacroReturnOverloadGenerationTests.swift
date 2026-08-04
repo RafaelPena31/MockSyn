@@ -58,24 +58,24 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var status: MockSynPropertyStubber<Bool> {
-                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "status.get", setMember: "status.set")
+                  internal var status: MockSynNonThrowingPropertyStubber<Bool> {
+                    MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "status.get", setMember: "status.set")
                   }
 
-                  internal func refresh() -> MockSynStubBuilder<Void> {
-                    MockSynStubBuilder<Void>(runtime: __mockSyn, member: "refresh()", matchers: [])
+                  internal func refresh() -> MockSynNonThrowingStubBuilder<Void> {
+                    MockSynNonThrowingStubBuilder<Void>(runtime: __mockSyn, member: "refresh()", matchers: [])
                   }
 
-                  internal func loadReturningString() -> MockSynStubBuilder<String> {
-                    MockSynStubBuilder<String>(runtime: __mockSyn, member: "load() -> String", matchers: [])
+                  internal func loadReturningString() -> MockSynNonThrowingStubBuilder<String> {
+                    MockSynNonThrowingStubBuilder<String>(runtime: __mockSyn, member: "load() -> String", matchers: [])
                   }
 
-                  internal func loadReturningInt() -> MockSynStubBuilder<Int> {
-                    MockSynStubBuilder<Int>(runtime: __mockSyn, member: "load() -> Int", matchers: [])
+                  internal func loadReturningInt() -> MockSynNonThrowingStubBuilder<Int> {
+                    MockSynNonThrowingStubBuilder<Int>(runtime: __mockSyn, member: "load() -> Int", matchers: [])
                   }
 
-                  internal func loadReturningStringOptional() -> MockSynStubBuilder<String?> {
-                    MockSynStubBuilder<String?>(runtime: __mockSyn, member: "load() -> String?", matchers: [])
+                  internal func loadReturningStringOptional() -> MockSynNonThrowingStubBuilder<String?> {
+                    MockSynNonThrowingStubBuilder<String?>(runtime: __mockSyn, member: "load() -> String?", matchers: [])
                   }
                 }
 
@@ -189,32 +189,32 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal func refresh() -> MockSynStubBuilder<Void> {
-                    MockSynStubBuilder<Void>(runtime: __mockSyn, member: "refresh()", matchers: [])
+                  internal func refresh() -> MockSynNonThrowingStubBuilder<Void> {
+                    MockSynNonThrowingStubBuilder<Void>(runtime: __mockSyn, member: "refresh()", matchers: [])
                   }
 
-                  internal func itemReturningReturnOverloadNamespaceValue() -> MockSynStubBuilder<ReturnOverloadNamespace.Value> {
-                    MockSynStubBuilder<ReturnOverloadNamespace.Value>(runtime: __mockSyn, member: "item() -> ReturnOverloadNamespace.Value", matchers: [])
+                  internal func itemReturningReturnOverloadNamespaceValue() -> MockSynNonThrowingStubBuilder<ReturnOverloadNamespace.Value> {
+                    MockSynNonThrowingStubBuilder<ReturnOverloadNamespace.Value>(runtime: __mockSyn, member: "item() -> ReturnOverloadNamespace.Value", matchers: [])
                   }
 
-                  internal func itemReturningReturnOverloadNamespaceValueOverload2() -> MockSynStubBuilder<ReturnOverloadNamespaceValue> {
-                    MockSynStubBuilder<ReturnOverloadNamespaceValue>(runtime: __mockSyn, member: "item() -> ReturnOverloadNamespaceValue", matchers: [])
+                  internal func itemReturningReturnOverloadNamespaceValueOverload2() -> MockSynNonThrowingStubBuilder<ReturnOverloadNamespaceValue> {
+                    MockSynNonThrowingStubBuilder<ReturnOverloadNamespaceValue>(runtime: __mockSyn, member: "item() -> ReturnOverloadNamespaceValue", matchers: [])
                   }
 
-                  internal func otherReturningString() -> MockSynStubBuilder<String> {
-                    MockSynStubBuilder<String>(runtime: __mockSyn, member: "other() -> String", matchers: [])
+                  internal func otherReturningString() -> MockSynNonThrowingStubBuilder<String> {
+                    MockSynNonThrowingStubBuilder<String>(runtime: __mockSyn, member: "other() -> String", matchers: [])
                   }
 
-                  internal func otherReturningInt() -> MockSynStubBuilder<Int> {
-                    MockSynStubBuilder<Int>(runtime: __mockSyn, member: "other() -> Int", matchers: [])
+                  internal func otherReturningInt() -> MockSynNonThrowingStubBuilder<Int> {
+                    MockSynNonThrowingStubBuilder<Int>(runtime: __mockSyn, member: "other() -> Int", matchers: [])
                   }
 
-                  internal func findReturningReturnOverloadNamespaceValue(id: MockSynMatcher<String>) -> MockSynStubBuilder1<String, ReturnOverloadNamespace.Value> {
-                    MockSynStubBuilder1<String, ReturnOverloadNamespace.Value>(runtime: __mockSyn, member: "find(id:) -> ReturnOverloadNamespace.Value", matchers: [id.erase()])
+                  internal func findReturningReturnOverloadNamespaceValue(id: MockSynMatcher<String>) -> MockSynNonThrowingStubBuilder1<String, ReturnOverloadNamespace.Value> {
+                    MockSynNonThrowingStubBuilder1<String, ReturnOverloadNamespace.Value>(runtime: __mockSyn, member: "find(id:) -> ReturnOverloadNamespace.Value", matchers: [id.erase()])
                   }
 
-                  internal func findReturningReturnOverloadNamespaceValueOverload2(id: MockSynMatcher<String>) -> MockSynStubBuilder1<String, ReturnOverloadNamespaceValue> {
-                    MockSynStubBuilder1<String, ReturnOverloadNamespaceValue>(runtime: __mockSyn, member: "find(id:) -> ReturnOverloadNamespaceValue", matchers: [id.erase()])
+                  internal func findReturningReturnOverloadNamespaceValueOverload2(id: MockSynMatcher<String>) -> MockSynNonThrowingStubBuilder1<String, ReturnOverloadNamespaceValue> {
+                    MockSynNonThrowingStubBuilder1<String, ReturnOverloadNamespaceValue>(runtime: __mockSyn, member: "find(id:) -> ReturnOverloadNamespaceValue", matchers: [id.erase()])
                   }
                 }
 

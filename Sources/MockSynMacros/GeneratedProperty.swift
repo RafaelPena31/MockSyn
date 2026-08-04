@@ -79,9 +79,12 @@ struct GeneratedProperty {
     }
 
     private func propertyStubbingSource(access: String) -> String {
+        let stubberType = getterEffectSpecifiers.hasThrowingEffect
+            ? "MockSynPropertyStubber"
+            : "MockSynNonThrowingPropertyStubber"
         return """
-            \(access) var \(name): MockSynPropertyStubber<\(type)> {
-              MockSynPropertyStubber(runtime: __mockSyn, getMember: "\(name).get", setMember: "\(name).set")
+            \(access) var \(name): \(stubberType)<\(type)> {
+              \(stubberType)(runtime: __mockSyn, getMember: "\(name).get", setMember: "\(name).set")
             }
         """
     }

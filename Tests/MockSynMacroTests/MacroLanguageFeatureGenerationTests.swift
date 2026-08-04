@@ -10,12 +10,14 @@ extension MockSynMacroTests {
             protocol EffectfulPropertyService {
                 var asyncName: String { get async }
                 var asyncThrowingName: String { get async throws }
+                subscript(index: Int) -> String { get async }
             }
             """,
             expandedSource: """
               protocol EffectfulPropertyService {
                   var asyncName: String { get async }
                   var asyncThrowingName: String { get async throws }
+                  subscript(index: Int) -> String { get async }
               }
 
               #if MOCKSYN_ENABLE
@@ -54,12 +56,16 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var asyncName: MockSynPropertyStubber<String> {
-                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "asyncName.get", setMember: "asyncName.set")
+                  internal var asyncName: MockSynNonThrowingPropertyStubber<String> {
+                    MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "asyncName.get", setMember: "asyncName.set")
                   }
 
                   internal var asyncThrowingName: MockSynPropertyStubber<String> {
                     MockSynPropertyStubber(runtime: __mockSyn, getMember: "asyncThrowingName.get", setMember: "asyncThrowingName.set")
+                  }
+
+                  internal func `subscript`(index: MockSynMatcher<Int>) -> MockSynNonThrowingSubscriptStubber<String> {
+                    MockSynNonThrowingSubscriptStubber(runtime: __mockSyn, getMember: "subscript(index:).get", setMember: "subscript(index:).set", indexMatchers: [index.erase()])
                   }
                 }
 
@@ -72,6 +78,10 @@ extension MockSynMacroTests {
 
                   internal var asyncThrowingName: MockSynPropertyVerification<String> {
                     MockSynPropertyVerification(runtime: __mockSyn, getMember: "asyncThrowingName.get", setMember: "asyncThrowingName.set")
+                  }
+
+                  internal func `subscript`(index: MockSynMatcher<Int>) -> MockSynSubscriptVerification<String> {
+                    MockSynSubscriptVerification(runtime: __mockSyn, getMember: "subscript(index:).get", setMember: "subscript(index:).set", indexMatchers: [index.erase()])
                   }
                 }
 
@@ -86,6 +96,13 @@ extension MockSynMacroTests {
                   get async throws {
                     __mockSyn.record(member: "asyncThrowingName.get", arguments: [])
                     return try await self.__mockSynWrapped.asyncThrowingName
+                  }
+                }
+
+                internal subscript(index: Int) -> String {
+                  get async {
+                    __mockSyn.record(member: "subscript(index:).get", arguments: [index as Any])
+                    return await self.__mockSynWrapped[index]
                   }
                 }
               }
@@ -151,28 +168,28 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal var title: MockSynPropertyStubber<String> {
-                    MockSynPropertyStubber(runtime: __mockSyn, getMember: "title.get", setMember: "title.set")
+                  internal var title: MockSynNonThrowingPropertyStubber<String> {
+                    MockSynNonThrowingPropertyStubber(runtime: __mockSyn, getMember: "title.get", setMember: "title.set")
                   }
 
-                  internal func map<Value>(_ value: MockSynMatcher<Value>) -> MockSynStubBuilder1<Value, Value> where Value: Sendable {
-                    MockSynStubBuilder1<Value, Value>(runtime: __mockSyn, member: "map(_:)", matchers: [value.erase()])
+                  internal func map<Value>(_ value: MockSynMatcher<Value>) -> MockSynNonThrowingStubBuilder1<Value, Value> where Value: Sendable {
+                    MockSynNonThrowingStubBuilder1<Value, Value>(runtime: __mockSyn, member: "map(_:)", matchers: [value.erase()])
                   }
 
-                  internal func update(_ value: MockSynMatcher<Int>) -> MockSynStubBuilder1<Int, Void> {
-                    MockSynStubBuilder1<Int, Void>(runtime: __mockSyn, member: "update(_:)", matchers: [value.erase()])
+                  internal func update(_ value: MockSynMatcher<Int>) -> MockSynNonThrowingStubBuilder1<Int, Void> {
+                    MockSynNonThrowingStubBuilder1<Int, Void>(runtime: __mockSyn, member: "update(_:)", matchers: [value.erase()])
                   }
 
-                  internal func handle(_ action: MockSynMatcher<(String) -> Void>) -> MockSynStubBuilder1<(String) -> Void, Void> {
-                    MockSynStubBuilder1<(String) -> Void, Void>(runtime: __mockSyn, member: "handle(_:)", matchers: [action.erase()])
+                  internal func handle(_ action: MockSynMatcher<(String) -> Void>) -> MockSynNonThrowingStubBuilder1<(String) -> Void, Void> {
+                    MockSynNonThrowingStubBuilder1<(String) -> Void, Void>(runtime: __mockSyn, member: "handle(_:)", matchers: [action.erase()])
                   }
 
-                  internal func clone() -> MockSynStubBuilder<ProcessorMock> {
-                    MockSynStubBuilder<ProcessorMock>(runtime: __mockSyn, member: "clone()", matchers: [])
+                  internal func clone() -> MockSynNonThrowingStubBuilder<ProcessorMock> {
+                    MockSynNonThrowingStubBuilder<ProcessorMock>(runtime: __mockSyn, member: "clone()", matchers: [])
                   }
 
-                  internal func collect(_ values: MockSynMatcher<[Int]>) -> MockSynStubBuilder1<[Int], Int> {
-                    MockSynStubBuilder1<[Int], Int>(runtime: __mockSyn, member: "collect(_:)", matchers: [values.erase()])
+                  internal func collect(_ values: MockSynMatcher<[Int]>) -> MockSynNonThrowingStubBuilder1<[Int], Int> {
+                    MockSynNonThrowingStubBuilder1<[Int], Int>(runtime: __mockSyn, member: "collect(_:)", matchers: [values.erase()])
                   }
                 }
 
@@ -288,16 +305,16 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal func update(_ value: MockSynMatcher<Int>) -> MockSynStubBuilder1<Int, Void> {
-                    MockSynStubBuilder1<Int, Void>(runtime: __mockSyn, member: "update(_:)", matchers: [value.erase()])
+                  internal func update(_ value: MockSynMatcher<Int>) -> MockSynNonThrowingStubBuilder1<Int, Void> {
+                    MockSynNonThrowingStubBuilder1<Int, Void>(runtime: __mockSyn, member: "update(_:)", matchers: [value.erase()])
                   }
 
-                  internal func handle(_ action: MockSynMatcher<(String) -> Void>) -> MockSynStubBuilder1<(String) -> Void, Void> {
-                    MockSynStubBuilder1<(String) -> Void, Void>(runtime: __mockSyn, member: "handle(_:)", matchers: [action.erase()])
+                  internal func handle(_ action: MockSynMatcher<(String) -> Void>) -> MockSynNonThrowingStubBuilder1<(String) -> Void, Void> {
+                    MockSynNonThrowingStubBuilder1<(String) -> Void, Void>(runtime: __mockSyn, member: "handle(_:)", matchers: [action.erase()])
                   }
 
-                  internal func collect(_ values: MockSynMatcher<[Int]>) -> MockSynStubBuilder1<[Int], Int> {
-                    MockSynStubBuilder1<[Int], Int>(runtime: __mockSyn, member: "collect(_:)", matchers: [values.erase()])
+                  internal func collect(_ values: MockSynMatcher<[Int]>) -> MockSynNonThrowingStubBuilder1<[Int], Int> {
+                    MockSynNonThrowingStubBuilder1<[Int], Int>(runtime: __mockSyn, member: "collect(_:)", matchers: [values.erase()])
                   }
                 }
 

@@ -41,7 +41,7 @@ enum MemberGenerator {
                     continue
                 }
 
-                generatedMembers.append(.function(GeneratedFunction(
+                let generatedFunction = GeneratedFunction(
                     attributes: function.attributes.mockSynForwardedAttributes,
                     name: function.name.text,
                     dslName: isNamedMember ? function.name.text : function.name.text.mockSynOperatorDslName,
@@ -58,7 +58,20 @@ enum MemberGenerator {
                     hasInoutParameter: function.signature.parameterClause.hasInoutParameter,
                     hasVariadicParameter: function.signature.parameterClause.hasVariadicParameter,
                     returnsValue: function.signature.returnClause.returnsValue
-                )))
+                )
+                generatedMembers.append(.function(generatedFunction))
+                if generatedFunction.stubParameters.count > 6 {
+                    let supportsWillThrow = generatedFunction.effectSpecifiers.hasThrowingEffect
+                        && !generatedFunction.effectSpecifiers.hasRethrowsEffect
+                    context.diagnose(Diagnostic(
+                        node: Syntax(function),
+                        message: MockSynDiagnostic.typedWillRunUnavailable(
+                            member: generatedFunction.signatureName,
+                            parameterCount: generatedFunction.stubParameters.count,
+                            supportsWillThrow: supportsWillThrow
+                        )
+                    ))
+                }
                 continue
             }
 
@@ -94,7 +107,8 @@ enum MemberGenerator {
                     stubParameters: subscriptDeclaration.parameterClause.generatedParameters,
                     returnClause: subscriptDeclaration.returnClause.description.trimmedReturnClause,
                     genericWhereClause: subscriptDeclaration.genericWhereClause?.description.trimmedReturnClause ?? "",
-                    hasSetter: subscriptDeclaration.accessorBlock?.description.range(of: "set") != nil
+                    hasSetter: subscriptDeclaration.accessorBlock?.description.range(of: "set") != nil,
+                    getterEffectSpecifiers: subscriptDeclaration.accessorBlock?.mockSynGetterEffectSpecifiers ?? ""
                 )))
                 continue
             }

@@ -52,8 +52,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal func record(_ prefix: MockSynMatcher<String>, suffix: MockSynMatcher<String>, values: MockSynMatcher<[Int]>) -> MockSynStubBuilder<Void> {
-                    MockSynStubBuilder<Void>(runtime: __mockSyn, member: "record(_:suffix:values:)", matchers: [prefix.erase(), suffix.erase(), values.erase()])
+                  internal func record(_ prefix: MockSynMatcher<String>, suffix: MockSynMatcher<String>, values: MockSynMatcher<[Int]>) -> MockSynNonThrowingStubBuilder3<String, String, [Int], Void> {
+                    MockSynNonThrowingStubBuilder3<String, String, [Int], Void>(runtime: __mockSyn, member: "record(_:suffix:values:)", matchers: [prefix.erase(), suffix.erase(), values.erase()])
                   }
                 }
 
@@ -146,8 +146,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal func collect(_ values: MockSynMatcher<[Int]>) -> MockSynStubBuilder1<[Int], Int> {
-                    MockSynStubBuilder1<[Int], Int>(runtime: __mockSyn, member: "collect(_:)", matchers: [values.erase()])
+                  internal func collect(_ values: MockSynMatcher<[Int]>) -> MockSynNonThrowingStubBuilder1<[Int], Int> {
+                    MockSynNonThrowingStubBuilder1<[Int], Int>(runtime: __mockSyn, member: "collect(_:)", matchers: [values.erase()])
                   }
                 }
 
@@ -217,8 +217,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal func collect(_ values: MockSynMatcher<[Int]>, labels: MockSynMatcher<[String]>) -> MockSynStubBuilder2<[Int], [String], String> {
-                    MockSynStubBuilder2<[Int], [String], String>(runtime: __mockSyn, member: "collect(_:labels:)", matchers: [values.erase(), labels.erase()])
+                  internal func collect(_ values: MockSynMatcher<[Int]>, labels: MockSynMatcher<[String]>) -> MockSynNonThrowingStubBuilder2<[Int], [String], String> {
+                    MockSynNonThrowingStubBuilder2<[Int], [String], String>(runtime: __mockSyn, member: "collect(_:labels:)", matchers: [values.erase(), labels.erase()])
                   }
                 }
 
@@ -288,8 +288,8 @@ extension MockSynMacroTests {
                 internal struct __MockSynGiven {
                   internal let __mockSyn: MockSynRuntime
 
-                  internal func refresh() -> MockSynStubBuilder<Void> {
-                    MockSynStubBuilder<Void>(runtime: __mockSyn, member: "refresh()", matchers: [])
+                  internal func refresh() -> MockSynNonThrowingStubBuilder<Void> {
+                    MockSynNonThrowingStubBuilder<Void>(runtime: __mockSyn, member: "refresh()", matchers: [])
                   }
                 }
 

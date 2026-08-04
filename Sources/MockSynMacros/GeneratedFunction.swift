@@ -307,17 +307,23 @@ struct GeneratedFunction {
 
     private func stubBuilderType(generatedName: String) -> String {
         let returnType = returnType.resolvingSelf(as: generatedName)
-        let builderBase = effectSpecifiers.hasRethrowsEffect ? "MockSynRethrowingStubBuilder" : "MockSynStubBuilder"
-        guard stubParameters.count == 1, let parameter = stubParameters.first else {
-            if stubParameters.count == 2 {
-                let firstParameter = stubParameters[0]
-                let secondParameter = stubParameters[1]
-                return "\(builderBase)2<\(firstParameter.matcherType.resolvingSelf(as: generatedName)), \(secondParameter.matcherType.resolvingSelf(as: generatedName)), \(returnType)>"
-            }
-
-            return "\(builderBase)<\(returnType)>"
+        let builderBase: String
+        if effectSpecifiers.hasRethrowsEffect {
+            builderBase = "MockSynRethrowingStubBuilder"
+        } else if effectSpecifiers.hasThrowingEffect {
+            builderBase = "MockSynStubBuilder"
+        } else {
+            builderBase = "MockSynNonThrowingStubBuilder"
         }
 
-        return "\(builderBase)1<\(parameter.matcherType.resolvingSelf(as: generatedName)), \(returnType)>"
+        guard stubParameters.count <= 6 else {
+            return "\(builderBase)ReturnOnly<\(returnType)>"
+        }
+
+        let suffix = stubParameters.isEmpty ? "" : String(stubParameters.count)
+        let types = stubParameters.map { parameter in
+            parameter.matcherType.resolvingSelf(as: generatedName)
+        } + [returnType]
+        return "\(builderBase)\(suffix)<\(types.joined(separator: ", "))>"
     }
 }

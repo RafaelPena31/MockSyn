@@ -13,17 +13,28 @@ struct GeneratedSubscript {
     let returnClause: String
     let genericWhereClause: String
     let hasSetter: Bool
+    let getterEffectSpecifiers: String
 
     func source(access: String, kind: MockSynPeerMacro.Kind, target: Target) -> String {
         let declarationPrefix = target.kind == .class ? "override " : ""
         let arguments = "[\(argumentValues)]"
-        let fallback = kind == .spy ? ", fallback: { self.__mockSynWrapped[\(callArguments)] }" : ""
-        let getterBody = "__mockSyn.resolve(member: \"\(signatureName).get\", arguments: \(arguments), returnType: \(returnType).self\(fallback))"
+        let callPrefix = getterEffectSpecifiers.callPrefix
+        let fallback = kind == .spy ? ", fallback: { \(callPrefix)self.__mockSynWrapped[\(callArguments)] }" : ""
+        let getterBody: String
+        if kind == .spy, getterEffectSpecifiers.hasAsyncEffect {
+            let recording = "__mockSyn.record(member: \"\(signatureName).get\", arguments: \(arguments))"
+            let delegation = "return \(callPrefix)self.__mockSynWrapped[\(callArguments)]"
+            getterBody = "\(recording)\n      \(delegation)"
+        } else if getterEffectSpecifiers.hasThrowingEffect {
+            getterBody = "try __mockSyn.resolveThrowing(member: \"\(signatureName).get\", arguments: \(arguments), returnType: \(returnType).self\(fallback))"
+        } else {
+            getterBody = "__mockSyn.resolve(member: \"\(signatureName).get\", arguments: \(arguments), returnType: \(returnType).self\(fallback))"
+        }
         let setterSource = hasSetter ? "\n    set {\n      __mockSyn.resolveVoid(member: \"\(signatureName).set\", arguments: \(setArguments))\n    }" : ""
 
         return """
           \(attributes)\(access) \(declarationPrefix)subscript\(genericParameterClause)\(parameterClause)\(returnClause)\(genericWhereClause) {
-            get {
+            get\(getterEffectSpecifiers) {
               \(getterBody)
             }\(setterSource)
           }
@@ -32,10 +43,13 @@ struct GeneratedSubscript {
 
     func stubbingSource(access: String) -> String? {
         let matcherList = stubParameters.map { $0.matcherExpression }.joined(separator: ", ")
+        let stubberType = getterEffectSpecifiers.hasThrowingEffect
+            ? "MockSynSubscriptStubber"
+            : "MockSynNonThrowingSubscriptStubber"
 
         return """
-            \(access) func `subscript`\(genericParameterClause)\(stubParameterClause) -> MockSynSubscriptStubber<\(returnType)>\(genericWhereClause) {
-              MockSynSubscriptStubber(runtime: __mockSyn, getMember: "\(signatureName).get", setMember: "\(signatureName).set", indexMatchers: [\(matcherList)])
+            \(access) func `subscript`\(genericParameterClause)\(stubParameterClause) -> \(stubberType)<\(returnType)>\(genericWhereClause) {
+              \(stubberType)(runtime: __mockSyn, getMember: "\(signatureName).get", setMember: "\(signatureName).set", indexMatchers: [\(matcherList)])
             }
         """
     }
