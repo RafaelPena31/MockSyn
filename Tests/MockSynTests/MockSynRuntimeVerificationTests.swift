@@ -43,8 +43,8 @@ extension MockSynPublicAPITests {
                 """
                 Expected refresh() to be called exactly 1 time, but it was called 2 times
                 Recorded calls:
-                - refresh()()
-                - refresh()()
+                - refresh()
+                - refresh()
                 """
             )
         }

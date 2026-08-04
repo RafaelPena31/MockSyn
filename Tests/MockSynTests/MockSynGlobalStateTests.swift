@@ -32,8 +32,6 @@ final class MockSynGlobalStateTests: XCTestCase {
         )
         MockSynFailureReporter.setHandler { recorder.record($0) }
 
-        instanceRuntime.resolveVoid(member: "beforeFirst()", arguments: [])
-        instanceRuntime.resolveVoid(member: "beforeSecond()", arguments: [])
         XCTAssertEqual(StaticFactoryServiceMock.make(id: "id"), "factory")
         XCTAssertEqual(try StaticThrowingServiceMock.fetch(), "throwing")
         MockSynFailureReporter.report(MockSynFailure(message: "before reset"))
@@ -53,18 +51,41 @@ final class MockSynGlobalStateTests: XCTestCase {
         )
         StaticFactoryServiceMock.ping()
 
-        XCTAssertThrowsError(
-            try MockSynVerifier.verifyOrder(
-                MockSynVerification(runtime: instanceRuntime, member: "beforeSecond()", matchers: []),
-                StaticFactoryServiceMock.verify.ping()
-            )
-        )
-
         XCTAssertEqual(StaticFactoryServiceMock.make(id: "id"), "")
         XCTAssertThrowsError(try StaticThrowingServiceMock.fetch())
         #else
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif
+    }
+
+    func testResetPreservesChronologicalOrderingAcrossClockEpochs() {
+        let runtime = MockSynRuntime(kind: .mock, mode: .strict)
+        runtime.resolveVoid(member: "beforeFirst()", arguments: [])
+        runtime.resolveVoid(member: "beforeSecond()", arguments: [])
+
+        MockSynRuntime.resetAllGlobalState()
+
+        runtime.resolveVoid(member: "afterFirst()", arguments: [])
+        runtime.resolveVoid(member: "afterSecond()", arguments: [])
+
+        XCTAssertNoThrow(
+            try MockSynVerifier.verifyOrder(
+                MockSynVerification(runtime: runtime, member: "beforeFirst()", matchers: []),
+                MockSynVerification(runtime: runtime, member: "afterSecond()", matchers: [])
+            )
+        )
+        XCTAssertNoThrow(
+            try MockSynVerifier.verifyOrder(
+                MockSynVerification(runtime: runtime, member: "beforeSecond()", matchers: []),
+                MockSynVerification(runtime: runtime, member: "afterSecond()", matchers: [])
+            )
+        )
+        XCTAssertThrowsError(
+            try MockSynVerifier.verifyOrder(
+                MockSynVerification(runtime: runtime, member: "afterFirst()", matchers: []),
+                MockSynVerification(runtime: runtime, member: "beforeSecond()", matchers: [])
+            )
+        )
     }
 
     func testGlobalRuntimeRegistryDoesNotRetainReleasedRuntime() {

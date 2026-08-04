@@ -148,7 +148,10 @@ public struct MockSynVerification {
         try wasCalled(.atMost(count), file: file, line: line)
     }
 
-    func firstInvocationSequence(file: StaticString = #fileID, line: UInt = #line) throws -> UInt64 {
+    func firstInvocationSequence(
+        file: StaticString = #fileID,
+        line: UInt = #line
+    ) throws -> MockSynInvocationSequence {
         try runtime.firstInvocationSequence(member: member, matchers: matchers, file: file, line: line)
     }
 
@@ -261,14 +264,14 @@ public enum MockSynVerifier {
         file: StaticString = #fileID,
         line: UInt = #line
     ) throws {
-        var previousSequence: UInt64 = 0
+        var previousSequence: MockSynInvocationSequence?
         var members: [String] = []
 
         for verification in verifications {
             let sequence = try verification.firstInvocationSequence(file: file, line: line)
             members.append(verification.memberName)
 
-            guard sequence > previousSequence else {
+            if let previousSequence, sequence <= previousSequence {
                 let error = MockSynVerificationError.order(members)
                 MockSynFailureReporter.report(MockSynFailure(message: String(describing: error), file: file, line: line))
                 throw error

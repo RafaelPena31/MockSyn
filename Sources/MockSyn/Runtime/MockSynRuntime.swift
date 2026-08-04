@@ -311,7 +311,7 @@ public final class MockSynRuntime: @unchecked Sendable {
         matchers: [MockSynAnyMatcher],
         file: StaticString = #fileID,
         line: UInt = #line
-    ) throws -> UInt64 {
+    ) throws -> MockSynInvocationSequence {
         let snapshot = invocationSnapshot()
         guard let invocation = matchingInvocations(in: snapshot, member: member, matchers: matchers).first else {
             let error = MockSynVerificationError.expected(
@@ -404,7 +404,7 @@ public final class MockSynRuntime: @unchecked Sendable {
     }
 
     private func receivedCallDescription(member: String, arguments: [Any]) -> String {
-        "Received call:\n- \(member)(\(Self.argumentDescription(arguments)))"
+        "Received call:\n- \(Self.callDescription(member: member, arguments: arguments))"
     }
 
     private func recordedCallsDescription(member: String? = nil) -> String {
@@ -424,7 +424,7 @@ public final class MockSynRuntime: @unchecked Sendable {
     ) -> [String] {
         snapshot.compactMap { invocation in
             member == nil || invocation.member == member
-                ? "\(invocation.member)(\(Self.argumentDescription(invocation.arguments)))"
+                ? Self.callDescription(member: invocation.member, arguments: invocation.arguments)
                 : nil
         }
     }
@@ -441,5 +441,13 @@ public final class MockSynRuntime: @unchecked Sendable {
 
     private static func argumentDescription(_ arguments: [Any]) -> String {
         arguments.map(MockSynArgumentRenderer.render).joined(separator: ", ")
+    }
+
+    private static func callDescription(member: String, arguments: [Any]) -> String {
+        guard !arguments.isEmpty else {
+            return member
+        }
+
+        return "\(member)(\(argumentDescription(arguments)))"
     }
 }
