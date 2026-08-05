@@ -10,20 +10,29 @@ permissions:
 jobs:
   compatibility:
     name: Swift ${{ matrix.swift }} compatibility
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    container:
+      image: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - swift: "5.9"
+          - swift: "5.9.2"
+            image: swift:5.9.2-jammy
             language-mode: "5"
-          - swift: "6.3"
+          - swift: "6.3.1"
+            image: swift:6.3.1-jammy
             language-mode: "6"
     steps:
-      - uses: actions/checkout@v4
-      - uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: ${{ matrix.swift }}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Verify Swift toolchain
+        run: |
+          version="$(swift --version)"
+          printf '%s\n' "$version"
+          case "$version" in
+            *"Swift version ${{ matrix.swift }}"*) ;;
+            *) echo "Expected Swift ${{ matrix.swift }}" >&2; exit 1 ;;
+          esac
       - name: Test root package
         run: swift test -Xswiftc -swift-version -Xswiftc ${{ matrix.language-mode }}
       - name: Test external consumer
@@ -33,10 +42,9 @@ jobs:
     name: macOS Combine, coverage, and DocC
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
-      - uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: "6.3"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Print preinstalled Swift toolchain
+        run: swift --version
       - name: Test root package with coverage and Combine
         run: swift test --enable-code-coverage -Xswiftc -swift-version -Xswiftc 6
       - name: Test external consumer
