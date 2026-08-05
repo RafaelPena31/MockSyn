@@ -114,6 +114,7 @@ extension MockSynGeneratedTypeIntegrationTests {
         #endif
     }
 
+    #if canImport(ObjectiveC)
     func testGeneratedNSObjectBackedMockSubclassesAnnotatedClass() {
         #if MOCKSYN_ENABLE
         let mock = EmptyLegacyServiceMock()
@@ -141,6 +142,7 @@ extension MockSynGeneratedTypeIntegrationTests {
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif
     }
+    #endif
 
     func testGeneratedObservedClassPropertiesExposeSetterCapabilities() throws {
         #if MOCKSYN_ENABLE

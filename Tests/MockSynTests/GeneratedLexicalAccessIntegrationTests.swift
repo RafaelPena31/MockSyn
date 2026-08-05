@@ -1,6 +1,7 @@
 import MockSyn
 import XCTest
 
+#if compiler(>=5.10)
 public enum GeneratedPublicLexicalServices {
 }
 
@@ -65,3 +66,4 @@ extension MockSynGeneratedTypeIntegrationTests {
         #endif
     }
 }
+#endif

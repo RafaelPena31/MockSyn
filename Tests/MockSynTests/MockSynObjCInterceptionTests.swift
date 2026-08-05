@@ -3,7 +3,6 @@ import Foundation
 import XCTest
 #if canImport(ObjectiveC)
 import ObjectiveC.runtime
-#endif
 
 extension MockSynPublicAPITests {
     func testObjCInterceptionReplacesAndRestoresInstanceMethod() throws {
@@ -78,3 +77,4 @@ extension MockSynPublicAPITests {
         }
     }
 }
+#endif

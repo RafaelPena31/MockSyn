@@ -121,6 +121,7 @@ class SeededCacheStoreBase {
     }
 }
 
+#if canImport(ObjectiveC)
 @Mocking
 @objcMembers
 class EmptyLegacyService: NSObject {
@@ -132,6 +133,7 @@ class EmptyDynamicLegacyService: NSObject {
         "real"
     }
 }
+#endif
 
 @Mocking
 protocol MemberUserService {
