@@ -105,14 +105,15 @@ extension MockSynGeneratedTypeIntegrationTests {
         #endif
     }
 
-    @MainActor
-    func testGeneratedMainActorMockPreservesIsolation() {
+    func testGeneratedMainActorMockPreservesIsolation() async {
         #if MOCKSYN_ENABLE
-        let mock = MainActorServiceMock()
+        await MainActor.run {
+            let mock = MainActorServiceMock()
 
-        mock.refresh()
+            mock.refresh()
 
-        XCTAssertEqual(mock.__mockSyn.kind, .mock)
+            XCTAssertEqual(mock.__mockSyn.kind, .mock)
+        }
         #else
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif

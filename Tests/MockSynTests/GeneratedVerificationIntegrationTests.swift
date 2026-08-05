@@ -2,6 +2,12 @@ import MockSyn
 import Foundation
 import XCTest
 
+#if MOCKSYN_ENABLE
+private final class GeneratedVerificationSendableBox: @unchecked Sendable {
+    let mock = StubbedUserServiceMock()
+}
+#endif
+
 extension MockSynGeneratedTypeIntegrationTests {
     func testGeneratedMockVerifiesMethodsPropertiesSubscriptsAndConfirmVerified() throws {
         #if MOCKSYN_ENABLE
@@ -64,17 +70,16 @@ extension MockSynGeneratedTypeIntegrationTests {
         #endif
     }
 
-    @MainActor
     func testGeneratedVerificationCanWaitForAsyncCall() async throws {
         #if MOCKSYN_ENABLE
-        let mock = StubbedUserServiceMock()
+        let box = GeneratedVerificationSendableBox()
 
-        Task { @MainActor in
+        Task {
             try? await Task.sleep(nanoseconds: 20_000_000)
-            mock.ping()
+            box.mock.ping()
         }
 
-        try await mock.verify.ping().wasCalled(.once, timeout: 0.5)
+        try await box.mock.verify.ping().wasCalled(.once, timeout: 0.5)
         #else
         XCTFail("MOCKSYN_ENABLE must be active for generated test doubles")
         #endif
