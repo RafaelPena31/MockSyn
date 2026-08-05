@@ -2,7 +2,7 @@
 
 All notable changes to MockSyn are documented in this file.
 
-## Unreleased
+## 0.31.0 - 2026-08-04
 
 ### Added
 
@@ -37,6 +37,7 @@ All notable changes to MockSyn are documented in this file.
 
 ### Notes
 
+- SwiftPM package versioning is provided by the Git tag `0.31.0`.
 - This is a pre-1.0 release, so the two enum-shape changes above are intentional
   source-breaking corrections and require migration at exhaustive switch sites.
 

@@ -92,7 +92,7 @@ This prevents generated mocks from existing in normal Debug app runs.
 ## SwiftPM Consumer Integration
 
 ```swift
-.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.30.0")
+.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.31.0")
 ```
 
 In the target containing annotations:

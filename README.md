@@ -8,7 +8,7 @@ matrix and limitations before adopting it across module boundaries.
 ## Installation
 
 ```swift
-.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.30.0")
+.package(url: "https://github.com/RafaelPena31/MockSyn.git", from: "0.31.0")
 ```
 
 ## Core Directives
