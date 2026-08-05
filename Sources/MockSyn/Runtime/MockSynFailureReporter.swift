@@ -1,6 +1,7 @@
 import Foundation
 
-/// Runtime failure captured before MockSyn throws or crashes.
+/// Runtime failure captured before MockSyn throws, recovers with a default, or
+/// terminates because a non-throwing member cannot produce its required value.
 public struct MockSynFailure: Sendable {
     /// Human-readable failure message.
     public let message: String

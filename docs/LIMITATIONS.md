@@ -15,6 +15,8 @@ MockSyn is inspired by MockK and Mockito, but Swift does not provide the same ru
 | Class operator members | Class operator overriding is not part of the subclass-generation model. |
 | Runtime bytecode-style interception | Swift does not have a JVM-like bytecode agent model. |
 | Fully arbitrary generated peer names | Swift attached peer macros at global scope must declare name patterns. |
+| Inherited protocol requirements | Peer macros receive the annotated declaration's syntax, not a semantic expansion of parent protocols. |
+| Declarations from compiled modules | A macro cannot attach retroactively to source that is not being compiled. |
 
 ## Recommended Workarounds
 
@@ -118,10 +120,28 @@ constructor seam for the replacement to take effect.
 
 Macros operate on syntax available at the annotated declaration. They do not
 perform arbitrary semantic analysis across the whole project. This affects
-typealiases and some initializer scenarios. Variadic class initializers are
+typealiases, inherited protocol requirements, and some initializer scenarios.
+Custom protocol inheritance emits a warning. Redeclare the required members in
+the annotated child protocol so the macro can generate them; marker protocols
+such as `AnyObject` and `Sendable` do not emit that warning.
+
+For an external or KMP protocol, declare an annotated local mirror with the same
+requirements and add conformance from the generated double to the external
+protocol. The compiler then detects signature drift at the conformance
+extension, but MockSyn cannot read the binary module and create the mirror.
+
+`ObservableObject` publishing is generated only when the annotated declaration
+directly inherits `ObservableObject`. Indirect inheritance is subject to the
+same syntax-only limitation.
+
+Variadic class initializers are
 diagnosed because Swift cannot forward captured variadic arrays to `super.init`,
 and required class initializers are diagnosed for class spies because the exact
 required signature cannot receive the wrapped spy instance.
+
+On Swift 5.9, SwiftSyntax 509 does not expose an enclosing extension's access
+modifier to an attached peer macro. A declaration whose effective visibility
+comes only from such an extension must pass `access:` explicitly.
 
 ## Custom Generated Names
 

@@ -45,6 +45,7 @@ public enum MockSynVerificationCount: Equatable, Sendable {
 
 /// Errors produced by MockSyn verification APIs.
 public enum MockSynVerificationError: Error, CustomStringConvertible, Sendable {
+    /// A count expectation failed, with rendered calls recorded for the member.
     case expected(
         member: String,
         count: MockSynVerificationCount,

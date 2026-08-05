@@ -10,7 +10,8 @@ MockSyn must test the macro layer, runtime layer, public DSL, documentation exam
 | Diagnostic tests | Validate compiler diagnostics for unsupported constructs. |
 | Runtime unit tests | Validate invocation recording, stubbing, matching, captors, and reset. |
 | DSL tests | Validate user-facing `given` and `verify` behavior. |
-| Integration examples | Validate real package usage with XCTest and Swift Testing. |
+| Integration examples | Validate real package usage with XCTest, Swift Testing adapters, Quick, and Nimble. |
+| External consumer package | Validate only public APIs across SwiftPM module boundaries and language modes. |
 | Concurrency tests | Validate async calls and thread-safe runtime state. |
 | Performance tests | Validate build-time and runtime budgets. |
 
@@ -60,6 +61,9 @@ Runtime tests should cover:
 - `confirmVerified`;
 - `checkUnnecessaryStubs`;
 - reset.
+- process-wide reset, including static runtimes, defaults, reporter, and order;
+- strict non-throwing recovery with and without a producible default;
+- typed stub builders through six arguments.
 
 ## Documentation Examples
 
@@ -69,10 +73,14 @@ Every public Markdown feature example should be compiled in at least one example
 
 CI should run:
 
-- Swift 5.9-compatible toolchain when available;
-- Swift 6-compatible toolchain;
+- Swift 5.9 toolchain;
+- stable Swift 6 toolchain;
 - Release build without `MOCKSYN_ENABLE`;
 - test build with `MOCKSYN_ENABLE`;
 - macro expansion tests;
 - runtime tests;
 - documentation example tests.
+
+The Release check must inspect the consumer target's symbols and fail if a
+generated mock, stub, or spy is present. The external fixture must keep Quick
+examples independent so randomized test order cannot hide leaked global state.

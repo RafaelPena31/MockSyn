@@ -12,8 +12,8 @@ types in `#if MOCKSYN_ENABLE` by default.
 | `@Stubbing` | `<ProtocolName>Stub` | `.relaxed` | Response-oriented stub. |
 | `@Spying` | `<ProtocolName>Spy` | `.strict` | Spy that stores a wrapped real implementation. |
 
-The generated type name, access level, and default behavior mode can be configured
-on each macro:
+The generated type inherits the annotated declaration's access by default. Its
+name, access level, and behavior mode can be configured on each macro:
 
 ```swift
 @Mocking(name: "MockUserService", access: .public, mode: .relaxed)
@@ -146,6 +146,7 @@ protocol UserService {
 
 Available access values:
 
+- `.inherited` (default)
 - `.internal`
 - `.public`
 - `.package`
@@ -211,8 +212,11 @@ Block 11 adds explicit diagnostics, a fix-it for pure Swift `final` classes, and
 support-matrix documentation. Block 12 adds optional inspection tooling, DocC,
 migration guides, and benchmark helpers outside the generation path.
 
-Complex inherited requirements are covered by later feature blocks in
-`docs/FEATURES.md`.
+Peer macros cannot discover requirements declared only in a custom inherited
+protocol. MockSyn accepts the inheritance syntax but emits a warning asking the
+consumer to redeclare those requirements in the annotated declaration. Direct
+marker inheritance such as `AnyObject`, `Sendable`, and `ObservableObject` is
+recognized; `ObservableObject` publishing is direct-only.
 
 Custom names are constrained to the declared peer macro name patterns. Fully
 arbitrary peer type names are not supported by Swift macros at global scope.
@@ -222,6 +226,12 @@ arbitrary peer type names are not supported by Swift macros at global scope.
 The public package manifest uses Swift tools 5.9. SwiftSyntax is selected by
 compiler version in `Package.swift` so Swift 5.9 and Swift 6 toolchains can use a
 matching SwiftSyntax line.
+
+The mapping is 509 for Swift 5.9, 510 for Swift 5.10, 600-603 for the matching
+Swift 6.0-6.3 compiler, and exact
+`604.0.0-prerelease-2026-06-05` for Swift 6.4 beta. On SwiftSyntax 509, access
+written only on a surrounding extension is not visible to the macro; specify
+`access:` explicitly for that declaration shape.
 
 SwiftSyntax remains isolated to the `MockSynMacros` target. The `MockSyn` runtime
 target does not depend on SwiftSyntax.

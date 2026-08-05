@@ -9,7 +9,7 @@ for common requirements starts in Block 3.
 | Type | Status | Generation model |
 | --- | --- | --- |
 | Protocols | Supported | Generates a final class conforming to the protocol. |
-| Protocols with simple inheritance | Supported | Generates a final class conforming to the child protocol. |
+| Protocol inheritance syntax | Supported with diagnostics | Generates conformance to the child protocol; custom inherited requirements must be redeclared locally. |
 | Non-final classes | Supported | Generates a final subclass of the annotated class. |
 | `NSObject` classes | Supported as non-final classes | Generates a final subclass. |
 | `@objc dynamic` members | Type accepted when class is subclassable | Supported members are generated as Swift overrides; explicit runtime interception is available through `MockSynObjCInterception`. |
@@ -45,6 +45,19 @@ let admin = AdminServiceMock()
 let service: Service = admin
 #endif
 ```
+
+The peer macro cannot inspect `Service` to generate its requirements. A custom
+parent therefore emits a warning. Redeclare the required members in
+`AdminService`; Swift then validates both the generated implementation and the
+parent conformance. Marker protocols (`AnyObject`, `Sendable`) are allowlisted,
+and direct `ObservableObject` inheritance additionally generates change
+publishing when Combine is available.
+
+For direct `ObservableObject` declarations, the generated double owns a
+`MockSynObservableObjectPublisher`. Configuring a property getter emits once,
+and assigning through a generated instance setter emits before the setter stub
+runs. Reads, method stubs, and static properties do not emit. Indirect
+`ObservableObject` inheritance is not detectable by the peer macro.
 
 ## Non-Final Classes
 
@@ -164,6 +177,11 @@ MockSyn cannot generate a public double for an internal declaration
 `open` classes are treated as declarations that can receive `public` generated
 doubles. MockSyn does not generate `open` test doubles.
 
+Without an `access:` argument, generated visibility inherits the annotated
+declaration. Explicit access remains useful for narrowing. With SwiftSyntax 509,
+access written only on a surrounding extension is unavailable to the peer macro,
+so Swift 5.9 consumers must pass the effective access explicitly in that case.
+
 ## Limitations
 
 - Classes must be subclassable. Non-variadic class initializers are mirrored.
@@ -174,8 +192,9 @@ doubles. MockSyn does not generate `open` test doubles.
   captured variadic arrays to `super.init`.
 - Associated-type protocols generate generic mocks, stubs, and spies when the
   associated types can be represented as generic parameters.
-- Qualified and complex protocol inheritance syntax is supported when Swift
-  accepts the annotated protocol declaration.
+- Qualified and complex protocol inheritance syntax is accepted, but inherited
+  requirements are not discovered semantically and custom parents emit a
+  redeclaration warning.
 
 ## Compatibility Notes
 

@@ -26,8 +26,10 @@ adds richer matchers and captors that plug into those generated member APIs.
 ## Runtime Behavior
 
 Instance methods, properties, and subscripts generated for mocks, stubs, and
-spies now route through `MockSynRuntime`. Strict mocks fail on unstubbed non-void
-calls. Relaxed mocks and stubs return supported defaults when possible.
+spies now route through `MockSynRuntime`. Strict mocks report unstubbed non-void
+calls. Throwing calls throw; non-throwing calls recover with a known default when
+possible. Relaxed mocks and stubs return supported defaults without the strict
+failure report.
 
 ```swift
 @Mocking
@@ -215,6 +217,13 @@ required initializer plus a configurable initializer that accepts `mode:`.
 Class spies require a wrapped instance, so required class initializers on spies
 emit a diagnostic. Variadic class initializers also emit a diagnostic because
 Swift cannot forward captured variadic arrays to `super.init`.
+
+Private class methods and properties are not visible to the generated subclass,
+so MockSyn skips them. A `private(set)` property keeps its visible getter but does
+not generate an inaccessible setter override. Convenience initializers are also
+skipped because a subclass does not override them. If every designated
+initializer is private, generation fails with an actionable diagnostic because
+the subclass has no legal `super.init` path.
 
 ## Operators
 

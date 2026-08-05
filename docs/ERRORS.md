@@ -17,11 +17,12 @@ MockSyn has two kinds of errors: compile-time diagnostics from macros and runtim
 | Pure Swift final class | Emit an error recommending protocol extraction. |
 | Final class member | Emit an error recommending removing `final` from the member or extracting a protocol. |
 | Invalid mode option | Emit an error explaining the supported mode values. |
-| Private member requirement | Emit an error because generated code cannot satisfy inaccessible requirements. |
+| Private class member | Skip it because a generated subclass cannot override it. A class with only private designated initializers emits an error. |
 | Unsupported class operator | Emit an error recommending a protocol operator requirement. |
 | Concrete static class member | Emit an error recommending a protocol static requirement or Objective-C class method interception. |
 | Invalid access override | Emit an error when requested access is wider than allowed. |
 | Unsupported generic shape | Emit an error describing the unsupported generic construct. |
+| Custom protocol inheritance | Emit a warning that inherited requirements are not generated and should be redeclared locally. |
 | Missing Objective-C instance selector | Throw `MockSynObjCInterceptionError.missingInstanceMethod`. |
 | Missing Objective-C class selector | Throw `MockSynObjCInterceptionError.missingClassMethod`. |
 
@@ -40,13 +41,21 @@ property that cannot be overridden.
 
 | Case | Failure |
 | --- | --- |
-| Missing stub in strict mode | The call fails and reports the missing member and arguments. |
+| Missing stub in a non-throwing strict member | Reports the member and received arguments, then returns a registered or built-in default when available. |
+| Missing stub in a throwing strict member | Reports and throws `MockSynRuntimeError.missingStub`. |
 | Missing default in relaxed mode | The call fails with a message asking for a stub or default value. |
 | Verify expected call not found | Reports expected call, expected count, actual matching count, and all received calls for that member. |
 | Extra calls after `confirmVerified` | Reports unverified calls. |
 | Unused stubs | Reports configured stubs that were never consumed. |
 | Timeout verification | Reports expected call and timeout duration. |
 | Matcher type mismatch | Reports expected matcher type and actual argument type. |
+
+Swift requires every non-throwing function to return a value. If a missing stub
+has no fallback, custom registered default, or built-in default for its return
+type, MockSyn reports the failure and then calls `fatalError` with instructions
+to configure `willReturn` or `MockSynDefaultValueRegistry`. This is the only
+non-throwing resolution case that cannot recover without changing the declared
+function signature.
 
 ## Failure Reporter
 

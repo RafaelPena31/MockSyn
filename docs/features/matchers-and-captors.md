@@ -126,5 +126,5 @@ control when the captured callback is executed.
   captor across unrelated verifications unless repeated captures are intended.
 - Static member stubbing and verification use the same matchers on type-level
   `given` and `verify` APIs.
-- Testing-framework adapters are not implemented yet; verification currently
-  throws `MockSynVerificationError`.
+- Verification throws `MockSynVerificationError` and also forwards failures to
+  the configured XCTest, Swift Testing, or custom reporter adapter.

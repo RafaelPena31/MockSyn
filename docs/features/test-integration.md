@@ -31,7 +31,7 @@ final class UserServiceTests: XCTestCase {
     }
 
     override func tearDown() {
-        MockSynFailureReporter.reset()
+        MockSynRuntime.resetAllGlobalState()
         super.tearDown()
     }
 }
@@ -60,6 +60,49 @@ MockSynFailureReporter.useSwiftTesting { message, file, line in
 Exact `Issue.record` overloads can vary by toolchain, so MockSyn exposes a small
 adapter closure and lets the test target bind it to the available Swift Testing
 API.
+
+Use scoped cleanup in each Swift Testing test:
+
+```swift
+@Test func loadsUser() throws {
+    MockSynFailureReporter.useSwiftTesting { message, file, line in
+        // Bind to the Issue.record overload available in this toolchain.
+    }
+    defer { MockSynRuntime.resetAllGlobalState() }
+
+    // Test body.
+}
+```
+
+## Quick And Nimble
+
+Quick specs use the same public XCTest-style adapter and reset globally after
+each example:
+
+```swift
+final class UserServiceSpec: QuickSpec {
+    override class func spec() {
+        beforeEach {
+            MockSynFailureReporter.useXCTest { message, file, line in
+                XCTFail(message, file: file, line: line)
+            }
+        }
+
+        afterEach {
+            MockSynRuntime.resetAllGlobalState()
+        }
+
+        it("loads a user") {
+            // Given, when, then.
+        }
+    }
+}
+```
+
+Global reset clears all registered static runtimes, custom defaults, the failure
+reporter, and global invocation ordering. It is a process-wide operation: call it
+only at sequential suite/example boundaries. Do not run it while parallel tests
+are using MockSyn state.
 
 ## Custom Reporter
 
@@ -120,5 +163,6 @@ Runtime diagnostics render common argument shapes without relying only on raw
 
 - MockSyn exposes adapter closures instead of importing XCTest or Swift Testing
   from the runtime module.
-- Generated non-throwing calls that fail through `try!` still crash after the
-  runtime reports the failure.
+- A strict non-throwing missing stub recovers only when a custom or built-in
+  default can satisfy the declared return type. Otherwise the runtime must
+  terminate because the function cannot throw and still owes Swift a value.

@@ -138,9 +138,25 @@ Task {
 try await service.verify.refresh().wasCalled(.once, timeout: 0.5)
 ```
 
-## Current Limits
+## Failure Details
 
-- Verification failure reporting currently uses thrown `MockSynVerificationError`.
-  XCTest and Swift Testing adapters arrive in the test integration block.
-- Static member verification is available on the generated type, for example
-  `try IDFactoryMock.verify.make(id: .value("primary")).once()`.
+Count mismatches throw `MockSynVerificationError.expected` with the expected
+count, actual count, and rendered calls recorded for that member:
+
+```text
+Expected load(id:) to be called exactly 1 time, but it was called 0 times
+Recorded calls:
+- load(id:)("received")
+```
+
+The same description is sent to the configured failure reporter. The
+`recordedCalls` associated value was added to the public error case; code that
+pattern-matches the case must accept all four values.
+
+## Static Verification And Cleanup
+
+Static member verification is available on the generated type, for example
+`try IDFactoryMock.verify.make(id: .value("primary")).once()`. Use
+`MockSynRuntime.resetAllGlobalState()` at a sequential suite boundary to clear
+all registered static runtimes together with defaults, reporter configuration,
+and call-order state.

@@ -2,6 +2,44 @@
 
 All notable changes to MockSyn are documented in this file.
 
+## Unreleased
+
+### Added
+
+- Capability-specific non-throwing, throwing, and `rethrows` stub builders with
+  typed `willRun` closures through six arguments.
+- Direct `ObservableObject` publisher integration for generated doubles.
+- Process-wide `MockSynRuntime.resetAllGlobalState()` cleanup and external
+  SwiftPM consumer coverage with XCTest, Quick, and Nimble.
+- Recorded-call details in count-verification errors.
+
+### Changed
+
+- Strict non-throwing missing stubs now report the failure and return a known
+  default instead of trapping through `try!`; a call still terminates when its
+  return type has no configured, registered, or built-in default.
+- Generated access defaults to `.inherited`. Swift 5.9 consumers annotating a
+  declaration inside an access-modified extension must pass `access:` explicitly
+  because SwiftSyntax 509 does not expose that lexical access to peer macros.
+- Custom protocol inheritance now emits a warning because peer macros cannot
+  discover inherited requirements. Redeclare requirements locally or use a
+  local mirror protocol for external/KMP contracts.
+- Static runtime reset preserves ordering correctness across remaining runtimes.
+- SwiftSyntax dependency selection now follows compiler lines 509, 510, 600,
+  601, 602, 603, and the pinned 604 prerelease.
+
+### Source Compatibility
+
+- `MockSynAccess` gained `.inherited`. Exhaustive switches over this public enum
+  must add the new case.
+- `MockSynVerificationError.expected` gained the `recordedCalls` associated
+  value. Existing pattern matches over that case must accept the new payload.
+
+### Notes
+
+- This is a pre-1.0 release, so the two enum-shape changes above are intentional
+  source-breaking corrections and require migration at exhaustive switch sites.
+
 ## 0.30.0 - 2026-07-03
 
 ### Changed

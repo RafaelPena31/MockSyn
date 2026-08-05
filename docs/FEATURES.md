@@ -11,7 +11,7 @@ Este documento lista as features planejadas para o MockSyn, agrupadas por bloco 
 | `@Spying` | Macro para gerar um spy que registra chamadas e, quando possivel, encaminha para uma implementacao real. |
 | Configuracao de nome | Permite controlar o nome do tipo gerado, como `UserServiceMock`. |
 | Configuracao strict/relaxed | Define se chamadas sem stub falham ou recebem valores default. |
-| Configuracao de visibilidade | Permite gerar mocks `internal`, `public`, `package` etc. |
+| Configuracao de visibilidade | Herda a visibilidade da declaracao por padrao e permite narrowing explicito para `internal`, `public`, `package` etc. |
 
 ## 2. Tipos Suportados
 
@@ -21,7 +21,7 @@ Este documento lista as features planejadas para o MockSyn, agrupadas por bloco 
 | Classes nao-final | Suporte opcional para classes sobrescreviveis, via subclass gerada. |
 | Classes `NSObject` / `@objc dynamic` | Suporte por subclass gerada quando a classe e sobrescrevivel; interceptacao Objective-C explicita via runtime quando o seletor existe. |
 | Final classes | Nao mockar diretamente; oferecer diagnostico e sugestao de protocolo ou wrapper. |
-| Protocol inheritance | Suporte a protocolos que herdam de outros protocolos, comecando por heranca simples. |
+| Protocol inheritance | Aceita a sintaxe de heranca e diagnostica requisitos herdados que precisam ser redeclarados localmente. |
 
 ## 3. Membros Suportados
 
@@ -55,6 +55,7 @@ Este documento lista as features planejadas para o MockSyn, agrupadas por bloco 
 | `@escaping` closures | Closures armazenaveis ou chamadas depois. |
 | Actors/global actors | Preservacao de isolamento como `@MainActor`. |
 | `Sendable` | Compatibilidade com regras de concorrencia do Swift. |
+| `ObservableObject` | Emite notificacoes Combine para conformidade declarada diretamente no protocolo anotado. |
 
 ## 5. Stubbing
 
@@ -63,7 +64,7 @@ Este documento lista as features planejadas para o MockSyn, agrupadas por bloco 
 | `given` / `when` | API para declarar comportamento esperado. |
 | `willReturn` | Define valor de retorno. |
 | `willThrow` | Define erro lancado. |
-| `willRun` | Define closure customizada para executar na chamada. |
+| `willRun` | Define closure customizada tipada para metodos com ate seis argumentos. |
 | Retornos sequenciais | Retorna valores diferentes em chamadas sucessivas. |
 | Stubs por argumento | Permite respostas diferentes conforme os argumentos. |
 | Stubs de propriedade | Configura retorno de properties. |
@@ -105,7 +106,7 @@ Este documento lista as features planejadas para o MockSyn, agrupadas por bloco 
 
 | Feature | O que e |
 | --- | --- |
-| Strict mock | Falha quando uma chamada nao foi previamente configurada. |
+| Strict mock | Reporta chamada nao configurada; membros non-throwing recuperam com default quando existe. |
 | Relaxed mock | Retorna defaults automaticamente quando possivel. |
 | Stub | Double simples para devolver respostas. |
 | Spy | Double que registra chamadas e pode delegar para objeto real. |
@@ -122,6 +123,7 @@ Este documento lista as features planejadas para o MockSyn, agrupadas por bloco 
 | Argument boxing | Guarda argumentos heterogeneos de forma verificavel. |
 | Thread safety | Protege estado interno em testes concorrentes. |
 | Reset | Limpa chamadas e stubs. |
+| Global reset | Limpa runtimes estaticos, defaults, reporter e ordem global em fronteiras sequenciais de teste. |
 | Failure reporter | Canal unico para reportar falhas ao framework de testes. |
 
 ## 10. Integracao Com Testes

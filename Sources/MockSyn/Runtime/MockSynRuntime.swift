@@ -96,6 +96,9 @@ public final class MockSynRuntime: @unchecked Sendable {
     }
 
     /// Resolves a non-throwing generated member call.
+    ///
+    /// Strict missing stubs are reported before a custom or built-in default is
+    /// returned. Resolution terminates only when no value can satisfy `Return`.
     public func resolve<Return>(
         member: String,
         arguments: [Any],

@@ -28,6 +28,32 @@ let service = UserServiceMock()
 service.given.fetchUser(id: .any).willReturn(user)
 ```
 
+## External And KMP Contracts
+
+Macros cannot inspect a protocol that belongs to a compiled module. Mirror the
+contract locally, then let Swift validate that the generated double still
+conforms to the external API:
+
+```swift
+import MockSyn
+import ProtectorCore
+
+@Mocking(access: .public)
+public protocol TokenStorageMockable {
+    func readToken() -> String?
+    func saveToken(_ token: String)
+}
+
+#if MOCKSYN_ENABLE
+extension TokenStorageMockableMock: ProtectorCore.TokenStorage {}
+#endif
+```
+
+Use `TokenStorageMockableMock` in tests. If the external signature changes, the
+conformance extension stops compiling, providing compile-time drift detection.
+The mirror is still maintained by the consumer because MockSyn cannot derive it
+from an XCFramework or KMP binary.
+
 ## Active Compilation Conditions
 
 The flag must be active in the target where the macro annotation is compiled.
@@ -83,6 +109,12 @@ In the target containing annotations:
 )
 ```
 
+The macro's default `access: .inherited` follows the annotated declaration.
+Explicit access may narrow visibility, but cannot widen it. On Swift 5.9 only,
+when visibility comes from an enclosing access-modified extension, write the
+effective access explicitly because SwiftSyntax 509 does not provide that
+lexical context to the peer macro.
+
 ## CI Integration
 
 CI should have separate jobs:
@@ -91,6 +123,9 @@ CI should have separate jobs:
 - Run tests with `MOCKSYN_ENABLE`.
 - Run macro expansion tests for MockSyn itself.
 - Run performance checks for macro expansion and runtime overhead.
+
+MockSyn's own CI also builds a nested consumer package in Swift 5 and Swift 6
+language modes and checks that generated symbols are absent from Release output.
 
 ## Import Policy
 

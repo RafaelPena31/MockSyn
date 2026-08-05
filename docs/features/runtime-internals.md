@@ -13,6 +13,7 @@ turning MockSyn into a source generator or plugin-based framework.
 | Argument boxing | Supported | Arguments are stored as `[Any]`, matched through type-erased `MockSynAnyMatcher`, and rendered through the diagnostic argument renderer. |
 | Thread safety | Supported | Runtime state is protected by `NSRecursiveLock`. |
 | Reset | Supported | Clear invocations, stubs, or both with `MockSynResetScope`. |
+| Global reset | Supported | Clears registered static runtimes, defaults, reporter configuration, and global ordering. |
 | Failure reporter | Supported | Runtime failures are sent through `MockSynFailureReporter` before being thrown. |
 
 ## Runtime State
@@ -50,6 +51,16 @@ Manual fakes that adopt `MockSynFake` use the prefixed helper:
 fake.mockSynReset(.invocations)
 ```
 
+At a sequential test-suite boundary, clear process-wide support state:
+
+```swift
+MockSynRuntime.resetAllGlobalState()
+```
+
+Static runtimes register weakly, so cleanup does not keep generated types alive.
+Global reset must not run concurrently with tests that are reading or writing
+MockSyn global state.
+
 ## Failure Reporter
 
 `MockSynFailureReporter` is a process-wide reporting channel. The default handler
@@ -83,3 +94,5 @@ deterministic without adding work to macro expansion.
   and does not change matching semantics.
 - The global call-order clock is not reset by per-double reset because order can
   span multiple doubles.
+- `resetAllGlobalState()` resets the clock only after clearing registered static
+  runtimes; surviving invocation sequence values retain correct relative order.

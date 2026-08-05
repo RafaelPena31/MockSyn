@@ -11,7 +11,7 @@ inside the macro-only architecture.
 | Generic methods | Supported | Generic parameter clauses are preserved. |
 | Generic classes | Supported | Generated subclasses mirror generic parameters and `where` clauses. |
 | `where` clauses | Supported | Preserved on generated generic classes and methods. |
-| `Self` requirements | Supported for placeholder behavior | Mocks/stubs compile by using placeholder bodies. |
+| `Self` requirements | Supported where generated runtime resolution can satisfy the signature | Direct parameters and returns preserve `Self`. |
 | `rethrows` methods | Supported | Preserves `rethrows`; stubs cannot independently throw and spies rethrow only through fallback closure parameters. |
 | `inout` parameters | Supported | Spies delegate with `&` when the method is otherwise delegatable. |
 | Variadic parameters | Signature supported with sync spy delegation | Spies delegate one variadic parameter up to 8 values. Async and multiple-variadic methods remain stub-driven. |
@@ -38,8 +38,9 @@ Generated member:
 func map<Value>(_ value: Value) -> Value where Value: Sendable
 ```
 
-Non-void mocks and stubs still use placeholder `fatalError` bodies until the
-stubbing block provides configured return values.
+Generated bodies record the invocation and resolve configured behavior through
+the runtime. Strict non-throwing calls may recover with a known default; types
+without any producible value require an explicit stub or registered default.
 
 ## Generic Subscripts
 

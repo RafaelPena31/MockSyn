@@ -1,6 +1,9 @@
 /// Access level used by MockSyn macros when emitting generated test doubles.
 public enum MockSynAccess: Equatable, Sendable {
-    /// Inherits the effective access level of the annotated declaration.
+    /// Inherits the effective access level visible at the annotated declaration.
+    ///
+    /// SwiftSyntax 509 cannot expose access written only on a surrounding
+    /// extension; Swift 5.9 consumers must choose an explicit access in that case.
     case inherited
 
     /// Emits an `internal` generated type.
@@ -20,8 +23,8 @@ public enum MockSynAccess: Equatable, Sendable {
 
     /// Source spelling used when representing this macro option.
     ///
-    /// The macro resolves `inherited` to the annotated declaration's effective
-    /// access before emitting the generated type.
+    /// The macro resolves `inherited` to the declaration access visible in the
+    /// expansion context before emitting the generated type.
     public var generatedSourceName: String {
         switch self {
         case .inherited:

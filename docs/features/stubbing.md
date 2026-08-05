@@ -10,8 +10,8 @@ without a source generator or generated file cache.
 | --- | --- | --- |
 | `given` / `when` | Supported | `when` is an alias for teams that prefer Mockito naming. |
 | `willReturn` | Supported | Accepts one or more values. Multiple values are returned sequentially. |
-| `willThrow` | Supported | Works on generated `throws` members. A non-throwing member that receives a throwing stub fails fast. |
-| `willRun` | Supported | Supports zero, one, and two argument generated method builders, property setters, and subscript setters. |
+| `willThrow` | Supported | Exposed only by generated `throws` members. Non-throwing and `rethrows` builders do not offer it. |
+| `willRun` | Supported | Typed for zero through six method arguments, property setters, and subscript setters. |
 | `rethrows` stubs | Supported | Generated `rethrows` APIs use dedicated builders with `willReturn` and non-throwing `willRun`; they do not expose `willThrow`. |
 | Argument-specific stubs | Supported | Uses typed matchers such as `.any`, `.value`, `.matching`, optional, collection, composed, and captor matchers. |
 | Property getter stubs | Supported | `mock.given.name.get.willReturn("value")`. |
@@ -76,9 +76,10 @@ service.given.doubled(.any).willRun { value in
 }
 ```
 
-`willRun` is typed for generated members with zero, one, or two parameters.
-Members with more parameters can still use `willReturn` and `willThrow`; richer
-arity support can be added without changing the macro syntax.
+`willRun` is typed for generated members with zero through six parameters.
+Members with more than six parameters use a return-only builder: non-throwing
+members expose `willReturn`, while throwing members expose `willReturn` and
+`willThrow`. The macro emits a warning when typed `willRun` is unavailable.
 
 ## Rethrows
 
@@ -237,7 +238,8 @@ Use `resetStatic(_:)`, `confirmStaticVerified()`, and
 
 ## Current Limits
 
-- `willRun` has typed overloads for zero, one, and two method arguments.
+- `willRun` has typed overloads for zero through six method arguments. Higher
+  arities retain deterministic return or throw behavior without a typed closure.
 - Associated-type protocols generate generic doubles, so stubbing is available
   after the test binds the associated types through the generated generic
   parameters.

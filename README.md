@@ -2,7 +2,8 @@
 
 MockSyn is a Swift macro-first framework for generating mocks, stubs, and spies with an API inspired by MockK and Mockito.
 
-The framework is implemented incrementally by feature block. Version 0.30.0 reorganizes runtime, macro generator, and test code by domain without changing public APIs.
+The framework is implemented incrementally by feature block. See the support
+matrix and limitations before adopting it across module boundaries.
 
 ## Installation
 
@@ -15,8 +16,22 @@ The framework is implemented incrementally by feature block. Version 0.30.0 reor
 - Macro-first API. No build tool plugin, source generator, or generated source folder is part of the product flow.
 - MockK/Mockito-style test syntax is a product requirement.
 - Generated test doubles are guarded by `#if MOCKSYN_ENABLE` by default.
-- Swift 5.9 is the minimum supported language version. Swift 6 must be fully supported.
+- Swift 5.9 is the minimum supported language version. Swift 6 is tested as a
+  first-class language mode.
 - Documentation is required before implementation: public API doc strings, focused inline comments, and Markdown feature docs.
+
+## Safety And Macro Limits
+
+- Strict non-throwing calls report missing stubs and recover with a registered or
+  built-in default. They terminate only when Swift requires a value and no value
+  can be produced.
+- Attached macros see the annotated declaration's syntax, not requirements
+  declared in an inherited protocol or a precompiled external module. MockSyn
+  diagnoses custom protocol inheritance and documents the local mirror pattern.
+- `ObservableObject` notifications are generated only when the annotated
+  protocol directly declares that inheritance.
+- `MockSynRuntime.resetAllGlobalState()` clears static runtimes, defaults,
+  reporters, and call ordering at sequential test-suite boundaries.
 
 ## Documents
 

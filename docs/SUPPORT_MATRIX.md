@@ -8,11 +8,13 @@ MockSyn supports Swift 5.9 and Swift 6. Swift 6 is a first-class target, but the
 | --- | --- |
 | Swift 5.9 | Minimum supported version. Macro APIs must compile. Swift Testing adapter is not required. |
 | Swift 5.10 | Supported when available through compatible SwiftSyntax. |
-| Swift 6 | First-class support, including concurrency diagnostics and stricter Sendable behavior. |
+| Swift 6.0-6.3 | First-class support, including language-mode and concurrency validation. |
+| Swift 6.4 beta | Supported with the exact SwiftSyntax 604 prerelease pinned by the manifest. |
 
 ## Toolchain Dependency
 
-SwiftSyntax versions are tied to Swift toolchains. MockSyn must define a package strategy that maps supported Swift versions to compatible SwiftSyntax versions.
+SwiftSyntax versions are tied to Swift toolchains. `Package.swift` selects the
+compatible dependency line from the compiler that evaluates the manifest.
 
 Policy:
 
@@ -20,6 +22,18 @@ Policy:
 - Keep runtime target free of SwiftSyntax.
 - Test supported toolchains in CI.
 - Select a SwiftSyntax version line in `Package.swift` based on the compiler version that evaluates the manifest.
+
+| Compiler | SwiftSyntax dependency |
+| --- | --- |
+| Swift 5.9 | `509.x` |
+| Swift 5.10 | `510.x` |
+| Swift 6.0 | `600.x` |
+| Swift 6.1 | `601.x` |
+| Swift 6.2 | `602.x` |
+| Swift 6.3 | `603.x` |
+| Swift 6.4 beta | `604.0.0-prerelease-2026-06-05` exactly |
+
+The 604 pin is temporary until a compatible stable 604 tag exists.
 
 ## Platform Support
 
@@ -38,8 +52,9 @@ Initial platform support:
 | Feature | Swift 5.9 | Swift 6 |
 | --- | --- | --- |
 | Protocol mocks | Supported | Supported |
-| Simple protocol inheritance | Supported | Supported |
-| Complex protocol inheritance | Supported for valid Swift inherited type syntax | Supported for valid Swift inherited type syntax |
+| Protocol inheritance syntax | Accepted; custom inheritance emits a warning | Accepted; custom inheritance emits a warning |
+| Inherited protocol requirements | Redeclare locally; not discovered semantically by the macro | Redeclare locally; not discovered semantically by the macro |
+| Direct `ObservableObject` inheritance | Supported when Combine is available | Supported when Combine is available |
 | Non-final class doubles | Supported | Supported |
 | Pure Swift final classes and final class members | Diagnostic with fix-it where actionable | Diagnostic with fix-it where actionable |
 | `NSObject` subclasses | Supported as subclass generation | Supported as subclass generation |
@@ -55,7 +70,7 @@ Initial platform support:
 | Return-type-only overloads | Supported with return-disambiguated DSL names and runtime keys | Supported with return-disambiguated DSL names and runtime keys |
 | Concrete static class members | Diagnostic; use protocol static requirements or Objective-C interception for Objective-C class methods | Diagnostic; use protocol static requirements or Objective-C interception for Objective-C class methods |
 | Global functions | Diagnostic; wrap behind a protocol or explicit test seam | Diagnostic; wrap behind a protocol or explicit test seam |
-| Constructor seams | Supported with zero, one, and two argument factories | Supported with zero, one, and two argument factories |
+| Constructor seams | Supported with factories accepting 0-2 arguments | Supported with factories accepting 0-2 arguments |
 | Arbitrary direct constructor interception | Not supported; Swift macros do not rewrite `Type(...)` call sites | Not supported; Swift macros do not rewrite `Type(...)` call sites |
 | Protocol initializers | Supported for mocks/stubs | Supported for mocks/stubs |
 | Class initializers | Mirrored for non-variadic class initializers; required initializers supported for mocks/stubs | Mirrored for non-variadic class initializers; required initializers supported for mocks/stubs |
@@ -79,6 +94,13 @@ Initial platform support:
 | Optional inspection CLI | Supported outside build flow | Supported outside build flow |
 | DocC catalog | Supported | Supported |
 | Migration guides | Supported | Supported |
+
+## Swift 5.9 Access Note
+
+Generated access defaults to the annotated declaration's access. With
+SwiftSyntax 509, an attached peer macro cannot observe an access modifier written
+only on the surrounding extension. In that specific Swift 5.9 shape, pass an
+explicit non-widening value such as `@Mocking(access: .public)`.
 
 ## Conditional APIs
 
