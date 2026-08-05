@@ -121,6 +121,8 @@ final class MockSynHigherArityStubBuilderTests: XCTestCase {
     }
 
     func testTypedBuilderInitializerRejectsWrongMatcherCountWithActionableMessage() throws {
+        try requireXcrun()
+
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
         process.arguments = [
@@ -354,6 +356,8 @@ final class MockSynHigherArityStubBuilderTests: XCTestCase {
         file: StaticString = #filePath,
         line: UInt = #line
     ) throws {
+        try requireXcrun()
+
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
         process.arguments = [
@@ -380,5 +384,12 @@ final class MockSynHigherArityStubBuilderTests: XCTestCase {
         for fragment in fragments {
             XCTAssertTrue(errorOutput.contains(fragment), errorOutput, file: file, line: line)
         }
+    }
+
+    private func requireXcrun() throws {
+        try XCTSkipUnless(
+            FileManager.default.isExecutableFile(atPath: "/usr/bin/xcrun"),
+            "The fatal-error subprocess harness requires the macOS xctest runner."
+        )
     }
 }

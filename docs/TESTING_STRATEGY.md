@@ -84,3 +84,8 @@ CI should run:
 The Release check must inspect the consumer target's symbols and fail if a
 generated mock, stub, or spy is present. The external fixture must keep Quick
 examples independent so randomized test order cannot hide leaked global state.
+
+Linux compatibility jobs compile and execute every portable macro and runtime
+test. The macOS job additionally owns tests that require Apple tooling: DocC,
+the inspector's `doctor` command, Combine, and fatal-error subprocess assertions
+that launch the platform `xctest` runner through `xcrun`.

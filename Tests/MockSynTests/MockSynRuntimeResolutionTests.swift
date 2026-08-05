@@ -278,6 +278,8 @@ extension MockSynPublicAPITests {
     }
 
     func testStrictUnstubbedDomainWithoutRegisteredDefaultHasActionableFatalError() throws {
+        try requireXcrun()
+
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
         process.arguments = [
@@ -325,6 +327,8 @@ extension MockSynPublicAPITests {
     }
 
     func testRelaxedUnstubbedDomainReportsExactlyOnceBeforeFatalError() throws {
+        try requireXcrun()
+
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
         process.arguments = [
@@ -351,6 +355,13 @@ extension MockSynPublicAPITests {
 
         XCTAssertNotEqual(process.terminationStatus, 0)
         XCTAssertEqual(markerCount, 1, errorOutput)
+    }
+
+    private func requireXcrun() throws {
+        try XCTSkipUnless(
+            FileManager.default.isExecutableFile(atPath: "/usr/bin/xcrun"),
+            "The fatal-error subprocess harness requires the macOS xctest runner."
+        )
     }
 
     private func assertStrictUnstubbedResolution<Return: Equatable>(

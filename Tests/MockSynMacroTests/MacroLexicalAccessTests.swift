@@ -3,6 +3,7 @@ import SwiftSyntaxMacrosTestSupport
 import XCTest
 
 extension MockSynMacroTests {
+    #if canImport(SwiftSyntax600)
     func testMockingInheritsPublicExtensionAccess() {
         assertLexicalExtensionAccess(modifier: "public", expectedAccess: "public")
     }
@@ -18,6 +19,7 @@ extension MockSynMacroTests {
     func testMockingInheritsPrivateExtensionAccess() {
         assertLexicalExtensionAccess(modifier: "private", expectedAccess: "private")
     }
+    #endif
 
     func testMockingDoesNotInheritAccessFromLexicalNominalType() {
         assertExpansion(
@@ -69,6 +71,7 @@ extension MockSynMacroTests {
         )
     }
 
+    #if canImport(SwiftSyntax600)
     private func assertLexicalExtensionAccess(modifier: String, expectedAccess: String) {
         let expectedMemberAccess = expectedAccess == "private" ? "fileprivate" : expectedAccess
         assertExpansion(
@@ -103,4 +106,5 @@ extension MockSynMacroTests {
               """
         )
     }
+    #endif
 }

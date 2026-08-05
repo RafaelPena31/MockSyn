@@ -333,11 +333,11 @@ extension MockSynMacroTests {
         assertExpansion(
             """
             @Mocking(access: .public)
-            protocol UserService {
+            internal protocol UserService {
             }
             """,
             expandedSource: """
-              protocol UserService {
+              internal protocol UserService {
               }
               """,
             diagnostics: [
@@ -355,11 +355,11 @@ extension MockSynMacroTests {
         assertExpansion(
             """
             @Mocking(access: .public)
-            class UserService {
+            internal class UserService {
             }
             """,
             expandedSource: """
-              class UserService {
+              internal class UserService {
               }
               """,
             diagnostics: [

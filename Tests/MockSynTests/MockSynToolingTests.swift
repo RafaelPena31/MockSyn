@@ -20,9 +20,13 @@ final class MockSynToolingTests: XCTestCase {
         }
     }
 
-    func testInspectorDoctorAndVersionCommands() throws {
+    func testInspectorVersionCommand() throws {
         let version = try runTool("tools/mocksyn-inspect.sh", "version")
         XCTAssertTrue(version.contains("MockSyn version 0.31.0"))
+    }
+
+    func testInspectorDoctorCommand() throws {
+        try requireXcrun()
 
         let doctor = try runTool("tools/mocksyn-inspect.sh", "doctor")
         XCTAssertTrue(doctor.contains("MockSyn Inspector Doctor"))
@@ -33,6 +37,8 @@ final class MockSynToolingTests: XCTestCase {
     }
 
     func testInspectorDocCCommandCanValidateCatalog() throws {
+        try requireXcrun()
+
         let output = try runTool("tools/mocksyn-inspect.sh", "docc", "--validate")
 
         XCTAssertTrue(output.contains("DocC validation passed"))
@@ -76,6 +82,13 @@ final class MockSynToolingTests: XCTestCase {
         let output = String(decoding: data, as: UTF8.self)
         XCTAssertEqual(process.terminationStatus, 0, output)
         return output
+    }
+
+    private func requireXcrun() throws {
+        try XCTSkipUnless(
+            FileManager.default.isExecutableFile(atPath: "/usr/bin/xcrun"),
+            "This tooling command requires the macOS Apple developer toolchain."
+        )
     }
 
     private var repositoryRoot: URL {
