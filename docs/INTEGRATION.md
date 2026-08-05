@@ -54,6 +54,11 @@ conformance extension stops compiling, providing compile-time drift detection.
 The mirror is still maintained by the consumer because MockSyn cannot derive it
 from an XCFramework or KMP binary.
 
+With Swift 5.9, place the conformance extension in a different source file from
+the annotated mirror protocol. Swift 5.9 can otherwise report a circular
+reference while resolving the peer generated in that same file. Newer
+toolchains accept either layout, but separate files remain the portable form.
+
 ## Active Compilation Conditions
 
 The flag must be active in the target where the macro annotation is compiled.

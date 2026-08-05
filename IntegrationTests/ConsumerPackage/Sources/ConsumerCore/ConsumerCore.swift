@@ -1,4 +1,3 @@
-import ExternalContracts
 import MockSyn
 
 @Mocking
@@ -15,7 +14,3 @@ public protocol MirroredExternalUserLoading {
 public protocol PublicBuildInformation {
     static func revision() -> Int
 }
-
-#if MOCKSYN_ENABLE
-extension MirroredExternalUserLoadingMock: ExternalUserLoading {}
-#endif
