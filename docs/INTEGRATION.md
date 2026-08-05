@@ -126,6 +126,9 @@ CI should have separate jobs:
 
 MockSyn's own CI also builds a nested consumer package in Swift 5 and Swift 6
 language modes and checks that generated symbols are absent from Release output.
+The Swift 6.3 Linux lane compiles and links consumer tests without launching the
+affected Linux XCTest discovery runner; the macOS lane executes those tests in
+Swift 6 language mode.
 
 ## Import Policy
 

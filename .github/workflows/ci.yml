@@ -20,9 +20,11 @@ jobs:
           - swift: "5.9.2"
             image: swift:5.9.2-jammy@sha256:006635153a77dfc9d096dfc954b362d9017f1560d74c357100b50429bf5174c7
             language-mode: "5"
+            execute_tests: true
           - swift: "6.3.1"
             image: swift:6.3.1-jammy@sha256:98ced124a39751bef755522808683aa931516f39556909efac6c9f3c57be662b
             language-mode: "6"
+            execute_tests: false
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Verify Swift toolchain
@@ -34,9 +36,17 @@ jobs:
             *) echo "Expected Swift ${{ matrix.swift }}" >&2; exit 1 ;;
           esac
       - name: Test root package
+        if: matrix.execute_tests
         run: swift test -Xswiftc -swift-version -Xswiftc ${{ matrix.language-mode }}
+      - name: Build root package and test targets
+        if: ${{ !matrix.execute_tests }}
+        run: swift build --build-tests -Xswiftc -swift-version -Xswiftc ${{ matrix.language-mode }}
       - name: Test external consumer
+        if: matrix.execute_tests
         run: tools/test-consumer-package.sh --swift-version ${{ matrix.language-mode }}
+      - name: Build external consumer test targets
+        if: ${{ !matrix.execute_tests }}
+        run: tools/test-consumer-package.sh --swift-version ${{ matrix.language-mode }} --build-tests-only
 
   macos-integration:
     name: macOS Combine, coverage, and DocC

@@ -6,16 +6,19 @@ PACKAGE_DIR="$ROOT_DIR/IntegrationTests/ConsumerPackage"
 RESOLVED_FILE="$PACKAGE_DIR/Package.resolved"
 STATE_DIR="$PACKAGE_DIR/.build/script-state"
 SWIFT_VERSION="auto"
+RUN_TESTS=1
 RESOLVED_EXISTED=0
 RESOLVED_BACKUP=""
 
 print_help() {
   cat <<'EOF'
-Usage: tools/test-consumer-package.sh [--swift-version auto|5|6]
+Usage: tools/test-consumer-package.sh [--swift-version auto|5|6] [--build-tests-only]
 
 Builds the production ConsumerCore target in release mode, then runs the
 external consumer tests. Auto always checks Swift 5 language mode and adds
 Swift 6 language mode only when the active compiler supports it.
+
+--build-tests-only compiles and links the test targets without launching XCTest.
 EOF
 }
 
@@ -25,6 +28,10 @@ while [[ $# -gt 0 ]]; do
       [[ $# -ge 2 ]] || { echo "Missing value for --swift-version" >&2; exit 64; }
       SWIFT_VERSION="$2"
       shift 2
+      ;;
+    --build-tests-only)
+      RUN_TESTS=0
+      shift
       ;;
     --help|-h)
       print_help
@@ -154,8 +161,16 @@ for mode in "${modes[@]}"; do
     --target ConsumerCore
   verify_release_artifacts "$scratch_path"
 
-  echo "Testing ConsumerPackage in Swift $mode language mode"
-  MOCKSYN_CONSUMER_LANGUAGE_MODE="$mode" swift test \
-    --package-path "$PACKAGE_DIR" \
-    --scratch-path "$scratch_path"
+  if [[ "$RUN_TESTS" -eq 1 ]]; then
+    echo "Testing ConsumerPackage in Swift $mode language mode"
+    MOCKSYN_CONSUMER_LANGUAGE_MODE="$mode" swift test \
+      --package-path "$PACKAGE_DIR" \
+      --scratch-path "$scratch_path"
+  else
+    echo "Building ConsumerPackage test targets in Swift $mode language mode"
+    MOCKSYN_CONSUMER_LANGUAGE_MODE="$mode" swift build \
+      --package-path "$PACKAGE_DIR" \
+      --scratch-path "$scratch_path" \
+      --build-tests
+  fi
 done

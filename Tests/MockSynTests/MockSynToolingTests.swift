@@ -55,7 +55,10 @@ final class MockSynToolingTests: XCTestCase {
         ]
 
         for (relativePath, expectedFragments) in expectedDocuments {
-            let contents = try String(contentsOfFile: repositoryRoot.appendingPathComponent(relativePath).path)
+            let contents = try String(
+                contentsOfFile: repositoryRoot.appendingPathComponent(relativePath).path,
+                encoding: .utf8
+            )
 
             for fragment in expectedFragments {
                 XCTAssertTrue(
