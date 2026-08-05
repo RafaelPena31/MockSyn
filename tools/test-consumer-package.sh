@@ -88,6 +88,7 @@ verify_release_artifacts() {
   local artifact
   local artifact_count=0
   local forbidden_symbols="PublicUserLoadingMock|MirroredExternalUserLoadingMock|PublicBuildInformationMock"
+  local symbols
 
   command -v nm >/dev/null 2>&1 || { echo "nm is required to inspect release artifacts" >&2; return 69; }
 
@@ -107,7 +108,12 @@ verify_release_artifacts() {
   while IFS= read -r artifact; do
     [[ -n "$artifact" ]] || continue
     artifact_count=$((artifact_count + 1))
-    if nm "$artifact" 2>/dev/null | grep -E "$forbidden_symbols" >/dev/null; then
+    if ! symbols="$(nm "$artifact" 2>&1)"; then
+      echo "Unable to inspect release ConsumerCore artifact with nm: $artifact" >&2
+      echo "$symbols" >&2
+      return 70
+    fi
+    if printf '%s\n' "$symbols" | grep -E "$forbidden_symbols" >/dev/null; then
       echo "Generated mock symbol found in release ConsumerCore artifact: $artifact" >&2
       return 1
     fi
@@ -119,11 +125,27 @@ verify_release_artifacts() {
   fi
 }
 
+remove_stale_release_artifacts() {
+  local scratch_path="$1"
+
+  find "$scratch_path" -type d \( \
+    -name "ConsumerCore.build" -o \
+    -name "ConsumerCore-t.build" \
+  \) -prune -exec rm -rf {} + 2>/dev/null || true
+  find "$scratch_path" -type f \( \
+    -name "ConsumerCore.o" -o \
+    -name "libConsumerCore.a" -o \
+    -name "libConsumerCore.so" -o \
+    -name "libConsumerCore.dylib" \
+  \) -delete 2>/dev/null || true
+}
+
 preserve_resolved_file
 trap cleanup EXIT
 
 for mode in "${modes[@]}"; do
   scratch_path="$PACKAGE_DIR/.build/swift-$mode"
+  remove_stale_release_artifacts "$scratch_path"
   echo "Building ConsumerCore release target in Swift $mode language mode"
   MOCKSYN_CONSUMER_LANGUAGE_MODE="$mode" swift build \
     --package-path "$PACKAGE_DIR" \

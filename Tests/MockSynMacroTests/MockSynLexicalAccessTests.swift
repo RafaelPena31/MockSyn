@@ -60,4 +60,20 @@ final class MockSynLexicalAccessTests: XCTestCase {
 
         XCTAssertNil(MockSynLexicalAccess.extensionAccess(of: Syntax(protocolDeclaration)))
     }
+
+    func testLexicalContextStopsAtEveryNominalDeclarationKind() throws {
+        let declarations = try [
+            "actor Scope {}",
+            "class Scope {}",
+            "enum Scope {}",
+            "protocol Scope {}",
+            "struct Scope {}",
+        ].map { source in
+            try XCTUnwrap(Parser.parse(source: source).statements.first?.item)
+        }
+
+        for declaration in declarations {
+            XCTAssertNil(MockSynLexicalAccess.extensionAccess(in: [Syntax(declaration)]))
+        }
+    }
 }

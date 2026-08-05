@@ -18,10 +18,10 @@ jobs:
       matrix:
         include:
           - swift: "5.9.2"
-            image: swift:5.9.2-jammy
+            image: swift:5.9.2-jammy@sha256:006635153a77dfc9d096dfc954b362d9017f1560d74c357100b50429bf5174c7
             language-mode: "5"
           - swift: "6.3.1"
-            image: swift:6.3.1-jammy
+            image: swift:6.3.1-jammy@sha256:98ced124a39751bef755522808683aa931516f39556909efac6c9f3c57be662b
             language-mode: "6"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
