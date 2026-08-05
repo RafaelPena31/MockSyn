@@ -17,6 +17,7 @@ default:
 
 let package = Package(
     name: "MockSynConsumerPackage",
+    platforms: [.macOS(.v12), .iOS(.v13), .tvOS(.v15), .watchOS(.v6), .macCatalyst(.v15)],
     products: [
         .library(name: "ExternalContracts", targets: ["ExternalContracts"]),
         .library(name: "ConsumerCore", targets: ["ConsumerCore"]),
